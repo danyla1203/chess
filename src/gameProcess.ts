@@ -2,9 +2,11 @@ import { GameInfo, Cell, Figure } from "./initGame";
 
 export class Game {
   GameInfo: GameInfo;
-  Letters: string[]
-  constructor(gameInfo: GameInfo) {
+  Letters: string[];
+  makeTurn: (figure: Figure, cell: Cell) => any;
+  constructor(gameInfo: GameInfo, makeTurn: (figure: Figure, cell: Cell) => any) {
     this.GameInfo = gameInfo;
+    this.makeTurn = makeTurn;
     this.Letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   }
 
@@ -274,6 +276,7 @@ export class Game {
         let moveTo: Cell = this.findCellByCoord(clickX, clickY);
         if (possibleMoves.find((move) => move === moveTo)) {
           this.moveFigure(figureSelected.figure, moveTo, possibleMoves);
+          this.makeTurn(figureSelected.figure, moveTo);
           this.GameInfo.figureCels[figureSelected.figure] = moveTo;
           let striked = this.strikeFigure(moveTo);
           striked ? deadFigures.push(striked) : null;
