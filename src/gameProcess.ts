@@ -4,9 +4,11 @@ export class Game {
   GameInfo: GameInfo;
   Letters: string[];
   makeTurn: (figure: Figure, cell: Cell) => any;
-  constructor(gameInfo: GameInfo, makeTurn: (figure: Figure, cell: Cell) => any) {
+  waitForMessages: (callback: any) => void;
+  constructor(gameInfo: GameInfo, makeTurn: (figure: Figure, cell: Cell) => any, receiveMessage: any) {
     this.GameInfo = gameInfo;
     this.makeTurn = makeTurn;
+    this.waitForMessages = receiveMessage;
     this.Letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   }
 
@@ -256,6 +258,10 @@ export class Game {
     let possibleMoves: Cell[] = [];
     let figureSelected: any = null;
     let deadFigures: Figure[] = []; 
+
+    this.waitForMessages((data: any) => {
+      console.log(data);
+    })
 
     this.GameInfo.boardData.dom.onclick = (e: any) => {
       let target = e.target.className;

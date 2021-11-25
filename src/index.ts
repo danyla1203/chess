@@ -9,7 +9,12 @@ async function start(link: string) {
     const payload = { type: 'turn', figure: figure, cell: cell };
     ws.send(JSON.stringify(payload));
   }
-  let gameObj = new Game(GameInfo, makeTurn);
+  function receiveMessage(callback: (data: any) => any) {
+    ws.onmessage = (message: any) => {
+      callback(JSON.parse(message.data));
+    }
+  }
+  let gameObj = new Game(GameInfo, makeTurn, receiveMessage);
   gameObj.start();
 }
 
