@@ -1,11 +1,17 @@
+import { ReceiveMessageHandlers } from ".";
 import { GameInfo, Cell, Figure } from "./initGame";
 
 export class Game {
   GameInfo: GameInfo;
   Letters: string[];
   makeTurn: (figure: Figure, cell: Cell) => any;
-  waitForMessages: (callback: any) => void;
-  constructor(gameInfo: GameInfo, makeTurn: (figure: Figure, cell: Cell) => any, receiveMessage: any) {
+  waitForMessages: (callbacks: ReceiveMessageHandlers) => void
+
+  constructor(
+    gameInfo: GameInfo, 
+    makeTurn: (figure: Figure, cell: Cell) => any, 
+    receiveMessage: (callbacks: ReceiveMessageHandlers) => void
+  ) {
     this.GameInfo = gameInfo;
     this.makeTurn = makeTurn;
     this.waitForMessages = receiveMessage;
@@ -253,15 +259,23 @@ export class Game {
     });
   }
 
+  private onInitGame(data: any) {
+    
+  }
+  private onBoardUpdate(data: any) {
+
+  }
+
   start() {
     let isPlayerTurn = true;
     let possibleMoves: Cell[] = [];
     let figureSelected: any = null;
     let deadFigures: Figure[] = []; 
 
-    this.waitForMessages((data: any) => {
-      console.log(data);
-    })
+    this.waitForMessages({
+      initGame: this.onInitGame.bind(this),
+      onBoardUpdate: this.onBoardUpdate.bind(this)
+    });
 
     this.GameInfo.boardData.dom.onclick = (e: any) => {
       let target = e.target.className;

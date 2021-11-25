@@ -1,6 +1,17 @@
 import { initGame, GameInfo, Figure, Cell } from './initGame';
 import { Game } from './gameProcess';
 
+export type Response = {
+  type: string;
+  payload: any;
+}
+
+export type Callback = (data: any) => void;
+export type ReceiveMessageHandlers = {
+  initGame: Callback;
+  onBoardUpdate: Callback;
+}
+
 async function start(link: string) {
   const Board = document.querySelector<HTMLDivElement>('.board');
   const ws = new WebSocket(`ws://localhost:8081/${link}`, 'echo-protocol');
@@ -9,9 +20,15 @@ async function start(link: string) {
     const payload = { type: 'turn', figure: figure, cell: cell };
     ws.send(JSON.stringify(payload));
   }
-  function receiveMessage(callback: (data: any) => any) {
+  function receiveMessage(callbacks: ReceiveMessageHandlers) {
     ws.onmessage = (message: any) => {
-      callback(JSON.parse(message.data));
+      const res: Response = JSON.parse(message.data);
+      switch(res.type) {
+        case 'INIT_GAME':
+          callbacks.initGame(res.payload);
+        case 'UPDATE_STATE':
+          callbacks.onBoardUpdate(res.payload)
+      } 
     }
   }
   let gameObj = new Game(GameInfo, makeTurn, receiveMessage);
