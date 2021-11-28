@@ -1,38 +1,22 @@
-import { initGame, GameInfo, Figure, Cell } from './initGame';
-import { Game } from './gameProcess';
-
-export type Response = {
-  type: string;
-  payload: any;
-}
-
-export type Callback = (data: any) => void;
-export type ReceiveMessageHandlers = {
-  initGame: Callback;
-  onBoardUpdate: Callback;
-}
+import { initGame, ClientGameData } from './initGame';
+import { WsHandler } from './game/WsHandler';
+import { DOMController } from './game/DOMController';
+import { GameProccess } from './game/GameProccess';
+import { GameRender } from './game/GameRender';
 
 async function start(link: string) {
   const Board = document.querySelector<HTMLDivElement>('.board');
+  const Figures = document.querySelector<HTMLDivElement>('.figures');
   const ws = new WebSocket(`ws://localhost:8081/${link}`, 'echo-protocol');
-  const GameInfo: GameInfo = await initGame(Board, ws);
-  function makeTurn(figure: Figure, cell: Cell) {
-    const payload = { type: 'turn', figure: figure, cell: cell };
-    ws.send(JSON.stringify(payload));
-  }
-  function receiveMessage(callbacks: ReceiveMessageHandlers) {
-    ws.onmessage = (message: any) => {
-      const res: Response = JSON.parse(message.data);
-      switch(res.type) {
-        case 'INIT_GAME':
-          callbacks.initGame(res.payload);
-        case 'UPDATE_STATE':
-          callbacks.onBoardUpdate(res.payload)
-      } 
-    }
-  }
-  let gameObj = new Game(GameInfo, makeTurn, receiveMessage);
-  gameObj.start();
+  const GameInfo: ClientGameData = await initGame(Board, Figures, ws);
+
+  const render = new GameRender(GameInfo);
+  const proccess = new GameProccess(render);
+  const wsController = new WsHandler(ws, proccess);
+  const domController = new DOMController(Board, wsController.send.bind(wsController), proccess);
+
+  wsController.handle();
+  domController.handle();
 }
 
 document.querySelector<HTMLButtonElement>('.game-start-btn').onclick = (e) => {

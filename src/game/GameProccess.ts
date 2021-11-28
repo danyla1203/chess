@@ -1,40 +1,39 @@
-import { ReceiveMessageHandlers } from ".";
-import { GameInfo, Cell, Figure } from "./initGame";
 
-export class Game {
-  GameInfo: GameInfo;
-  Letters: string[];
-  makeTurn: (figure: Figure, cell: Cell) => any;
-  waitForMessages: (callbacks: ReceiveMessageHandlers) => void
+import { Board, Figure, Cell, Player, White, Black } from "./sharedTypes";
+export interface GameRenderI {
+  setFiguresOnBoard(white: White, black: Black): void;
+  renderPossibleMoves(moves: Cell[]): void;
+  removePossibleMoves(moves: Cell[]): void
+  moveFigure(playingSide: string, figure: Figure, newCell: Cell): void;
+  findCellByCoord(x: number, y: number): Cell;
+}
+export interface GameProccessI {
+  updateBoard(newBoard: Board): void;
+  moveFigure(figure: Figure, cell: Cell): string;
+  possibleMoves(figure: Figure, cell: Cell): void;
+  findCell(x: number, y: number): Cell;
+  set sideToPlay(side: Player)
+}
 
-  constructor(
-    gameInfo: GameInfo, 
-    makeTurn: (figure: Figure, cell: Cell) => any, 
-    receiveMessage: (callbacks: ReceiveMessageHandlers) => void
-  ) {
-    this.GameInfo = gameInfo;
-    this.makeTurn = makeTurn;
-    this.waitForMessages = receiveMessage;
+export class GameProccess implements GameProccessI{
+  private Render: GameRenderI;
+  private Letters: string[]
+  
+  private Board: Board;
+  private playerToTurn: Player;
+  private playingSide: Player;
+  private moves: Cell[];
+
+  set sideToPlay(side: Player) {
+    this.playingSide = side;
+  }
+
+  constructor(render: GameRenderI) {
+    this.Render = render;
+    this.playerToTurn = 'w';
+    this.moves = [];
     this.Letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   }
-
-  private isEnemyInCell(cell: Cell): boolean {
-    for (let figure in this.GameInfo.oponentFigures) {
-      if (this.GameInfo.oponentFigures[figure] === cell) return true;
-    }
-  }
-
-  private checkIsCellEmpty(cell: string): boolean {
-    if (parseInt(cell[1], 10) > 8) return false;
-    for (let figure in this.GameInfo.figureCels) {
-      if (this.GameInfo.figureCels[figure] === cell) return false;
-    }
-    for (let figure in this.GameInfo.oponentFigures) {
-      if (this.GameInfo.oponentFigures[figure] === cell) return false;
-    }
-    return true;
-  }
-
 
   private findNextLetter(letter: string): string[] {
     let result = [];
@@ -50,7 +49,6 @@ export class Game {
     }
     return result;
   }
-
   private pawnMove(currentCell: Cell): Cell[] {
     let [ letter, number ] = [currentCell[0], currentCell[1]];
     let num = parseInt(number);
@@ -76,7 +74,6 @@ export class Game {
     let nextLetters = this.findNextLetter(letter);
     let nextLetterRight = this.findNextLetter(nextLetters[1])[1];
     let nextLetterLeft = this.findNextLetter(nextLetters[0])[0];
-    console.log(nextLetters, 'nextLeeter[1]');
     nextLetterLeft = nextLetterLeft == letter ? null : nextLetterLeft;
 
     let cells: Cell[] = [
@@ -103,7 +100,7 @@ export class Game {
     let possibleMoves: string[] = [];
 
     for (let i = num + 1; i < 9; i++) {
-      console.log(letter, i);
+      console.log('first');
       if (this.isEnemyInCell(`${letter}${i}`)) {
         possibleMoves.push(`${letter}${i}`);
         break;
@@ -151,7 +148,6 @@ export class Game {
       } else if (!this.checkIsCellEmpty(cell)) break;
       else possibleMoves.push(cell);
     }
-    console.log(possibleMoves);
     for (let i = letterIndex - 1, nextNum = num - 1; i >= 0; i--, nextNum--) {
       if (nextNum <= 0) break;
       let cell = `${this.Letters[i]}${nextNum}`;
@@ -194,118 +190,69 @@ export class Game {
     return [];
   }
 
-  private renderPossibleMoves(moves: Cell[]) {
-    let divs = moves.map((cell) => {
-      let [letter, number] = [cell[0], cell[1]];
-      let div = document.createElement('div');
-      div.style.backgroundColor = 'gray';
-      div.style.width = '75px';
-      div.style.height = '75px';
-      div.style.position = 'absolute';
-      div.className = `possible-move-${cell}`
-      div.style.left = this.GameInfo.letterCoords[letter] + 'px';
-      div.style.top = this.GameInfo.numberCoords[number] + 'px';
-      document.querySelector('.board').appendChild(div);
-      return div;
-    });
-    return divs;
-  }
-  private findCellByCoord(x: number, y: number): string {
-    let letter;
-    for (let symb in this.GameInfo.letterCoords) {
-      let symbCoord = this.GameInfo.letterCoords[symb];
-      if (x > symbCoord && x < symbCoord + 75) {
-        letter = symb;
-      }
+  private checkIsCellEmpty(cell: string): boolean {
+    if (parseInt(cell[1], 10) > 8) return false;
+    for (let figure in this.Board.white) {
+      console.log(this.Board.white[figure], figure, cell);
+      if (this.Board.white[figure] === cell) return false;
     }
-    let number;
-    for (let num in this.GameInfo.numberCoords) {
-      let numCoord = this.GameInfo.numberCoords[num];
-      if (y > numCoord && y < numCoord + 75) {
-        number = num;
-      }
+    for (let figure in this.Board.black) {
+      if (this.Board.black[figure] === cell) return false;
     }
-    return `${letter}${number}`;
+    return true;
   }
-
-  private moveFigure(figure: Figure, newCell: Cell, possibleMoves: Cell[]) {
-    let figureDom = document.querySelector<HTMLDivElement>(`.${figure}-${this.GameInfo.playingSide}`);
-    let [newLet, newNum] = [newCell[0], newCell[1]];
-    figureDom.style.top = this.GameInfo.numberCoords[newNum] + 'px';
-    figureDom.style.left = this.GameInfo.letterCoords[newLet] + 'px';
-  }
-
-  private isPlayingFigure(figure: Figure): boolean {
-    let reg = new RegExp(`-${this.GameInfo.playingSide}`);
-    return reg.test(figure);
-  }
-
-  private strikeFigure(cell: Cell) {
-    let oponent = this.GameInfo.playingSide === 'w' ? 'b' : 'w';
-    for (let figure in this.GameInfo.oponentFigures) {
-      if (this.GameInfo.oponentFigures[figure] == cell) {
-        let figures = document.querySelector<HTMLDivElement>('.figures');
-        figures.removeChild(document.querySelector(`.${figure}-${oponent}`));
-        delete this.GameInfo.oponentFigures[figure];
-        return figure;
+  private isEnemyInCell(cell: Cell): boolean {
+    if (this.playingSide == 'w') {
+      for (let figure in this.Board.black) {
+        if (this.Board.black[figure] === cell) return true;
+      }
+    } else {
+      for (let figure in this.Board.white) {
+        if (this.Board.white[figure] === cell) return true;
       }
     }
   }
 
-  private removePossibleMoves(moves: Cell[]): void {
-    let board = this.GameInfo.boardData.dom;
-    moves.map((cell) => {
-      board.removeChild(board.querySelector(`.possible-move-${cell}`));
-    });
+  private canMove(moves: Cell[], cell: Cell) {
+    for (let i = 0; i < moves.length; i++) {
+      if (moves[i] == cell) return true;
+    }
+    return false;
+  }
+  private verifyUserSelect(figure: Figure, cell: Cell): boolean {
+    if (!figure || !cell) return false;
+    if (cell.length !== 2) return false;
+    if (figure.length == 0) return false;
+    let regExp = new RegExp(`^.+-${this.playingSide}$`);
+    if (!regExp.test(figure)) return false;
+    return true;
+  }
+  public updateBoard(newBoard: Board) {
+    this.Board = newBoard;
+    this.Render.setFiguresOnBoard(newBoard.white, newBoard.black);
   }
 
-  private onInitGame(data: any) {
-    
-  }
-  private onBoardUpdate(data: any) {
 
-  }
-
-  start() {
-    let isPlayerTurn = true;
-    let possibleMoves: Cell[] = [];
-    let figureSelected: any = null;
-    let deadFigures: Figure[] = []; 
-
-    this.waitForMessages({
-      initGame: this.onInitGame.bind(this),
-      onBoardUpdate: this.onBoardUpdate.bind(this)
-    });
-
-    this.GameInfo.boardData.dom.onclick = (e: any) => {
-      let target = e.target.className;
-      let newFigure = target == "board" || /possible-move/.test(target) ? null : target.replace(/-[w,b]/, '');
-      if ((isPlayerTurn && !figureSelected) || newFigure && newFigure !== figureSelected.figure) {
-        this.removePossibleMoves(possibleMoves);
-        let figure: Figure = target;
-        if (this.isPlayingFigure(figure)) {
-          figure = figure.replace(/-[w,b]/, '');
-        } else return;
-        let currentCell: Cell = this.GameInfo.figureCels[figure];
-        possibleMoves = this.createPossibleMoves(figure, currentCell);
-        this.renderPossibleMoves(possibleMoves);
-        figureSelected = { cell: currentCell, figure: figure };
-      } else if (isPlayerTurn && figureSelected) {
-        let clickX: number = e.clientX - this.GameInfo.boardData.coords.x;
-        let clickY: number = e.clientY - this.GameInfo.boardData.coords.y;
-        let moveTo: Cell = this.findCellByCoord(clickX, clickY);
-        if (possibleMoves.find((move) => move === moveTo)) {
-          this.moveFigure(figureSelected.figure, moveTo, possibleMoves);
-          this.makeTurn(figureSelected.figure, moveTo);
-          this.GameInfo.figureCels[figureSelected.figure] = moveTo;
-          let striked = this.strikeFigure(moveTo);
-          striked ? deadFigures.push(striked) : null;
-          figureSelected = null;
-          //isPlayerTurn = false;
-          this.removePossibleMoves(possibleMoves);
-          possibleMoves = [];
-        }
-      }
+  public moveFigure(figure: Figure, cell: Cell): string {
+    if (this.verifyUserSelect(figure, cell) && this.canMove(this.moves, cell)) {
+      this.Render.moveFigure(this.playingSide, figure, cell);
+      this.Render.removePossibleMoves(this.moves);
+      this.Board.white[figure.replace(/-[w,b]/, '')] = cell;
+      this.moves = [];
+      return 'ok';
+    } else {
+      return 'err';
     }
   }
+  public possibleMoves(figure: Figure, cell: Cell): void {
+    if (this.verifyUserSelect(figure, cell)) {
+      this.Render.removePossibleMoves(this.moves);
+      this.moves = this.createPossibleMoves(figure, cell)
+      this.Render.renderPossibleMoves(this.moves);
+    }
+  }
+  public findCell(x: number, y: number) {
+    return this.Render.findCellByCoord(x, y);
+  }
+  
 }
