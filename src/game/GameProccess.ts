@@ -53,12 +53,18 @@ export class GameProccess implements GameProccessI{
     let [ letter, number ] = [currentCell[0], currentCell[1]];
     let num = parseInt(number);
     let possibleMoves: string[] = [];
-    if (this.checkIsCellEmpty(`${letter}${num + 1}`)) {
-      possibleMoves.push(`${letter}${num + 1}`);
+    let sideToMove = 0;
+    if (this.playingSide == 'w') {
+      sideToMove = 1;
+    } else {
+      sideToMove = -1;
     }
+    if (this.checkIsCellEmpty(`${letter}${num + sideToMove}}`)) {
+      possibleMoves.push(`${letter}${num + sideToMove}`);
+    } 
     let nextLetters = this.findNextLetter(letter);
-    nextLetters[0] = `${nextLetters[0]}${num + 1}`;
-    nextLetters[1] = `${nextLetters[1]}${num + 1}`;
+    nextLetters[0] = `${nextLetters[0]}${num + sideToMove}`;
+    nextLetters[1] = `${nextLetters[1]}${num + sideToMove}`;
     if (this.isEnemyInCell(nextLetters[0])) {
       possibleMoves.push(nextLetters[0]);
     }
