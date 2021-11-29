@@ -29,9 +29,11 @@ export class DOMController implements ControllerI {
       if (this.selectedFigure && !isFigure) {
         console.log('move');
         let result = this.proccess.moveFigure(this.selectedFigure, cell);
-        result != 'err' ? this.selectedFigure = null : null;
+        if (result != 'err') {
+          this.selectedFigure = null;
+          this.send('turn', {cell: cell, figure: this.selectedFigure});
+        }
       } else if (isFigure && figure != this.selectedFigure) {
-        console.log('select');
         this.proccess.possibleMoves(figure, cell);
         this.selectedFigure = figure;
       }
