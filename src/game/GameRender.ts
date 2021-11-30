@@ -30,7 +30,9 @@ export class GameRender implements GameRenderI {
 
   private setFigure(side: string, figureName: string, x: number, y: number) {
     const figure = document.createElement('div');
-    figure.className = `${figureName}-${side}`;
+    figure.className = figureName;
+    figure.dataset.side = side;
+
     figure.style.top = y + 'px';
     figure.style.left = x + 'px';
     figure.innerText = figureName;

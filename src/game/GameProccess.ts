@@ -9,8 +9,8 @@ export interface GameRenderI {
 }
 export interface GameProccessI {
   updateBoard(newBoard: Board): void;
-  moveFigure(figure: Figure, cell: Cell): string;
-  possibleMoves(figure: Figure, cell: Cell): void;
+  moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string;
+  possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void;
   findCell(x: number, y: number): Cell;
   set sideToPlay(side: Player)
 }
@@ -20,7 +20,6 @@ export class GameProccess implements GameProccessI{
   private Letters: string[]
   
   private Board: Board;
-  private playerToTurn: Player;
   private playingSide: Player;
   private moves: Cell[];
 
@@ -30,7 +29,6 @@ export class GameProccess implements GameProccessI{
 
   constructor(render: GameRenderI) {
     this.Render = render;
-    this.playerToTurn = 'w';
     this.moves = [];
     this.Letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   }
@@ -106,7 +104,6 @@ export class GameProccess implements GameProccessI{
     let possibleMoves: string[] = [];
 
     for (let i = num + 1; i < 9; i++) {
-      console.log('first');
       if (this.isEnemyInCell(`${letter}${i}`)) {
         possibleMoves.push(`${letter}${i}`);
         break;
@@ -225,12 +222,12 @@ export class GameProccess implements GameProccessI{
     }
     return false;
   }
-  private verifyUserSelect(figure: Figure, cell: Cell): boolean {
+  private verifyUserSelect(figureSide: 'w'|'b', figure: Figure, cell: Cell): boolean {
     if (!figure || !cell) return false;
     if (cell.length !== 2) return false;
     if (figure.length == 0) return false;
-    let regExp = new RegExp(`^.+-${this.playingSide}$`);
-    if (!regExp.test(figure)) return false;
+    console.log(figureSide, this.playingSide);
+    if (figureSide != this.playingSide) return false;
     return true;
   }
   public updateBoard(newBoard: Board) {
@@ -239,10 +236,10 @@ export class GameProccess implements GameProccessI{
   }
 
 
-  public moveFigure(figure: Figure, cell: Cell): string {
-    if (this.verifyUserSelect(figure, cell) && this.canMove(this.moves, cell)) {
+  public moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string {
+    if (this.verifyUserSelect(figureSide, figure, cell) && this.canMove(this.moves, cell)) {
       this.Render.moveFigure(this.playingSide, figure, cell);
-      this.Board.white[figure.replace(/-[w,b]/, '')] = cell;
+      this.Board.white[figure] = cell;
       this.Render.removePossibleMoves(this.moves);
       this.moves = [];
       return 'ok';
@@ -250,8 +247,8 @@ export class GameProccess implements GameProccessI{
       return 'err';
     }
   }
-  public possibleMoves(figure: Figure, cell: Cell): void {
-    if (this.verifyUserSelect(figure, cell)) {
+  public possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void {
+    if (this.verifyUserSelect(figureSide, figure, cell)) {
       this.Render.removePossibleMoves(this.moves);
       this.moves = this.createPossibleMoves(figure, cell)
       this.Render.renderPossibleMoves(this.moves);
