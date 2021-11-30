@@ -1,6 +1,6 @@
-import { ClientGameData } from "../initGame";
-import { GameRenderI } from "./GameProccess";
-import { Board, Cell, Figure, Black, White } from "./sharedTypes";
+import { ClientGameData } from '../initGame';
+import { GameRenderI } from './GameProccess';
+import { Board, Cell, Figure, Black, White } from './sharedTypes';
 
 export class GameRender implements GameRenderI {
   renderData: ClientGameData;

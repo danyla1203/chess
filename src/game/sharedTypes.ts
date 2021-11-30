@@ -1,4 +1,4 @@
-import { MessageType } from "./WsHandler";
+import { MessageType } from './WsHandler';
 
 export interface ControllerI {
   handle(): void;

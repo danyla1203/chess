@@ -1,5 +1,5 @@
-import { GameProccessI } from "./GameProccess";
-import { WsHandlerI, Board } from "./sharedTypes";
+import { GameProccessI } from './GameProccess';
+import { WsHandlerI, Board } from './sharedTypes';
 
 type InitGame = {
   side: 'w'|'b';
@@ -49,5 +49,4 @@ export class WsHandler implements WsHandlerI {
       } 
     }
   }
-
 }

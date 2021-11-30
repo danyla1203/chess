@@ -1,5 +1,5 @@
 
-import { Board, Figure, Cell, Player, White, Black } from "./sharedTypes";
+import { Board, Figure, Cell, Player, White, Black } from './sharedTypes';
 export interface GameRenderI {
   setFiguresOnBoard(white: White, black: Black): void;
   renderPossibleMoves(moves: Cell[]): void;
@@ -261,5 +261,4 @@ export class GameProccess implements GameProccessI{
   public removePossibleMoves() {
     this.Render.removePossibleMoves();
   }
-  
 }

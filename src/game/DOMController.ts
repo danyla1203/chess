@@ -1,7 +1,7 @@
-import { Figure } from "../initGame";
-import { GameProccessI } from "./GameProccess";
-import { ControllerI } from "./sharedTypes";
-import { MessageType } from "./WsHandler";
+import { Figure } from '../initGame';
+import { GameProccessI } from './GameProccess';
+import { ControllerI } from './sharedTypes';
+import { MessageType } from './WsHandler';
 
 type Send = (type: MessageType, payload: any) => void;
 type SelectedFigure = {
