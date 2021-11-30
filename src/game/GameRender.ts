@@ -37,6 +37,7 @@ export class GameRender implements GameRenderI {
     this.renderData.figuresDom.appendChild(figure);
   }
   public setFiguresOnBoard(white: White, black: Black): void {
+    this.renderData.figuresDom.innerHTML = '';
     for (let figure in white) {
       let [letter, number] = [white[figure][0], white[figure][1]];
       this.setFigure('w', figure, this.renderData.letterCoords[letter], this.renderData.numberCoords[number]);
