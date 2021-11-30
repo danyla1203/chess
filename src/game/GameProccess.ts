@@ -59,7 +59,7 @@ export class GameProccess implements GameProccessI{
     } else {
       sideToMove = -1;
     }
-    if (this.checkIsCellEmpty(`${letter}${num + sideToMove}}`)) {
+    if (this.checkIsCellEmpty(`${letter}${num + sideToMove}`)) {
       possibleMoves.push(`${letter}${num + sideToMove}`);
     } 
     let nextLetters = this.findNextLetter(letter);
@@ -242,8 +242,8 @@ export class GameProccess implements GameProccessI{
   public moveFigure(figure: Figure, cell: Cell): string {
     if (this.verifyUserSelect(figure, cell) && this.canMove(this.moves, cell)) {
       this.Render.moveFigure(this.playingSide, figure, cell);
-      this.Render.removePossibleMoves(this.moves);
       this.Board.white[figure.replace(/-[w,b]/, '')] = cell;
+      this.Render.removePossibleMoves(this.moves);
       this.moves = [];
       return 'ok';
     } else {
