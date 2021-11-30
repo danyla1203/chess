@@ -49,11 +49,8 @@ export class GameRender implements GameRenderI {
       this.setFigure('b', figure, this.renderData.letterCoords[letter], this.renderData.numberCoords[number]);
     }
   }
-  public removePossibleMoves(moves: Cell[]): void {
-    let board = this.renderData.boardData.dom;
-    moves.map((cell) => {
-      board.removeChild(board.querySelector(`.possible-move-${cell}`));
-    });
+  public removePossibleMoves(): void {
+    document.querySelector<HTMLDivElement>('.moves').innerHTML = '';
   }
   public moveFigure(side: string, figure: Figure, cell: Cell) {
     let figureDom = document.querySelector<HTMLDivElement>(`.${figure}`);
@@ -62,6 +59,7 @@ export class GameRender implements GameRenderI {
     figureDom.style.left = this.renderData.letterCoords[newLet] + 'px';
   }
   public renderPossibleMoves(moves: Cell[]) {
+    let movesContainer = document.querySelector<HTMLDivElement>('.moves');
     let divs = moves.map((cell) => {
       let [letter, number] = [cell[0], cell[1]];
       let div = document.createElement('div');
@@ -72,7 +70,7 @@ export class GameRender implements GameRenderI {
       div.className = `possible-move-${cell}`
       div.style.left = this.renderData.letterCoords[letter] + 'px';
       div.style.top = this.renderData.numberCoords[number] + 'px';
-      this.renderData.boardData.dom.appendChild(div);
+      movesContainer.appendChild(div);
       return div;
     });
     return divs;

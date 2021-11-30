@@ -3,7 +3,7 @@ import { Board, Figure, Cell, Player, White, Black } from "./sharedTypes";
 export interface GameRenderI {
   setFiguresOnBoard(white: White, black: Black): void;
   renderPossibleMoves(moves: Cell[]): void;
-  removePossibleMoves(moves: Cell[]): void
+  removePossibleMoves(): void
   moveFigure(playingSide: string, figure: Figure, newCell: Cell): void;
   findCellByCoord(x: number, y: number): Cell;
 }
@@ -12,6 +12,7 @@ export interface GameProccessI {
   moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string;
   possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void;
   findCell(x: number, y: number): Cell;
+  removePossibleMoves(): void;
   set sideToPlay(side: Player)
 }
 
@@ -240,7 +241,7 @@ export class GameProccess implements GameProccessI{
     if (this.verifyUserSelect(figureSide, figure, cell) && this.canMove(this.moves, cell)) {
       this.Render.moveFigure(this.playingSide, figure, cell);
       this.Board.white[figure] = cell;
-      this.Render.removePossibleMoves(this.moves);
+      this.Render.removePossibleMoves();
       this.moves = [];
       return 'ok';
     } else {
@@ -249,13 +250,16 @@ export class GameProccess implements GameProccessI{
   }
   public possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void {
     if (this.verifyUserSelect(figureSide, figure, cell)) {
-      this.Render.removePossibleMoves(this.moves);
+      this.Render.removePossibleMoves();
       this.moves = this.createPossibleMoves(figure, cell)
       this.Render.renderPossibleMoves(this.moves);
     }
   }
   public findCell(x: number, y: number) {
     return this.Render.findCellByCoord(x, y);
+  }
+  public removePossibleMoves() {
+    this.Render.removePossibleMoves();
   }
   
 }

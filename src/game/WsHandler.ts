@@ -23,6 +23,7 @@ export class WsHandler implements WsHandlerI {
 
   private onBoardUpdate(board: Board) {
     this.proccess.updateBoard(board);
+    this.proccess.removePossibleMoves();
   }
   private initGame(initState: InitGame) {
     this.proccess.updateBoard(initState.board);
