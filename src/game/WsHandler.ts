@@ -26,8 +26,8 @@ export class WsHandler implements WsHandlerI {
     this.proccess.removePossibleMoves();
   }
   private initGame(initState: InitGame) {
-    this.proccess.updateBoard(initState.board);
     this.proccess.sideToPlay = initState.side;
+    this.proccess.updateBoard(initState.board);
   }
 
   public send(type: MessageType, payload: any) {
