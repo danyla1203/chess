@@ -26,7 +26,7 @@ export class DOMController implements ControllerI {
 
   public handle() {
     this.Board.onclick = (e: any) => {
-      let figure = e.target.classList[1];
+      let figure = e.target.classList[2];
       let side = e.target.dataset.side;
       let isFigure = this.checkIsFigure(e.target);
       let cell = this.proccess.findCell(e.clientX, e.clientY);
@@ -39,7 +39,7 @@ export class DOMController implements ControllerI {
         }
       }  
       if (isFigure && figure != this.selectedFigure) {
-        console.log('select');
+        console.log('select')
         this.proccess.possibleMoves(side, figure, cell);
         this.selectedFigure = { figure: figure, side: side };
       }
