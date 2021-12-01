@@ -7,9 +7,15 @@ export class GameRender implements GameRenderI {
   constructor(data: ClientGameData) {
     this.renderData = data;
   }
-  public findCellByCoord(x: number, y: number): Cell {
-    x -= this.renderData.boardData.coords.x;
-    y -= this.renderData.boardData.coords.y;
+  public findCellByCoord(side: 'w'|'b', x: number, y: number): Cell {
+    if (side == 'w') {
+      x -= this.renderData.boardData.coords.x;
+      y -= this.renderData.boardData.coords.y;
+    } else {
+      let board = this.renderData.boardData.dom.getBoundingClientRect();
+      y = (board.bottom - y);
+      x = (board.right - x);
+    }
     let letter;
     for (let symb in this.renderData.letterCoords) {
       let symbCoord = this.renderData.letterCoords[symb];
@@ -44,7 +50,7 @@ export class GameRender implements GameRenderI {
     figure.style.left = x + 'px';
     this.renderData.figuresDom.appendChild(figure);
   }
-  public setFiguresOnBoard(white: White, black: Black): void {
+  public setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void {
     this.renderData.figuresDom.innerHTML = '';
     for (let figure in white) {
       let [letter, number] = [white[figure][0], white[figure][1]];
@@ -53,6 +59,12 @@ export class GameRender implements GameRenderI {
     for (let figure in black) {
       let [letter, number] = [black[figure][0], black[figure][1]];
       this.setFigure('b', figure, this.renderData.letterCoords[letter], this.renderData.numberCoords[number]);
+    }
+    if (transform == 'b') {
+      this.renderData.boardData.dom.style.transform = 'rotate(180deg)';
+      document.querySelectorAll<HTMLDivElement>('.figures div').forEach((elem) => {
+        elem.style.transform = 'rotate(180deg)';
+      })
     }
   }
   public removePossibleMoves(): void {

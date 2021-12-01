@@ -1,11 +1,11 @@
 
 import { Board, Figure, Cell, Player, White, Black } from './sharedTypes';
 export interface GameRenderI {
-  setFiguresOnBoard(white: White, black: Black): void;
+  setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void;
   renderPossibleMoves(moves: Cell[]): void;
   removePossibleMoves(): void
   moveFigure(playingSide: string, figure: Figure, newCell: Cell): void;
-  findCellByCoord(x: number, y: number): Cell;
+  findCellByCoord(side: 'w'|'b', x: number, y: number): Cell;
 }
 export interface GameProccessI {
   updateBoard(newBoard: Board): void;
@@ -197,7 +197,6 @@ export class GameProccess implements GameProccessI{
   private checkIsCellEmpty(cell: string): boolean {
     if (parseInt(cell[1], 10) > 8) return false;
     for (let figure in this.Board.white) {
-      console.log(this.Board.white[figure], figure, cell);
       if (this.Board.white[figure] === cell) return false;
     }
     for (let figure in this.Board.black) {
@@ -233,7 +232,7 @@ export class GameProccess implements GameProccessI{
   }
   public updateBoard(newBoard: Board) {
     this.Board = newBoard;
-    this.Render.setFiguresOnBoard(newBoard.white, newBoard.black);
+    this.Render.setFiguresOnBoard(this.playingSide, newBoard.white, newBoard.black);
   }
 
 
@@ -256,7 +255,7 @@ export class GameProccess implements GameProccessI{
     }
   }
   public findCell(x: number, y: number) {
-    return this.Render.findCellByCoord(x, y);
+    return this.Render.findCellByCoord(this.playingSide, x, y);
   }
   public removePossibleMoves() {
     this.Render.removePossibleMoves();
