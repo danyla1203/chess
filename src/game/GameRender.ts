@@ -1,6 +1,6 @@
 import { ClientGameData } from '../initGame';
 import { GameRenderI } from './GameProccess';
-import { Board, Cell, Figure, Black, White } from './sharedTypes';
+import { Cell, Figure, Black, White } from './sharedTypes';
 
 export class GameRender implements GameRenderI {
   renderData: ClientGameData;
@@ -30,12 +30,17 @@ export class GameRender implements GameRenderI {
 
   private setFigure(side: string, figureName: string, x: number, y: number) {
     const figure = document.createElement('div');
-    figure.className = figureName;
+    if (/pawn./.test(figureName)) figure.classList.add('pawn');
+    if (/R/.test(figureName)) figure.classList.add('rock');
+    if (/K/.test(figureName)) figure.classList.add('knight');
+    if (/B/.test(figureName)) figure.classList.add('bishop');
+    if (/Q/.test(figureName)) figure.classList.add('queen');
+    if (/Kn/.test(figureName)) figure.classList.add('king');
+    figure.classList.add(figureName);
     figure.dataset.side = side;
-
+    
     figure.style.top = y + 'px';
     figure.style.left = x + 'px';
-    figure.innerText = figureName;
     this.renderData.figuresDom.appendChild(figure);
   }
   public setFiguresOnBoard(white: White, black: Black): void {

@@ -26,18 +26,20 @@ export class DOMController implements ControllerI {
 
   public handle() {
     this.Board.onclick = (e: any) => {
-      let figure = e.target.className;
+      let figure = e.target.classList[1];
       let side = e.target.dataset.side;
       let isFigure = this.checkIsFigure(e.target);
       let cell = this.proccess.findCell(e.clientX, e.clientY);
-      if (this.selectedFigure && !isFigure) {
+      if (this.selectedFigure && (!isFigure || side != this.selectedFigure.side)) {
         console.log('move');
         let result = this.proccess.moveFigure(this.selectedFigure.side, this.selectedFigure.figure, cell);
         if (result != 'err') {
           this.send('turn', {cell: cell, figure: this.selectedFigure.figure});
           this.selectedFigure = null;
         }
-      } else if (isFigure && figure != this.selectedFigure) {
+      }  
+      if (isFigure && figure != this.selectedFigure) {
+        console.log('select');
         this.proccess.possibleMoves(side, figure, cell);
         this.selectedFigure = { figure: figure, side: side };
       }
