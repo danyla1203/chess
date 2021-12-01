@@ -2,6 +2,10 @@ export type ClientGameData = {
   letterCoords: {[index: string]: number};
   numberCoords: {[index: string]: number};
   figuresDom: HTMLDivElement;
+  cellMetrics: {
+    width: number;
+    height: number;
+  }
   boardData: {
     dom: HTMLDivElement,
     coords: {x: number, y: number}
@@ -51,6 +55,10 @@ export async function initGame(Board: HTMLDivElement, FiguresDom: HTMLDivElement
       res({ 
         letterCoords: letterXCoords,
         numberCoords: numberYCoords,
+        cellMetrics: {
+          height: 75,
+          width: 75
+        },
         figuresDom: FiguresDom,
         boardData: {
           dom: Board,

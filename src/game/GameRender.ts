@@ -13,14 +13,14 @@ export class GameRender implements GameRenderI {
     let letter;
     for (let symb in this.renderData.letterCoords) {
       let symbCoord = this.renderData.letterCoords[symb];
-      if (x > symbCoord && x < symbCoord + 75) {
+      if (x > symbCoord && x < symbCoord + this.renderData.cellMetrics.width) {
         letter = symb;
       }
     }
     let number;
     for (let num in this.renderData.numberCoords) {
       let numCoord = this.renderData.numberCoords[num];
-      if (y > numCoord && y < numCoord + 75) {
+      if (y > numCoord && y < numCoord + this.renderData.cellMetrics.height) {
         number = num;
       }
     }
@@ -36,6 +36,7 @@ export class GameRender implements GameRenderI {
     if (/B/.test(figureName)) figure.classList.add('bishop');
     if (/Q/.test(figureName)) figure.classList.add('queen');
     if (/Kn/.test(figureName)) figure.classList.add('king');
+    figure.classList.add(side);
     figure.classList.add(figureName);
     figure.dataset.side = side;
     
