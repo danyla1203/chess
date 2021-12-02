@@ -1,5 +1,6 @@
+import { Figure } from '../initGame';
 import { GameProccessI } from './GameProccess';
-import { WsHandlerI, Board } from './sharedTypes';
+import { WsHandlerI, Board, Striked } from './sharedTypes';
 
 type InitGame = {
   side: 'w'|'b';
@@ -29,6 +30,9 @@ export class WsHandler implements WsHandlerI {
     this.proccess.sideToPlay = initState.side;
     this.proccess.updateBoard(initState.board);
   }
+  private strike(striked: Striked) {
+    this.proccess.showStriked(striked);
+  }
 
   public send(type: MessageType, payload: any) {
     this.conn.send(JSON.stringify({
@@ -45,6 +49,9 @@ export class WsHandler implements WsHandlerI {
           break;
         case 'UPDATE_STATE':
           this.onBoardUpdate(res.payload);
+          break;
+        case "STRIKE":
+          this.strike(res.payload);
           break;
       } 
     }

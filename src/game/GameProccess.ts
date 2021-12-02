@@ -1,11 +1,12 @@
 
-import { Board, Figure, Cell, Player, White, Black } from './sharedTypes';
+import { Board, Figure, Cell, Player, White, Black, Striked } from './sharedTypes';
 export interface GameRenderI {
   setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void;
   renderPossibleMoves(moves: Cell[]): void;
-  removePossibleMoves(): void
+  removePossibleMoves(): void;
   moveFigure(playingSide: string, figure: Figure, newCell: Cell): void;
   findCellByCoord(side: 'w'|'b', x: number, y: number): Cell;
+  setStrikedFigure(playindSide: 'w'|'b', color: 'w'|'b', figure: Figure): void
 }
 export interface GameProccessI {
   updateBoard(newBoard: Board): void;
@@ -13,7 +14,8 @@ export interface GameProccessI {
   possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void;
   findCell(x: number, y: number): Cell;
   removePossibleMoves(): void;
-  set sideToPlay(side: Player)
+  showStriked(striked: Striked): void;
+  set sideToPlay(side: Player);
 }
 
 export class GameProccess implements GameProccessI{
@@ -259,5 +261,8 @@ export class GameProccess implements GameProccessI{
   }
   public removePossibleMoves() {
     this.Render.removePossibleMoves();
+  }
+  public showStriked(striked: Striked) {
+    this.Render.setStrikedFigure(this.playingSide, striked.strikedSide, striked.figure);
   }
 }

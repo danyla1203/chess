@@ -93,4 +93,17 @@ export class GameRender implements GameRenderI {
     });
     return divs;
   }
+  public setStrikedFigure(playindSide: 'w'|'b', color: 'w'|'b', figure: Figure): void {
+    const strikedDiv = document.createElement('div');
+    strikedDiv.classList.add(figure.replace(/\d/, ''));
+    strikedDiv.classList.add('striked');
+    strikedDiv.classList.add(color);
+    playindSide == 'b' ?
+      strikedDiv.style.transform = 'rotate(180deg)': null;
+    if (color == 'w') {
+      document.querySelector<HTMLDivElement>('.striked .white').appendChild(strikedDiv);;
+    } else {
+      document.querySelector<HTMLDivElement>('.striked .black').appendChild(strikedDiv);
+    }
+  }
 }

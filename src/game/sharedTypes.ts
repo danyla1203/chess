@@ -19,3 +19,8 @@ export type Board = {
   white: White
   black: Black
 }
+
+export type Striked = {
+  strikedSide: 'w'|'b',
+  figure: Figure
+}
