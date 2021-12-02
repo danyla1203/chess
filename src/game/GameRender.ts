@@ -38,7 +38,7 @@ export class GameRender implements GameRenderI {
     const figure = document.createElement('div');
     if (/pawn./.test(figureName)) figure.classList.add('pawn');
     if (/R/.test(figureName)) figure.classList.add('rock');
-    if (/K/.test(figureName)) figure.classList.add('knight');
+    if (/K\d/.test(figureName)) figure.classList.add('knight');
     if (/B/.test(figureName)) figure.classList.add('bishop');
     if (/Q/.test(figureName)) figure.classList.add('queen');
     if (/Kn/.test(figureName)) figure.classList.add('king');
