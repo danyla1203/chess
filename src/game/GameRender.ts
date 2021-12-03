@@ -64,7 +64,16 @@ export class GameRender implements GameRenderI {
       this.renderData.boardData.dom.style.transform = 'rotate(180deg)';
       document.querySelectorAll<HTMLDivElement>('.figures div').forEach((elem) => {
         elem.style.transform = 'rotate(180deg)';
-      })
+      });
+      document.querySelectorAll<HTMLDivElement>('.striked .side div').forEach((elem) => {
+        elem.style.transform = 'rotate(180deg)';
+      });
+      const blSide = document.querySelector<HTMLDivElement>('.striked .black');
+      const whSide = document.querySelector<HTMLDivElement>('.striked .white');
+      blSide.style.top = '550px';
+      blSide.style.right = '650px';
+      whSide.style.left = '-70px';
+
     }
   }
   public removePossibleMoves(): void {
