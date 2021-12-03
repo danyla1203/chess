@@ -1,13 +1,13 @@
 export type ClientGameData = {
-  letterCoords: {[index: string]: number};
-  numberCoords: {[index: string]: number};
-  figuresDom: HTMLDivElement;
+  letterCoords: {[index: string]: number}
+  numberCoords: {[index: string]: number}
+  figuresDom: HTMLDivElement
   cellMetrics: {
-    width: number;
-    height: number;
+    width: number
+    height: number
   }
   boardData: {
-    dom: HTMLDivElement,
+    dom: HTMLDivElement
     coords: {x: number, y: number}
   }
 }
@@ -46,7 +46,7 @@ function fillCellsCoords(): void {
   }
 }
 
-export async function initGame(Board: HTMLDivElement, FiguresDom: HTMLDivElement, ws: WebSocket): Promise<ClientGameData> {
+export async function initGame(Board: HTMLDivElement, FiguresDom: HTMLDivElement, StrikedDom: HTMLDivElement, ws: WebSocket): Promise<ClientGameData> {
   return new Promise((res, rej) => {
     ws.onopen = (event: any) => {
       fillCellsCoords();

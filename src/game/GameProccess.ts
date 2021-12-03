@@ -1,26 +1,26 @@
 
 import { Board, Figure, Cell, Player, White, Black, Striked } from './sharedTypes';
 export interface GameRenderI {
-  setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void;
-  renderPossibleMoves(moves: Cell[]): void;
-  removePossibleMoves(): void;
-  moveFigure(playingSide: string, figure: Figure, newCell: Cell): void;
-  findCellByCoord(side: 'w'|'b', x: number, y: number): Cell;
+  setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void
+  renderPossibleMoves(moves: Cell[]): void
+  removePossibleMoves(): void
+  moveFigure(playingSide: string, figure: Figure, newCell: Cell): void
+  findCellByCoord(side: 'w'|'b', x: number, y: number): Cell
   setStrikedFigure(playindSide: 'w'|'b', color: 'w'|'b', figure: Figure): void
 }
 export interface GameProccessI {
-  updateBoard(newBoard: Board): void;
-  moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string;
-  possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void;
-  findCell(x: number, y: number): Cell;
-  removePossibleMoves(): void;
-  showStriked(striked: Striked): void;
-  set sideToPlay(side: Player);
+  updateBoard(newBoard: Board): void
+  moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string
+  possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void
+  findCell(x: number, y: number): Cell
+  removePossibleMoves(): void
+  showStriked(striked: Striked): void
+  set sideToPlay(side: Player)
 }
 
 export class GameProccess implements GameProccessI{
   private Render: GameRenderI;
-  private Letters: string[]
+  private Letters: string[];
   
   private Board: Board;
   private playingSide: Player;

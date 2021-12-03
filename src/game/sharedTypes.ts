@@ -1,10 +1,10 @@
 import { MessageType } from './WsHandler';
 
 export interface ControllerI {
-  handle(): void;
+  handle(): void
 }
 export type WsHandlerI = ControllerI & {
-  send(type: MessageType, payload: any): void;
+  send(type: MessageType, payload: any): void
 }
 
 export type Figure = string;
@@ -21,6 +21,6 @@ export type Board = {
 }
 
 export type Striked = {
-  strikedSide: 'w'|'b',
+  strikedSide: 'w'|'b'
   figure: Figure
 }

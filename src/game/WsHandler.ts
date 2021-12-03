@@ -3,16 +3,16 @@ import { GameProccessI } from './GameProccess';
 import { WsHandlerI, Board, Striked } from './sharedTypes';
 
 type InitGame = {
-  side: 'w'|'b';
-  board: Board;
+  side: 'w'|'b'
+  board: Board
 }
 
 export type Response = {
-  type: string;
-  payload: any;
+  type: string
+  payload: any
 }
 export type Callback = (data: any) => void;
-export type MessageType = 'turn';  
+export type MessageType = 'turn'; 
 
 export class WsHandler implements WsHandlerI {
   proccess: GameProccessI;

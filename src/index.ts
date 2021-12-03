@@ -7,8 +7,9 @@ import { GameRender } from './game/GameRender';
 async function start(link: string) {
   const Board = document.querySelector<HTMLDivElement>('.board');
   const Figures = document.querySelector<HTMLDivElement>('.figures');
+  const StrikedDiv = document.querySelector<HTMLDivElement>('.striked');
   const ws = new WebSocket(`ws://localhost:8081/${link}`, 'echo-protocol');
-  const GameInfo: ClientGameData = await initGame(Board, Figures, ws);
+  const GameInfo: ClientGameData = await initGame(Board, Figures, StrikedDiv, ws);
 
   const render = new GameRender(GameInfo);
   const proccess = new GameProccess(render);

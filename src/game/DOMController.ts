@@ -5,12 +5,12 @@ import { MessageType } from './WsHandler';
 
 type Send = (type: MessageType, payload: any) => void;
 type SelectedFigure = {
-  side: 'w'|'b';
+  side: 'w'|'b'
   figure: Figure
 }
 export class DOMController implements ControllerI {
   Board: HTMLDivElement;
-  proccess: GameProccessI
+  proccess: GameProccessI;
   send: Send;
   private selectedFigure?: SelectedFigure;
   
@@ -39,7 +39,7 @@ export class DOMController implements ControllerI {
         }
       }  
       if (isFigure && figure != this.selectedFigure) {
-        console.log('select')
+        console.log('select');
         this.proccess.possibleMoves(side, figure, cell);
         this.selectedFigure = { figure: figure, side: side };
       }
