@@ -73,7 +73,6 @@ export class GameRender implements GameRenderI {
       blSide.style.top = '550px';
       blSide.style.right = '650px';
       whSide.style.left = '-70px';
-
     }
   }
   public removePossibleMoves(): void {

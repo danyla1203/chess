@@ -48,7 +48,7 @@ function fillCellsCoords(): void {
 
 export async function initGame(Board: HTMLDivElement, FiguresDom: HTMLDivElement, StrikedDom: HTMLDivElement, ws: WebSocket): Promise<ClientGameData> {
   return new Promise((res, rej) => {
-    ws.onopen = (event: any) => {
+    ws.onopen = () => {
       fillCellsCoords();
       console.log('ok');
       let { left, top } = Board.getBoundingClientRect();
