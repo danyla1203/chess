@@ -33,7 +33,6 @@ export class GameRender implements GameRenderI {
     return `${letter}${number}`;
   }
 
-
   private setFigure(side: string, figureName: string, x: number, y: number) {
     const figure = document.createElement('div');
     if (/pawn./.test(figureName)) figure.classList.add('pawn');
@@ -113,5 +112,9 @@ export class GameRender implements GameRenderI {
     } else {
       document.querySelector<HTMLDivElement>('.striked .black').appendChild(strikedDiv);
     }
+  }
+  public removeFigure(side: 'w' | 'b', figure: string): void {
+    let elem = document.querySelector(`.figures div.${figure}[data-side*="${side}"]`);
+    elem ? elem.remove() : null;
   }
 }

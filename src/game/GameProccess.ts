@@ -7,6 +7,7 @@ export interface GameRenderI {
   moveFigure(playingSide: string, figure: Figure, newCell: Cell): void
   findCellByCoord(side: 'w'|'b', x: number, y: number): Cell
   setStrikedFigure(playindSide: 'w'|'b', color: 'w'|'b', figure: Figure): void
+  removeFigure(side: 'w'|'b', figure: Figure): void;
 }
 export interface GameProccessI {
   updateBoard(newBoard: Board): void
@@ -15,6 +16,7 @@ export interface GameProccessI {
   findCell(x: number, y: number): Cell
   removePossibleMoves(): void
   showStriked(striked: Striked): void
+  removeFigure(striked: Striked): void
   set sideToPlay(side: Player)
 }
 
@@ -263,5 +265,14 @@ export class GameProccess implements GameProccessI{
   }
   public showStriked(striked: Striked) {
     this.Render.setStrikedFigure(this.playingSide, striked.strikedSide, striked.figure);
+  }
+  public removeFigure(striked: Striked) {
+    if (striked.strikedSide == 'w') {
+      this.Render.removeFigure('w', striked.figure);
+      delete this.Board.white[striked.figure];
+    } else {
+      this.Render.removeFigure('b', striked.figure);
+      delete this.Board.black[striked.figure];
+    }
   }
 }

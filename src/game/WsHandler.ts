@@ -31,6 +31,7 @@ export class WsHandler implements WsHandlerI {
     this.proccess.updateBoard(initState.board);
   }
   private strike(striked: Striked) {
+    this.proccess.removeFigure(striked);
     this.proccess.showStriked(striked);
   }
 
