@@ -241,8 +241,6 @@ export class GameProccess implements GameProccessI{
 
   public moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string {
     if (this.verifyUserSelect(figureSide, figure, cell) && this.canMove(this.moves, cell)) {
-      this.Render.moveFigure(this.playingSide, figure, cell);
-      this.Board.white[figure] = cell;
       this.Render.removePossibleMoves();
       this.moves = [];
       return 'ok';
