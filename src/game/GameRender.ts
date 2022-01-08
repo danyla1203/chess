@@ -33,7 +33,7 @@ export class GameRender implements GameRenderI {
     return `${letter}${number}`;
   }
 
-  private setFigure(side: string, figureName: string, x: number, y: number) {
+  private setFigure(side: string, figureName: string, x: number, y: number): void {
     const figure = document.createElement('div');
     if (/pawn./.test(figureName)) figure.classList.add('pawn');
     if (/R/.test(figureName)) figure.classList.add('rock');
@@ -77,15 +77,15 @@ export class GameRender implements GameRenderI {
   public removePossibleMoves(): void {
     document.querySelector<HTMLDivElement>('.moves').innerHTML = '';
   }
-  public moveFigure(side: string, figure: Figure, cell: Cell) {
+  public moveFigure(side: string, figure: Figure, cell: Cell): void {
     let figureDom = document.querySelector<HTMLDivElement>(`.${figure}`);
     let [newLet, newNum] = [cell[0], cell[1]];
     figureDom.style.top = this.renderData.numberCoords[newNum] + 'px';
     figureDom.style.left = this.renderData.letterCoords[newLet] + 'px';
   }
-  public renderPossibleMoves(moves: Cell[]) {
+  public renderPossibleMoves(moves: Cell[]): void {
     let movesContainer = document.querySelector<HTMLDivElement>('.moves');
-    let divs = moves.map((cell) => {
+    moves.map((cell) => {
       let [letter, number] = [cell[0], cell[1]];
       let div = document.createElement('div');
       div.style.backgroundColor = 'gray';
@@ -98,7 +98,6 @@ export class GameRender implements GameRenderI {
       movesContainer.appendChild(div);
       return div;
     });
-    return divs;
   }
   public setStrikedFigure(playindSide: 'w'|'b', color: 'w'|'b', figure: Figure): void {
     const strikedDiv = document.createElement('div');
@@ -116,5 +115,9 @@ export class GameRender implements GameRenderI {
   public removeFigure(side: 'w' | 'b', figure: string): void {
     let elem = document.querySelector(`.figures div.${figure}[data-side*="${side}"]`);
     elem ? elem.remove() : null;
+  }
+  public highlightFigure(side: 'w' | 'b', figure: string): void {
+    let elem = document.querySelector<HTMLDivElement>(`.figures .${figure}[data-side*=${side}]`);
+    elem.style.border = '2px solid red';
   }
 }

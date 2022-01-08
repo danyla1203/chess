@@ -1,6 +1,6 @@
 import { Figure } from '../initGame';
 import { GameProccessI } from './GameProccess';
-import { WsHandlerI, Board, Striked } from './sharedTypes';
+import { WsHandlerI, Board, Striked, ShahData } from './sharedTypes';
 
 type InitGame = {
   side: 'w'|'b'
@@ -22,26 +22,29 @@ export class WsHandler implements WsHandlerI {
     this.conn = conn;
   }
 
-  private onBoardUpdate(board: Board) {
+  private onBoardUpdate(board: Board): void {
     this.proccess.updateBoard(board);
     this.proccess.removePossibleMoves();
   }
-  private initGame(initState: InitGame) {
+  private initGame(initState: InitGame): void {
     this.proccess.sideToPlay = initState.side;
     this.proccess.updateBoard(initState.board);
   }
-  private strike(striked: Striked) {
+  private strike(striked: Striked): void {
     this.proccess.removeFigure(striked);
     this.proccess.showStriked(striked);
   }
+  private shah(shahData: ShahData): void {
+    this.proccess.highlightFigure(shahData);
+  }
 
-  public send(type: MessageType, payload: any) {
+  public send(type: MessageType, payload: any): void {
     this.conn.send(JSON.stringify({
       type: type,
       payload: payload
     }))
   }
-  public handle() {
+  public handle(): void {
     this.conn.onmessage = (message: any) => {
       const res: Response = JSON.parse(message.data);
       switch(res.type) {
@@ -53,6 +56,9 @@ export class WsHandler implements WsHandlerI {
           break;
         case "STRIKE":
           this.strike(res.payload);
+          break;
+        case 'SHAH':
+          this.shah(res.payload);
           break;
       } 
     }

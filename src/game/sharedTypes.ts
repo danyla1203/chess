@@ -24,3 +24,8 @@ export type Striked = {
   strikedSide: 'w'|'b'
   figure: Figure
 }
+
+export type ShahData = {
+  shachedSide: 'w'|'b',
+  byFigure: Figure
+}

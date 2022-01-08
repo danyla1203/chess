@@ -4,7 +4,7 @@ import { DOMController } from './game/DOMController';
 import { GameProccess } from './game/GameProccess';
 import { GameRender } from './game/GameRender';
 
-async function start(link: string) {
+async function start(link: string): Promise<void> {
   const Board = document.querySelector<HTMLDivElement>('.board');
   const Figures = document.querySelector<HTMLDivElement>('.figures');
   const StrikedDiv = document.querySelector<HTMLDivElement>('.striked');
@@ -20,7 +20,7 @@ async function start(link: string) {
   domController.handle();
 }
 
-document.querySelector<HTMLButtonElement>('.game-start-btn').onclick = (e) => {
+document.querySelector<HTMLButtonElement>('.game-start-btn').onclick = () => {
   let input = document.querySelector<HTMLInputElement>('.game-input');
   start(input.value);
 }

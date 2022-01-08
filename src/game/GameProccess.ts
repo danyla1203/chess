@@ -1,5 +1,5 @@
 
-import { Board, Figure, Cell, Player, White, Black, Striked } from './sharedTypes';
+import { Board, Figure, Cell, Player, White, Black, Striked, ShahData } from './sharedTypes';
 export interface GameRenderI {
   setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void
   renderPossibleMoves(moves: Cell[]): void
@@ -8,6 +8,7 @@ export interface GameRenderI {
   findCellByCoord(side: 'w'|'b', x: number, y: number): Cell
   setStrikedFigure(playindSide: 'w'|'b', color: 'w'|'b', figure: Figure): void
   removeFigure(side: 'w'|'b', figure: Figure): void;
+  highlightFigure(side: 'w'|'b', figure: Figure): void
 }
 export interface GameProccessI {
   updateBoard(newBoard: Board): void
@@ -17,6 +18,7 @@ export interface GameProccessI {
   removePossibleMoves(): void
   showStriked(striked: Striked): void
   removeFigure(striked: Striked): void
+  highlightFigure(shahData: ShahData): void
   set sideToPlay(side: Player)
 }
 
@@ -102,7 +104,6 @@ export class GameProccess implements GameProccessI{
     })
     return possibleMoves;
   }
-
   private rockMove(currentCell: Cell): string[] {
     let [ letter, number ] = [currentCell[0], currentCell[1]];
     let num = parseInt(number, 10);
@@ -220,7 +221,7 @@ export class GameProccess implements GameProccessI{
     }
   }
 
-  private canMove(moves: Cell[], cell: Cell) {
+  private canMove(moves: Cell[], cell: Cell): boolean {
     for (let i = 0; i < moves.length; i++) {
       if (moves[i] == cell) return true;
     }
@@ -234,7 +235,7 @@ export class GameProccess implements GameProccessI{
     if (figureSide != this.playingSide) return false;
     return true;
   }
-  public updateBoard(newBoard: Board) {
+  public updateBoard(newBoard: Board): void {
     this.Board = newBoard;
     this.Render.setFiguresOnBoard(this.playingSide, newBoard.white, newBoard.black);
   }
@@ -255,16 +256,16 @@ export class GameProccess implements GameProccessI{
       this.Render.renderPossibleMoves(this.moves);
     }
   }
-  public findCell(x: number, y: number) {
+  public findCell(x: number, y: number): Cell {
     return this.Render.findCellByCoord(this.playingSide, x, y);
   }
-  public removePossibleMoves() {
+  public removePossibleMoves(): void {
     this.Render.removePossibleMoves();
   }
-  public showStriked(striked: Striked) {
+  public showStriked(striked: Striked): void {
     this.Render.setStrikedFigure(this.playingSide, striked.strikedSide, striked.figure);
   }
-  public removeFigure(striked: Striked) {
+  public removeFigure(striked: Striked): void {
     if (striked.strikedSide == 'w') {
       this.Render.removeFigure('w', striked.figure);
       delete this.Board.white[striked.figure];
@@ -272,5 +273,9 @@ export class GameProccess implements GameProccessI{
       this.Render.removeFigure('b', striked.figure);
       delete this.Board.black[striked.figure];
     }
+  }
+  public highlightFigure(shahData: ShahData): void {
+    let side: 'w'|'b' = shahData.shachedSide == 'w' ? 'b':'w';
+    this.Render.highlightFigure(side, shahData.byFigure);
   }
 }
