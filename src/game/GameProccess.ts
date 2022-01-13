@@ -189,13 +189,49 @@ export class GameProccess implements GameProccessI{
   private queenMove(currentCell: Cell): Cell[] {
     return [...this.rockMove(currentCell), ...this.bishopMove(currentCell)];
   }
-
+  private getCellsAround(cell: Cell): Cell[] {
+    let [letter, number] = cell;
+    let [leftLetter, rightLetter] = this.findNextLetter(letter);
+    let nextNum = parseInt(number, 10) + 1;
+    let prevNum = parseInt(number, 10) - 1;
+    let result: Cell[] = [
+      `${letter}${nextNum}`,
+      `${letter}${prevNum}`,
+      `${rightLetter}${nextNum}`,
+      `${rightLetter}${prevNum}`,
+      `${leftLetter}${nextNum}`,
+      `${leftLetter}${prevNum}`,
+      `${leftLetter}${number}`,
+      `${rightLetter}${number}`
+    ];
+    for (let i = 0; i < result.length; i++) {
+      let [lett, num] = result[i];
+      if (parseInt(num) > 8 || parseInt(num) < 1 || result[i].length > 2) {
+        result.splice(i, 1);
+      }
+    }
+    return result;
+  }
+  private knMove(currentCell: Cell): Cell[] {
+    let cells = this.getCellsAround(currentCell);
+    console.log(cells);
+    for (let i = 0; i < cells.length; i++) {
+      if (!this.checkIsCellEmpty(cells[i])) {
+        console.log(cells[i]);
+        cells.splice(i, 1);
+        i--;
+      }
+    }
+    return cells;
+  }
   private createPossibleMoves(figure: Figure, currentCell: Cell): Cell[] {
     if (/pawn/.test(figure)) return this.pawnMove(currentCell);
     if (/R/.test(figure)) return this.rockMove(currentCell);
+    if (/Kn/.test(figure)) return this.knMove(currentCell);
     if (/K/.test(figure)) return this.knighMove(currentCell);
     if (/B/.test(figure)) return this.bishopMove(currentCell);
     if (/Q/.test(figure)) return this.queenMove(currentCell);
+
     return [];
   }
 
