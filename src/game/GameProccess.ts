@@ -216,7 +216,7 @@ export class GameProccess implements GameProccessI{
     let cells = this.getCellsAround(currentCell);
     console.log(cells);
     for (let i = 0; i < cells.length; i++) {
-      if (!this.checkIsCellEmpty(cells[i])) {
+      if (!this.checkIsCellEmpty(cells[i]) && !this.isEnemyInCell(cells[i])) {
         console.log(cells[i]);
         cells.splice(i, 1);
         i--;
