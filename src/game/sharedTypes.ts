@@ -29,3 +29,7 @@ export type ShahData = {
   shachedSide: 'w'|'b',
   byFigure: Figure
 }
+export type MateData = {
+  matedSide: 'w'|'b',
+  byFigure: Figure
+}

@@ -1,5 +1,5 @@
 
-import { Board, Figure, Cell, Player, White, Black, Striked, ShahData } from './sharedTypes';
+import { Board, Figure, Cell, Player, White, Black, Striked, ShahData, MateData } from './sharedTypes';
 export interface GameRenderI {
   setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void
   renderPossibleMoves(moves: Cell[]): void
@@ -19,6 +19,7 @@ export interface GameProccessI {
   showStriked(striked: Striked): void
   removeFigure(striked: Striked): void
   highlightFigure(shahData: ShahData): void
+  setMate(mate: MateData): void;
   set sideToPlay(side: Player)
 }
 
@@ -313,5 +314,8 @@ export class GameProccess implements GameProccessI{
   public highlightFigure(shahData: ShahData): void {
     let side: 'w'|'b' = shahData.shachedSide == 'w' ? 'b':'w';
     this.Render.highlightFigure(side, shahData.byFigure);
+  }
+  public setMate(mate: MateData): void {
+    alert('Game is finished');
   }
 }

@@ -1,12 +1,10 @@
-import { Figure } from '../initGame';
 import { GameProccessI } from './GameProccess';
-import { WsHandlerI, Board, Striked, ShahData } from './sharedTypes';
+import { WsHandlerI, Board, Striked, ShahData, MateData } from './sharedTypes';
 
 type InitGame = {
   side: 'w'|'b'
   board: Board
 }
-
 export type Response = {
   type: string
   payload: any
@@ -37,6 +35,9 @@ export class WsHandler implements WsHandlerI {
   private shah(shahData: ShahData): void {
     this.proccess.highlightFigure(shahData);
   }
+  private mate(mateData: MateData): void {
+    this.proccess.setMate(mateData);
+  }
 
   public send(type: MessageType, payload: any): void {
     this.conn.send(JSON.stringify({
@@ -59,6 +60,9 @@ export class WsHandler implements WsHandlerI {
           break;
         case 'SHAH':
           this.shah(res.payload);
+          break;
+        case 'MATE':
+          this.mate(res.payload);
           break;
       } 
     }
