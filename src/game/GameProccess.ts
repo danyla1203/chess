@@ -77,6 +77,11 @@ export class GameProccess implements GameProccessI{
     if (this.isEnemyInCell(nextLetters[1])) {
       possibleMoves.push(nextLetters[1]);
     }
+    if (this.playingSide == 'w' && num == 2) {
+      possibleMoves.push(`${letter}${num + 2}`);
+    } else if (this.playingSide == 'b' && num == 7) {
+      possibleMoves.push(`${letter}${num - 2}`);
+    }
     return possibleMoves;
   }
   private knighMove(currentCell: Cell): Cell[] {
