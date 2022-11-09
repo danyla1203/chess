@@ -52,11 +52,11 @@ export class GameRender implements GameRenderI {
   public setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void {
     this.renderData.figuresDom.innerHTML = '';
     for (let figure in white) {
-      let [letter, number] = [white[figure][0], white[figure][1]];
+      let [ letter, number ] = [ white[figure][0], white[figure][1] ];
       this.setFigure('w', figure, this.renderData.letterCoords[letter], this.renderData.numberCoords[number]);
     }
     for (let figure in black) {
-      let [letter, number] = [black[figure][0], black[figure][1]];
+      let [ letter, number ] = [ black[figure][0], black[figure][1] ];
       this.setFigure('b', figure, this.renderData.letterCoords[letter], this.renderData.numberCoords[number]);
     }
     if (transform == 'b') {
@@ -79,20 +79,20 @@ export class GameRender implements GameRenderI {
   }
   public moveFigure(side: string, figure: Figure, cell: Cell): void {
     let figureDom = document.querySelector<HTMLDivElement>(`.${figure}`);
-    let [newLet, newNum] = [cell[0], cell[1]];
+    let [ newLet, newNum ] = [ cell[0], cell[1] ];
     figureDom.style.top = this.renderData.numberCoords[newNum] + 'px';
     figureDom.style.left = this.renderData.letterCoords[newLet] + 'px';
   }
   public renderPossibleMoves(moves: Cell[]): void {
     let movesContainer = document.querySelector<HTMLDivElement>('.moves');
     moves.map((cell) => {
-      let [letter, number] = [cell[0], cell[1]];
+      let [ letter, number ] = [ cell[0], cell[1] ];
       let div = document.createElement('div');
       div.style.backgroundColor = 'gray';
       div.style.width = '75px';
       div.style.height = '75px';
       div.style.position = 'absolute';
-      div.className = `possible-move-${cell}`
+      div.className = `possible-move-${cell}`;
       div.style.left = this.renderData.letterCoords[letter] + 'px';
       div.style.top = this.renderData.numberCoords[number] + 'px';
       movesContainer.appendChild(div);

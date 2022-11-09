@@ -24,7 +24,7 @@ const letterXCoords: {[index: string]: number}= {
   'f': 0,
   'g': 0,
   'h': 0
-}
+};
 const numberYCoords: {[index: string]: number} = {
   '1': 0,
   '2': 0,
@@ -34,7 +34,7 @@ const numberYCoords: {[index: string]: number} = {
   '6': 0,
   '7': 0,
   '8': 0
-}
+};
 
 function fillCellsCoords(): void {
   for (let number in numberYCoords) {
@@ -46,25 +46,20 @@ function fillCellsCoords(): void {
   }
 }
 
-export async function initGame(Board: HTMLDivElement, FiguresDom: HTMLDivElement, StrikedDom: HTMLDivElement, ws: WebSocket): Promise<ClientGameData> {
-  return new Promise((res, rej) => {
-    ws.onopen = () => {
-      fillCellsCoords();
-      console.log('ok');
-      let { left, top } = Board.getBoundingClientRect();
-      res({ 
-        letterCoords: letterXCoords,
-        numberCoords: numberYCoords,
-        cellMetrics: {
-          height: 75,
-          width: 75
-        },
-        figuresDom: FiguresDom,
-        boardData: {
-          dom: Board,
-          coords: {x: left, y: top}
-        }
-      });
+export function initGame( Board: HTMLDivElement, FiguresDom: HTMLDivElement,): ClientGameData {
+  fillCellsCoords();
+  let { left, top } = Board.getBoundingClientRect();
+  return { 
+    letterCoords: letterXCoords,
+    numberCoords: numberYCoords,
+    cellMetrics: {
+      height: 75,
+      width: 75
+    },
+    figuresDom: FiguresDom,
+    boardData: {
+      dom: Board,
+      coords: { x: left, y: top }
     }
-  });
+  };
 }

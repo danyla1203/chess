@@ -11,6 +11,7 @@ export interface GameRenderI {
   highlightFigure(side: 'w'|'b', figure: Figure): void
 }
 export interface GameProccessI {
+  gameId: string,
   updateBoard(newBoard: Board): void
   moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string
   possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void
@@ -20,10 +21,11 @@ export interface GameProccessI {
   removeFigure(striked: Striked): void
   highlightFigure(shahData: ShahData): void
   setMate(mate: MateData): void;
-  set sideToPlay(side: Player)
+  set sideToPlay(side: Player);
 }
 
-export class GameProccess implements GameProccessI{
+export class GameProccess implements GameProccessI {
+  public gameId: string;
   private Render: GameRenderI;
   private Letters: string[];
   
@@ -38,7 +40,7 @@ export class GameProccess implements GameProccessI{
   constructor(render: GameRenderI) {
     this.Render = render;
     this.moves = [];
-    this.Letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    this.Letters = [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' ];
   }
 
   private findNextLetter(letter: string): string[] {
@@ -47,16 +49,16 @@ export class GameProccess implements GameProccessI{
       if (this.Letters[i] == letter) {
         if (this.Letters[i - 1]) {
           result.push(this.Letters[i - 1]);
-        } else { result.push(null) }
+        } else { result.push(null); }
         if (this.Letters[i + 1]) {
           result.push(this.Letters[i + 1]);
-        } else { result.push(null) }
+        } else { result.push(null); }
       }
     }
     return result;
   }
   private pawnMove(currentCell: Cell): Cell[] {
-    let [ letter, number ] = [currentCell[0], currentCell[1]];
+    let [ letter, number ] = [ currentCell[0], currentCell[1] ];
     let num = parseInt(number);
     let possibleMoves: string[] = [];
     let sideToMove = 0;
@@ -85,7 +87,7 @@ export class GameProccess implements GameProccessI{
     return possibleMoves;
   }
   private knighMove(currentCell: Cell): Cell[] {
-    let [ letter, number ] = [currentCell[0], currentCell[1]];
+    let [ letter, number ] = [ currentCell[0], currentCell[1] ];
     let num = parseInt(number, 10);
     let possibleMoves: string[] = [];
     let nextLetters = this.findNextLetter(letter);
@@ -107,11 +109,11 @@ export class GameProccess implements GameProccessI{
       if (cell.length != 2 || cell[1] == '0') return;
       if (this.isEnemyInCell(cell)) possibleMoves.push(cell);
       else if (this.checkIsCellEmpty(cell)) possibleMoves.push(cell);
-    })
+    });
     return possibleMoves;
   }
   private rockMove(currentCell: Cell): string[] {
-    let [ letter, number ] = [currentCell[0], currentCell[1]];
+    let [ letter, number ] = [ currentCell[0], currentCell[1] ];
     let num = parseInt(number, 10);
     let possibleMoves: string[] = [];
 
@@ -149,7 +151,7 @@ export class GameProccess implements GameProccessI{
     return possibleMoves;
   }
   private bishopMove(currentCell: Cell): Cell[] {
-    let [ letter, number ] = [currentCell[0], currentCell[1]];
+    let [ letter, number ] = [ currentCell[0], currentCell[1] ];
     let num = parseInt(number, 10);
     let letterIndex = this.Letters.findIndex((lett) => lett == letter);
     let possibleMoves: string[] = [];
@@ -193,11 +195,11 @@ export class GameProccess implements GameProccessI{
     return possibleMoves;
   }
   private queenMove(currentCell: Cell): Cell[] {
-    return [...this.rockMove(currentCell), ...this.bishopMove(currentCell)];
+    return [ ...this.rockMove(currentCell), ...this.bishopMove(currentCell) ];
   }
   private getCellsAround(cell: Cell): Cell[] {
-    let [letter, number] = cell;
-    let [leftLetter, rightLetter] = this.findNextLetter(letter);
+    let [ letter, number ] = cell;
+    let [ leftLetter, rightLetter ] = this.findNextLetter(letter);
     let nextNum = parseInt(number, 10) + 1;
     let prevNum = parseInt(number, 10) - 1;
     let result: Cell[] = [
@@ -211,7 +213,7 @@ export class GameProccess implements GameProccessI{
       `${rightLetter}${number}`
     ];
     for (let i = 0; i < result.length; i++) {
-      let [lett, num] = result[i];
+      let num = result[i][1];
       if (parseInt(num) > 8 || parseInt(num) < 1 || result[i].length > 2) {
         result.splice(i, 1);
       }
@@ -294,7 +296,7 @@ export class GameProccess implements GameProccessI{
   public possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void {
     if (this.verifyUserSelect(figureSide, figure, cell)) {
       this.Render.removePossibleMoves();
-      this.moves = this.createPossibleMoves(figure, cell)
+      this.moves = this.createPossibleMoves(figure, cell);
       this.Render.renderPossibleMoves(this.moves);
     }
   }
@@ -320,7 +322,7 @@ export class GameProccess implements GameProccessI{
     let side: 'w'|'b' = shahData.shachedSide == 'w' ? 'b':'w';
     this.Render.highlightFigure(side, shahData.byFigure);
   }
-  public setMate(mate: MateData): void {
+  public setMate(): void {
     alert('Game is finished');
   }
 }

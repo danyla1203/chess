@@ -1,9 +1,9 @@
 import { Figure } from '../initGame';
 import { GameProccessI } from './GameProccess';
-import { ControllerI } from './sharedTypes';
-import { MessageType } from './WsHandler';
+import { ControllerI, GameRequestTypes } from './sharedTypes';
+import { RequestTypes } from './wsHandlers/WsHandler';
 
-type Send = (type: MessageType, payload: any) => void;
+type Send = (type: RequestTypes, payload: any) => void;
 type SelectedFigure = {
   side: 'w'|'b'
   figure: Figure
@@ -23,6 +23,9 @@ export class DOMController implements ControllerI {
   private checkIsFigure(figure: HTMLDivElement): boolean {
     return /w|b/.test(figure.dataset.side);
   }
+  private sendTurnRequest(gameId: string, body: any) {
+    this.send(RequestTypes.Game, { type: GameRequestTypes.MAKE_TURN, gameId, body: body });
+  } 
 
   public handle(): void {
     this.Board.onclick = (e: any) => {
@@ -33,7 +36,7 @@ export class DOMController implements ControllerI {
       if (this.selectedFigure && (!isFigure || side != this.selectedFigure.side)) {
         let result = this.proccess.moveFigure(this.selectedFigure.side, this.selectedFigure.figure, cell);
         if (result != 'err') {
-          this.send('turn', {cell: cell, figure: this.selectedFigure.figure});
+          this.sendTurnRequest(this.proccess.gameId, { cell: cell, figure: this.selectedFigure.figure });
           this.selectedFigure = null;
         }
       }  
@@ -41,6 +44,6 @@ export class DOMController implements ControllerI {
         this.proccess.possibleMoves(side, figure, cell);
         this.selectedFigure = { figure: figure, side: side };
       }
-    }
+    };
   }
 }
