@@ -256,6 +256,7 @@ export const gameSlice = createSlice({
     board: null,
     highlightedCels: [],
     selectedFigure: { figure: null, cell: null },
+    strikedFigures: { black: [], white: [] },
   },
   reducers: {
     initGameData: (state, { payload }) => {
@@ -309,10 +310,14 @@ export const gameSlice = createSlice({
       state.board = boardState;
       state.highlightedCels = [];
       state.selectedFigure = { figure: null, cell: null };
+    },
+    addStrikedFigure: (state, { payload: { strikedSide, figure } }) => {
+      if (strikedSide === 'w') state.strikedFigures.white.push(figure);
+      else if (strikedSide === 'b') state.strikedFigures.black.push(figure);
     }
   },
 });
 
-export const { initGameData, startGame, selectFigure, updateBoard } = gameSlice.actions;
+export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure } = gameSlice.actions;
 
 export default gameSlice.reducer;

@@ -6,6 +6,7 @@ import { Cell } from './Сell';
 
 export const Board = () => {
   const side = useSelector((state: any) => state.game.side);
+  const strikedFigures = useSelector((state: any) => state.game.strikedFigures);
   const letters = [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' ];
   const result = [];
   for (let i = 0; i < 8; i++) {
@@ -18,11 +19,27 @@ export const Board = () => {
   
   return (
     <div className={'board' + (side === 'w' ? ' rotated': '')}>
-      {result.map((row, i) => (
-        <div key={i} className={'row' + (side === 'w' ? ' rotated' : '')}>
-          {row.map((Cell) => Cell)}
-        </div>
-      ))}
+      <div className={'striked_block' + (side === 'w'? ' rotated': '') }>
+        {
+          strikedFigures.black.map((figure: string) => 
+            <div className={'striked_figure' + ` ${figure.replace(/\d/, '')}` +' b'}></div>
+          )
+        }
+      </div>
+      <div className='board_main'>
+        {result.map((row, i) => (
+          <div key={i} className={'row' + (side === 'w' ? ' rotated' : '')}>
+            {row.map((Cell) => Cell)}
+          </div>
+        ))}
+      </div>
+      <div className={'striked_block' + (side === 'w' ? ' rotated' : '')}>
+        {
+          strikedFigures.white.map((figure: string) =>
+            <div className={'striked_figure' + ` ${figure.replace(/\d/, '')}` + ' w'}></div>
+          )
+        }
+      </div>
     </div>
   );
 };

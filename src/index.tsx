@@ -10,7 +10,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { setConnectStatus } from './store/slices/ws';
 import { setGames } from './store/slices/gamelist';
 import { GamePage } from './pages/Game/Game';
-import { initGameData, startGame, updateBoard } from './store/slices/game';
+import { addStrikedFigure, initGameData, startGame, updateBoard } from './store/slices/game';
 import { setUserData } from './store/slices/user';
 
 export enum ServerMessageTypes {
@@ -38,6 +38,7 @@ const WsHandler = (): null => {
   const dispatch = useDispatch();
 
   const GameHandler = (data: any) => {
+    console.log(data);
     switch (data.type) {
     case GameServerResponses.INIT_GAME:
       dispatch(initGameData(data));
@@ -47,6 +48,9 @@ const WsHandler = (): null => {
       break;
     case GameServerResponses.UPDATE_STATE:
       dispatch(updateBoard(data));
+      break;
+    case GameServerResponses.STRIKE:
+      dispatch(addStrikedFigure(data.payload));
       break;
     }
   };
