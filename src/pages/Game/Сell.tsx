@@ -7,27 +7,25 @@ import { GameTypes, ServerMessageTypes } from '../..';
 export const Cell = (props: any) => {
   const { sendJsonMessage } = useWebSocket('ws://localhost:3000', { share: true });
   const dispatch = useDispatch();
-  const board = useSelector((state: any) => state.game.board);
+  
+  const { figure, side } = useSelector(({ game: { board: { white, black } } }) => {
+    if (white[props.name]) return { side: 'w', figure: white[props.name] };
+    if (black[props.name]) return { side: 'b', figure: black[props.name] };
+    return {};
+  });
   const gameId = useSelector((state: any) => state.game.id);
-  const selectedFigure = useSelector((state: any) => state.game.selectedFigure.figure);
-  const isCellSelected = useSelector((state: any) => state.game.selectedFigure.cell === props.name);
+  const selectedFigure = useSelector((state: any) => state.game.selectedFigure);
   const isCellHighlithed = useSelector((state: any) => state.game.highlightedCels.includes(props.name));
- 
-  let cellBody: string;
-  if (board.white[props.name]) {
-    cellBody = board.white[props.name];
-  } else if (board.black[props.name]) {
-    cellBody = board.black[props.name];
-  }
+  const isCellSelected = selectedFigure.cell === props.name;
   
   const cellClick = () => {
     if (isCellHighlithed && !isCellSelected) {
       sendJsonMessage({ 
-        type: ServerMessageTypes.Game, 
+        type: ServerMessageTypes.Game,
         body: { 
           type: GameTypes.MAKE_TURN, 
           gameId,
-          body: { figure: selectedFigure, cell: props.name }
+          body: { figure: selectedFigure.figure, cell: props.name }
         } 
       });
     } else {
@@ -35,10 +33,14 @@ export const Cell = (props: any) => {
     }
   };
 
+  let className = 'cell';
+  if (isCellSelected) className += ' selected';
+  if (isCellHighlithed) className += ' highlighted';
+  if (figure) className += ` ${figure.replace(/\d/, '')} ${side}`;
   return (
     <div 
-      className={'cell' + (isCellSelected ? ' selected' : '') + (isCellHighlithed ? ' highlighted' : '') }
+      className={className}
       onClick={cellClick}
-    >{cellBody}</div>
+    ></div>
   );
 };
