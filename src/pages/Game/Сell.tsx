@@ -13,6 +13,9 @@ export const Cell = (props: any) => {
     if (black[props.name]) return { side: 'b', figure: black[props.name] };
     return {};
   });
+  const isCellShached = useSelector(({ game: { shahData } }) => {
+    if (shahData.shachedSide === side && figure === 'Kn') return true;
+  });
   const gameId = useSelector((state: any) => state.game.id);
   const selectedFigure = useSelector((state: any) => state.game.selectedFigure);
   const isCellHighlithed = useSelector((state: any) => state.game.highlightedCels.includes(props.name));
@@ -37,6 +40,7 @@ export const Cell = (props: any) => {
   if (isCellSelected) className += ' selected';
   if (isCellHighlithed) className += ' highlighted';
   if (figure) className += ` ${figure.replace(/\d/, '')} ${side}`;
+  if (isCellShached) className += ' shahed';
   return (
     <div 
       className={className}

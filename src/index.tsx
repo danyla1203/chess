@@ -10,7 +10,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { setConnectStatus } from './store/slices/ws';
 import { setGames } from './store/slices/gamelist';
 import { GamePage } from './pages/Game/Game';
-import { addStrikedFigure, initGameData, startGame, updateBoard } from './store/slices/game';
+import { addStrikedFigure, initGameData, setShah, startGame, updateBoard } from './store/slices/game';
 import { setUserData } from './store/slices/user';
 
 export enum ServerMessageTypes {
@@ -52,6 +52,8 @@ const WsHandler = (): null => {
     case GameServerResponses.STRIKE:
       dispatch(addStrikedFigure(data.payload));
       break;
+    case GameServerResponses.SHAH:
+      dispatch(setShah(data.payload));
     }
   };
   const GameListHandler = (data: any) => {
