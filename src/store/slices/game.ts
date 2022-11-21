@@ -311,6 +311,7 @@ export const gameSlice = createSlice({
       state.board = boardState;
       state.highlightedCels = [];
       state.selectedFigure = { figure: null, cell: null };
+      state.shahData = { shachedSide: null, figure: null };
     },
     addStrikedFigure: (state, { payload: { strikedSide, figure } }) => {
       if (strikedSide === 'w') state.strikedFigures.white.push(figure);
@@ -323,6 +324,6 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure, setShah} = gameSlice.actions;
+export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure, setShah } = gameSlice.actions;
 
 export default gameSlice.reducer;
