@@ -13,6 +13,8 @@ import { GamePage } from './pages/Game/Game';
 import { addStrikedFigure, initGameData, setShah, startGame, updateBoard } from './store/slices/game';
 import { setUserData } from './store/slices/user';
 
+import './index.scss';
+
 export enum ServerMessageTypes {
   Game = 'Game',
   GameChat = 'GameChat',
