@@ -14,6 +14,7 @@ import { addStrikedFigure, initGameData, setShah, startGame, updateBoard } from 
 import { setUserData } from './store/slices/user';
 
 import './index.scss';
+import { GameList } from './pages/GameList/GameList';
 
 export enum ServerMessageTypes {
   Game = 'Game',
@@ -40,7 +41,6 @@ const WsHandler = (): null => {
   const dispatch = useDispatch();
 
   const GameHandler = (data: any) => {
-    console.log(data);
     switch (data.type) {
     case GameServerResponses.INIT_GAME:
       dispatch(initGameData(data));
@@ -107,14 +107,17 @@ const App = () => {
 
   if (wsStatus) {
     return (
-      <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<MainPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/game" element={<GamePage />} />
-        </Routes>
-      </ BrowserRouter>
+      <div className="wrapper">
+        <BrowserRouter>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/game" element={<GamePage />} />
+            <Route path='/lobby' element={<GameList />}/>
+          </Routes>
+        </ BrowserRouter>
+      </div>
     );
   }
   return (
