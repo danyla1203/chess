@@ -11,8 +11,8 @@ export const GamePage = () => {
     );
   }
   return (
-    <div id='game'>
-      { game.id }
+    <div className='game'>
+      <h3>{game.id}</h3>
       <Board />
     </div>
   );
