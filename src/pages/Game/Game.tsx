@@ -3,9 +3,9 @@ import { useSelector } from 'react-redux';
 import { Board } from './Board';
 
 export const GamePage = () => {
-  const game = useSelector((state: any) => state.game);
+  const isWaiting = useSelector((state: any) => state.game.isWaiting);
 
-  if (!game.id) {
+  if (isWaiting || isWaiting === null) {
     return (
       <div>Loading</div>
     );

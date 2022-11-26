@@ -250,7 +250,7 @@ export const gameSlice = createSlice({
   name: 'game',
   initialState: {
     id: null,
-    isWaiting: true,
+    isWaiting: null,
     side: null,
     movingSide: 'w',
     board: null,
@@ -281,6 +281,9 @@ export const gameSlice = createSlice({
     },
     startGame: (state) => {
       state.isWaiting = false;
+    },
+    createGame: (state: any) => {
+      state.isWaiting = true;
     },
     selectFigure: (state, { payload }) => {
       const figure = state.side === 'w' ? state.board.white[payload] : state.board.black[payload];;
@@ -319,6 +322,6 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure, setShah } = gameSlice.actions;
+export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure, setShah, createGame } = gameSlice.actions;
 
 export default gameSlice.reducer;
