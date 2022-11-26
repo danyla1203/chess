@@ -21,9 +21,14 @@ export const GameTimer = ({ side, time }: { side: 'w' | 'b', time: number, incre
       return () => clearInterval(interval);
     }
   }, [ isTicking, isWaiting ]);
+
+  const beautySeconds = seconds === 0 ?
+    '00':
+    seconds < 10 ? `0${seconds}`: seconds;
+  const beautyMinutes = minutes < 10 ? `0${minutes}` : minutes;
   return (
     <div className='board__timers__timer'>
-      <span className='board__timers__timer-text'>{minutes}:{seconds}</span>
+      <span className='board__timers__timer-text'>{beautyMinutes}:{beautySeconds}</span>
     </div>
   );
 };
