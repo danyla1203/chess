@@ -36,7 +36,7 @@ export const Cell = (props: any) => {
     }
   };
 
-  let className = 'cell';
+  let className = 'board__wrapper__main__row__cell';
   if (isCellSelected) className += ' selected';
   if (isCellHighlithed) className += ' highlighted';
   if (figure) className += ` ${figure.replace(/\d/, '')} ${side}`;

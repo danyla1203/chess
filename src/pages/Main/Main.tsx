@@ -14,7 +14,7 @@ export const MainPage = () => {
     const body = {
       side,
       time: minutes * 60 * 1000,
-      addTime: timeAdd * 1000
+      timeIncrement: timeAdd * 1000
     };
     sendJsonMessage({ type: ServerMessageTypes.Game, body: { type: GameTypes.START_NEW, body } });
   };

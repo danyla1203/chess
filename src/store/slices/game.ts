@@ -245,7 +245,6 @@ class HighlightedCels {
   }
 }
 
-
 const possibleMovesLogic = new HighlightedCels();
 export const gameSlice = createSlice({
   name: 'game',
@@ -253,7 +252,10 @@ export const gameSlice = createSlice({
     id: null,
     isWaiting: true,
     side: null,
+    movingSide: 'w',
     board: null,
+    time: null,
+    timeIncrement: null,
     highlightedCels: [],
     selectedFigure: { figure: null, cell: null },
     strikedFigures: { black: [], white: [] },
@@ -265,29 +267,23 @@ export const gameSlice = createSlice({
 
       possibleMovesLogic.setData(payload.payload.board, payload.payload.side);
       const board = payload.payload.board;
-      const boardState: any = {
-        white: {},
-        black: {},
-      };
+      const boardState: any = { white: {}, black: {} };
       for (const side in board) {
         for (const figure in board[side]) {
           boardState[side][board[side][figure]] = figure;
         }
       }
+
       state.board = boardState;
+      state.time = parseInt(payload.payload.maxTime, 10);
+      state.timeIncrement = parseInt(payload.payload.timeIncrement, 10);
       state.id = payload.payload.gameId;
     },
     startGame: (state) => {
       state.isWaiting = false;
     },
     selectFigure: (state, { payload }) => {
-      let figure;
-      if (state.side === 'w') {
-        figure = state.board.white[payload];
-      } else {
-        figure = state.board.black[payload];
-      }
-
+      const figure = state.side === 'w' ? state.board.white[payload] : state.board.black[payload];;
       if (!figure) return;
 
       const possibleMoves = possibleMovesLogic.createPossibleMoves(figure, payload);
@@ -299,10 +295,7 @@ export const gameSlice = createSlice({
     updateBoard: (state, { payload }) => {
       possibleMovesLogic.setUpdatedBoard(payload.payload.board);
       const board = payload.payload.board;
-      const boardState: any = {
-        white: {},
-        black: {},
-      };
+      const boardState: any = { white: {}, black: {} };
       for (const side in board) {
         for (const figure in board[side]) {
           boardState[side][board[side][figure]] = figure;
@@ -312,10 +305,12 @@ export const gameSlice = createSlice({
       state.highlightedCels = [];
       state.selectedFigure = { figure: null, cell: null };
       state.shahData = { shachedSide: null, figure: null };
+      state.movingSide = state.movingSide === 'w' ? 'b':'w';
     },
     addStrikedFigure: (state, { payload: { strikedSide, figure } }) => {
-      if (strikedSide === 'w') state.strikedFigures.white.push(figure);
-      else if (strikedSide === 'b') state.strikedFigures.black.push(figure);
+      strikedSide === 'w' ?
+        state.strikedFigures.white.push(figure):
+        state.strikedFigures.black.push(figure);
     },
     setShah: (state, { payload: { shachedSide, byFigure } }) => {
       state.shahData.figure = byFigure;

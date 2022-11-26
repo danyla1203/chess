@@ -12,7 +12,6 @@ export const GamePage = () => {
   }
   return (
     <div className='game'>
-      <h3>{game.id}</h3>
       <Board />
     </div>
   );

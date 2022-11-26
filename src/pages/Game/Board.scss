@@ -1,39 +1,65 @@
+.game {
+  display: flex;
+}
+
 .board {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  .row {
+  &__timers {
+    width: 300px;
+    height: 200px;
     display: flex;
-    width: fit-content;
-    .cell {
-      border: 1px solid;
-      padding: 5px;
-      width: 50px;
-      height: 50px;
-      background-position: center;
-      background-repeat: no-repeat;
+    flex-direction: column;
+    justify-content: space-between;
+    &__timer {
+      padding: 10px;
+      background-color: bisque;
+      &-text {
+        font: 19px system-ui
+      }
     }
   }
+  &__wrapper {
+    width: 40vw;
+    height: 40vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    &__striked {
+      height: 20px;
+      display: flex;
+      &__figure {
+        width: 20px;
+        height: 20px;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    }
+    &__main {
+      &__row {
+        display: flex;
+        width: fit-content;
+        &__cell {
+          border: 1px solid;
+          padding: 5px;
+          width: 50px;
+          height: 50px;
+          background-position: center;
+          background-repeat: no-repeat;
+        }
+      }
+    }
+    }
 }
-.rotated {
-  transform: rotate(180deg);
-}
+
 .selected {
   background-color: gray;
 }
 .highlighted {
   background-color: gray;
 }
-.striked_figure {
-  width: 20px;
-  height: 20px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-.striked_block {
-  display: flex;
-}
+
 .shahed {
   background-color: bisque;
 }

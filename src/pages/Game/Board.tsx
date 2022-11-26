@@ -2,11 +2,13 @@ import * as React from 'react';
 import { useSelector } from 'react-redux';
 import './Board.scss';
 import { Cell } from './Сell';
+import { GameTimer } from './Timer';
 
 
 export const Board = () => {
-  const side = useSelector((state: any) => state.game.side);
+  const { side, timeIncrement, time } = useSelector((state: any) => state.game);
   const strikedFigures = useSelector((state: any) => state.game.strikedFigures);
+
   const letters = [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' ];
   const result = [];
   for (let i = 0; i < 8; i++) {
@@ -16,29 +18,39 @@ export const Board = () => {
     }
     result.push(row);
   }
-  
+
+  let renderedResult = result.map((row, i) => (
+    <div key={i} className={'board__wrapper__main__row'}>
+      {row.map((Cell) => Cell)}
+    </div>
+  ));
+  if (side === 'w') renderedResult = renderedResult.reverse();
+
+  const strikedBlack = strikedFigures.black.map((figure: string) =>
+    <div className={'board__wrapper__striked__figure' + ` ${figure.replace(/\d/, '')}` + ' b'}></div>
+  );
+  const strikedWhite = strikedFigures.white.map((figure: string) =>
+    <div className={'board__wrapper__striked__figure' + ` ${figure.replace(/\d/, '')}` + ' w'}></div>
+  );
+
   return (
-    <div className={'board' + (side === 'w' ? ' rotated': '')}>
-      <div className={'striked_block' + (side === 'w'? ' rotated': '') }>
-        {
-          strikedFigures.black.map((figure: string) => 
-            <div className={'striked_figure' + ` ${figure.replace(/\d/, '')}` +' b'}></div>
-          )
-        }
+    <div className='board'>
+      <div className={'board__wrapper'}>
+        <div className='board__wrapper__main'>
+          {renderedResult}
+        </div>
       </div>
-      <div className='board_main'>
-        {result.map((row, i) => (
-          <div key={i} className={'row' + (side === 'w' ? ' rotated' : '')}>
-            {row.map((Cell) => Cell)}
+      <div className="board__rigth-menu">
+        <div className="board__timers">
+          <div className={'board__wrapper__striked'}>
+            {side === 'w' ? strikedWhite : strikedBlack}
           </div>
-        ))}
-      </div>
-      <div className={'striked_block' + (side === 'w' ? ' rotated' : '')}>
-        {
-          strikedFigures.white.map((figure: string) =>
-            <div className={'striked_figure' + ` ${figure.replace(/\d/, '')}` + ' w'}></div>
-          )
-        }
+          <GameTimer side={side === 'w' ? 'b' : 'w'} time={time} increment={timeIncrement} />
+          <GameTimer side={side} time={time} increment={timeIncrement} />
+          <div className={'board__wrapper__striked'}>
+            {side === 'w' ? strikedBlack : strikedWhite}
+          </div>
+        </div>
       </div>
     </div>
   );
