@@ -2,10 +2,12 @@ import * as React from 'react';
 import { useSelector } from 'react-redux';
 
 export const GameTimer = ({ side, time }: { side: 'w' | 'b', time: number, increment: number}) => {
+  const isEnded = useSelector((state: any) => state.game.isEnded);
   const isTicking = useSelector((state: any) => side === state.game.movingSide);
   const isWaiting = useSelector((state: any) => state.game.isWaiting);
   const [ minutes, setMinutes ] = React.useState(Math.round(time / (1000 * 60)));
   const [ seconds, setSeconds ] = React.useState(Math.round((time - minutes * 1000 * 60) / 1000));
+  const [ intervalMark, setIntervalFunc ] = React.useState<any>();
 
   const getTime = () => {
     time -= 1000;
@@ -15,10 +17,13 @@ export const GameTimer = ({ side, time }: { side: 'w' | 'b', time: number, incre
     setSeconds(newSeconds);
   };
 
+  if (isEnded) clearInterval(intervalMark);
+
   React.useEffect(() => {
     if (isTicking && !isWaiting) {
-      const interval = setInterval(() => getTime(), 1000);
-      return () => clearInterval(interval);
+      setIntervalFunc(setInterval(() => getTime(), 1000));
+
+      return () => clearInterval(intervalMark);
     }
   }, [ isTicking, isWaiting ]);
 

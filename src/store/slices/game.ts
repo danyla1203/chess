@@ -251,6 +251,7 @@ export const gameSlice = createSlice({
   initialState: {
     id: null,
     isWaiting: null,
+    isEnded: false,
     side: null,
     movingSide: 'w',
     board: null,
@@ -278,6 +279,9 @@ export const gameSlice = createSlice({
       state.time = parseInt(payload.payload.maxTime, 10);
       state.timeIncrement = parseInt(payload.payload.timeIncrement, 10);
       state.id = payload.payload.gameId;
+    },
+    endGame: (state) => {
+      state.isEnded = true;
     },
     startGame: (state) => {
       state.isWaiting = false;
@@ -322,6 +326,6 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure, setShah, createGame } = gameSlice.actions;
+export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure, setShah, createGame, endGame } = gameSlice.actions;
 
 export default gameSlice.reducer;
