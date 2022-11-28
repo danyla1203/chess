@@ -24,12 +24,12 @@ export const MainPage = () => {
       <div className="create-game">
         <div className="create-game__time-config">
           <h4>Minutes per side: {minutes}</h4>
-          <input 
-            className="create-game__minutes" 
-            onChange={(e: any) => setMinutes(e.target.value)} 
-            type="range" 
-            min="0"
-            max="38" 
+          <input
+            className="create-game__minutes"
+            onChange={(e: any) => setMinutes(e.target.value)}
+            type="range"
+            min="1"
+            max="38"
             value={minutes}
           />
           <h4>Increment in seconds: {timeAdd}</h4>
@@ -37,7 +37,7 @@ export const MainPage = () => {
             className="create-game_time-add"
             onChange={(e: any) => setTimeAdd(e.target.value)}
             type="range"
-            min="0"
+            min="1"
             max="38"
             value={timeAdd}
           />
