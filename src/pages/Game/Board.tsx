@@ -11,7 +11,8 @@ export const Board = () => {
   for (let i = 0; i < 8; i++) {
     const row = [];
     for (let j = 0; j < 8; j++) {
-      row.push(<Cell key={letters[j] + (i + 1)} name={letters[j] + (i + 1)}/>);
+      const color = (i + j) % 2 === 0 ? 'cell-color2' : 'cell-color1';
+      row.push(<Cell color={color} key={letters[j] + (i + 1)} name={letters[j] + (i + 1)}/>);
     }
     result.push(row);
   }

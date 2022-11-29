@@ -36,15 +36,15 @@ export const Cell = (props: any) => {
     }
   };
 
-  let className = 'board__row__cell';
+  let className = `board__row__cell ${props.color}`;
   if (isCellSelected) className += ' selected';
-  if (isCellHighlithed) className += ' highlighted';
   if (figure) className += ` ${figure.replace(/\d/, '')} ${side}`;
   if (isCellShached) className += ' shahed';
   return (
-    <div 
-      className={className}
-      onClick={cellClick}
-    ></div>
+    <div className={className} onClick={cellClick}>
+      {
+        isCellHighlithed ? <span className='board__row__cell-dot'></span>:null
+      }
+    </div>
   );
 };

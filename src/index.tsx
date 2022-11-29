@@ -10,7 +10,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { setConnectStatus } from './store/slices/ws';
 import { setGames } from './store/slices/gamelist';
 import { GamePage } from './pages/Game/Game';
-import { addStrikedFigure, createGame, endGame, initGameData, setShah, startGame, updateBoard } from './store/slices/game';
+import { addMessage, addStrikedFigure, createGame, endGame, initGameData, setShah, startGame, updateBoard } from './store/slices/game';
 import { setUserData } from './store/slices/user';
 
 import './index.scss';
@@ -26,7 +26,8 @@ export enum GameTypes {
   START_NEW = 'START_NEW',
   CONNECT_TO_EXISTING_GAME = 'CONNECT_TO_EXISTING_GAME',
   CONNECT_TO_GAME_AS_SPECTATOR = 'CONNECT_TO_GAME_AS_SPECTATOR',
-  MAKE_TURN = 'MAKE_TURN'
+  MAKE_TURN = 'MAKE_TURN',
+  CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 enum GameServerResponses {
   INIT_GAME = 'INIT_GAME',
@@ -36,7 +37,8 @@ enum GameServerResponses {
   STRIKE = 'STRIKE',
   SHAH = 'SHAH',
   MATE = 'MATE',
-  PLAYER_TIMEOUT = 'PLAYER_TIMEOUT'
+  PLAYER_TIMEOUT = 'PLAYER_TIMEOUT',
+  CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 
 const WsHandler = (): null => {
@@ -67,6 +69,9 @@ const WsHandler = (): null => {
       break;
     case GameServerResponses.PLAYER_TIMEOUT:
       dispatch(endGame());
+      break;
+    case GameServerResponses.CHAT_MESSAGE:
+      dispatch(addMessage(data.payload));
       break;
     }
   };
