@@ -2,7 +2,8 @@ import * as React from 'react';
 import useWebSocket from 'react-use-websocket';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectFigure } from '../../store/slices/game';
-import { GameTypes, ServerMessageTypes } from '../..';
+import { GameTypes } from '../..';
+import { ServerMessageTypes } from '../../WsHandler';
 
 export const Cell = (props: any) => {
   const { sendJsonMessage } = useWebSocket('ws://localhost:3000', { share: true });

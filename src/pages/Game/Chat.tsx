@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import useWebSocket from 'react-use-websocket';
-import { GameTypes, ServerMessageTypes } from '../..';
+import { GameTypes } from '../..';
+import { ServerMessageTypes } from '../../WsHandler';
 
 const Message = ({ text, date }: any) => {
   const userName = useSelector((state: any) => state.user.name);

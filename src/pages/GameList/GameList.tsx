@@ -2,8 +2,9 @@ import * as React from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import useWebSocket from 'react-use-websocket';
-import { GameTypes, ServerMessageTypes } from '../..';
+import { GameTypes } from '../..';
 import { GameData } from '../../store/slices/gamelist';
+import { ServerMessageTypes } from '../../WsHandler';
 
 export const GameList = () => {
   const { sendJsonMessage } = useWebSocket('ws://localhost:3000', { share: true });

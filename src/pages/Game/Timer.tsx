@@ -17,7 +17,7 @@ export const GameTimer = ({ side, time }: { side: 'w' | 'b', time: number, incre
     setSeconds(newSeconds);
   };
 
-  if (isEnded) clearInterval(intervalMark);
+  if (isEnded || (minutes <= 0 && seconds <= 0)) clearInterval(intervalMark);
 
   React.useEffect(() => {
     if (isTicking && !isWaiting) {

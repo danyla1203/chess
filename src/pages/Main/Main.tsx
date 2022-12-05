@@ -1,9 +1,10 @@
 import * as React from 'react';
 import useWebSocket from 'react-use-websocket';
-import { GameTypes, ServerMessageTypes } from '../..';
+import { GameTypes } from '../..';
 import { Link } from 'react-router-dom';
 
 import './Main.scss';
+import { ServerMessageTypes } from '../../WsHandler';
 
 export const MainPage = () => {
   const [ minutes, setMinutes ] = React.useState(6);
