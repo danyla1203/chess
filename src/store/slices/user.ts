@@ -6,7 +6,7 @@ export const loginRequest = createAsyncThunk(
     const reqBody = { 
       method: 'POST', 
       body: loginData, 
-      headers: { accept: 'application/json' } 
+      headers: { accept: 'application/json', 'Content-Type': 'application/json' } 
     };
     const response = await fetch('http://localhost:3000/login', reqBody);
     if (response.status !== 200) {
