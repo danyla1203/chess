@@ -7,6 +7,7 @@ import { Navbar } from './components/Navbar/Navbar';
 import { Provider, useSelector } from 'react-redux';
 import { store } from './store/index';
 import { GamePage } from './pages/Game/Game';
+import { Signup } from './pages/Signup/Signup';
 import { WsHandler } from './WsHandler';
 
 import './index.scss';
@@ -31,6 +32,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/game" element={<GamePage />} />
             <Route path='/lobby' element={<GameList />}/>
           </Routes>
