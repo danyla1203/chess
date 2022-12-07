@@ -1,31 +1,23 @@
 import * as React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
+import { signUpRequest } from '../../store/slices/user';
 
 export const Signup = () => {
   const [ email, setEmail ] = React.useState('');
   const [ name, setName ] = React.useState('');
   const [ password, setPassword ] = React.useState('');
-  const [ isLoaded, setLoadStatus ] = React.useState(null);
-  const [ err, setErr ] = React.useState(null);
+  const err = useSelector((state: any) => state.user.error);
+  const isLoaded = useSelector((state: any) => !!state.user.accessToken);
+  const dispatch = useDispatch<any>();
 
   const signup = () => {
     const deviceId: string = (Math.random() + 1).toString(36).substring(7);
     const payload = JSON.stringify({ email, password, deviceId, name });
-    fetch('http://localhost:3000/signup', { method: 'POST', body: payload, headers: { accept: 'application/json' } })
-      .then((res) => res.json())
-      .then((payload) => {
-        if (payload.error) {
-          setErr(payload.error);
-          setLoadStatus(true);
-        }
-        else setLoadStatus(true);
-      })
-      .catch((err) => setErr(err));
-    setLoadStatus(false);
+    dispatch(signUpRequest(payload));
   };
 
-  if (isLoaded === false) return <div>Loading...</div>;
-  else if (isLoaded === true && err === null) return <Navigate to='/' />;
+  if (isLoaded) return <Navigate to='/' />;
   return (
     <div className="signup">
       <div className="signup_form">
@@ -34,7 +26,7 @@ export const Signup = () => {
         <input type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} />
         <button onClick={signup}>Sign up</button>
       </div>
-      { err }
+      {err.text}
     </div>
   );
 };

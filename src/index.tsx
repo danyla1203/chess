@@ -8,10 +8,10 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/index';
 import { GamePage } from './pages/Game/Game';
 import { Signup } from './pages/Signup/Signup';
+import { UserPage } from './pages/User/User';
 import { WsHandler } from './WsHandler';
 
 import { getTokens, userMeRequest } from './store/slices/user';
-
 
 import './index.scss';
 import { GameList } from './pages/GameList/GameList';
@@ -51,6 +51,7 @@ const App = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/game" element={<GamePage />} />
             <Route path='/lobby' element={<GameList />}/>
+            <Route path='/user' element={<UserPage />}/>
           </Routes>
         </ BrowserRouter>
       </div>

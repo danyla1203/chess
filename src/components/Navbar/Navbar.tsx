@@ -23,7 +23,7 @@ export const Navbar = () => {
         </li>
       </ul>
       <div className='navbar__user'>
-        <h3 className='navbar__user-name'>{user.name}</h3>
+        <Link to={'/user'}><h3 className='navbar__user-name'>{user.name}</h3></Link>
       </div>
     </div>
   );

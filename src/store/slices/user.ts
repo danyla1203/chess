@@ -18,6 +18,24 @@ export const loginRequest = createAsyncThunk(
     return response.json();
   }
 );
+export const signUpRequest = createAsyncThunk(
+  '/signup',
+  async (registraionData: string, thunk) => {
+    const reqBody = { 
+      method: 'POST', 
+      body: registraionData, 
+      headers: { 
+        accept: 'application/json', 
+        'Content-Type': 'application/json' 
+      } 
+    };
+    const response = await fetch('http://localhost:3000/signup', reqBody);
+    if (response.status !== 200) {
+      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
+    }
+    return response.json();
+  }
+);
 export const userMeRequest = createAsyncThunk(
   '/me',
   async (accessToken: string, thunk) => {
@@ -96,6 +114,11 @@ export const userSlice = createSlice({
       state.accessToken = null;
       state.authorized = false;
       localStorage.removeItem('refreshToken');
+    });
+    builder.addCase(signUpRequest.fulfilled, (state, { payload }: any) => {
+      state.accessToken = payload.access;
+      state.authorized = true;
+      localStorage.setItem('refreshToken', payload.refresh);
     });
   }
 });
