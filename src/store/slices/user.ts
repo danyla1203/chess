@@ -6,7 +6,10 @@ export const loginRequest = createAsyncThunk(
     const reqBody = { 
       method: 'POST', 
       body: loginData, 
-      headers: { accept: 'application/json', 'Content-Type': 'application/json' } 
+      headers: { 
+        accept: 'application/json', 
+        'Content-Type': 'application/json' 
+      } 
     };
     const response = await fetch('http://localhost:3000/login', reqBody);
     if (response.status !== 200) {
@@ -26,6 +29,24 @@ export const userMeRequest = createAsyncThunk(
       }
     };
     const response = await fetch('http://localhost:3000/me', reqBody);
+    if (response.status !== 200) {
+      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
+    }
+    return response.json();
+  }
+);
+export const getTokens = createAsyncThunk(
+  '/use-refresh',
+  async (refreshToken: string, thunk) => {
+    const reqBody = { 
+      method: 'PUT',
+      body: JSON.stringify({ refreshToken }),
+      headers: { 
+        accept: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    };
+    const response = await fetch('http://localhost:3000/refresh-token', reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -65,6 +86,16 @@ export const userSlice = createSlice({
       state.id = payload.id;
       state.name = payload.name;
       state.email = payload.email;
+    });
+    builder.addCase(getTokens.fulfilled, (state, { payload }: any) => {
+      state.accessToken = payload.access;
+      state.authorized = true;
+      localStorage.setItem('refreshToken', payload.refresh);
+    });
+    builder.addCase(getTokens.rejected, (state) => {
+      state.accessToken = null;
+      state.authorized = false;
+      localStorage.removeItem('refreshToken');
     });
   }
 });

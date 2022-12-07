@@ -3,17 +3,13 @@ import useWebSocket from 'react-use-websocket';
 import { GameTypes } from '../..';
 import { Link } from 'react-router-dom';
 
+
 import './Main.scss';
 import { ServerMessageTypes } from '../../WsHandler';
-import { useDispatch, useSelector } from 'react-redux';
-import { userMeRequest } from '../../store/slices/user';
-
 export const MainPage = () => {
   const [ minutes, setMinutes ] = React.useState(6);
   const [ timeAdd, setTimeAdd ] = React.useState(15);
   const { sendJsonMessage } = useWebSocket('ws://localhost:3000', { share: true });
-  const accessToken = useSelector((state: any) => state.user.accessToken);
-  const dispatch = useDispatch<any>();
 
   const createGame = (side: 'w'|'b'|'rand') => {
     const body = {
@@ -23,10 +19,6 @@ export const MainPage = () => {
     };
     sendJsonMessage({ type: ServerMessageTypes.Game, body: { type: GameTypes.START_NEW, body } });
   };
-  
-  React.useEffect(() => {
-    if (accessToken) dispatch(userMeRequest(accessToken));
-  }, [ accessToken ]);
 
   return (
     <main>

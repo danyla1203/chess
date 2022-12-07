@@ -4,11 +4,14 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { LoginPage } from './pages/Login/Login';
 import { MainPage } from './pages/Main/Main';
 import { Navbar } from './components/Navbar/Navbar';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/index';
 import { GamePage } from './pages/Game/Game';
 import { Signup } from './pages/Signup/Signup';
 import { WsHandler } from './WsHandler';
+
+import { getTokens, userMeRequest } from './store/slices/user';
+
 
 import './index.scss';
 import { GameList } from './pages/GameList/GameList';
@@ -23,6 +26,19 @@ export enum GameTypes {
 
 const App = () => {
   const wsStatus = useSelector((state: any) => state.wsConnection.isConnected);
+  const accessToken = useSelector((state: any) => state.user.accessToken);
+  const dispatch = useDispatch<any>();
+  
+  React.useEffect(() => {
+    if (accessToken) {
+      dispatch(userMeRequest(accessToken));
+      return;
+    };
+    const refresh = localStorage.getItem('refreshToken');
+    if (refresh) {
+      dispatch(getTokens(refresh));
+    }
+  }, [ accessToken ]);
 
   if (wsStatus) {
     return (
