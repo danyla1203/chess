@@ -12,7 +12,7 @@ export const MainPage = () => {
   const [ minutes, setMinutes ] = React.useState(6);
   const [ timeAdd, setTimeAdd ] = React.useState(15);
   const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
-    share: true, 
+    share: true,
     queryParams: {
       'Authorization': accessToken,
     }, 
