@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { GameTimer } from './Timer';
 
 export const RigthMenu = () => {
-  const { side, timeIncrement, time } = useSelector((state: any) => state.game);
+  const { side } = useSelector((state: any) => state.game);
   const strikedFigures = useSelector((state: any) => state.game.strikedFigures);
 
   const strikedBlack = strikedFigures.black.map((figure: string) =>
@@ -18,8 +18,8 @@ export const RigthMenu = () => {
         {side === 'w' ? strikedWhite : strikedBlack}
       </div>
       <div className="game__rigth-menu__timers">
-        <GameTimer side={side === 'w' ? 'b' : 'w'} time={time} increment={timeIncrement} />
-        <GameTimer side={side} time={time} increment={timeIncrement} />
+        <GameTimer side={side === 'w' ? 'b' : 'w'} />
+        <GameTimer side={side} />
       </div>
       <div className={'game__rigth-menu__striked'}>
         {side === 'w' ? strikedBlack : strikedWhite}

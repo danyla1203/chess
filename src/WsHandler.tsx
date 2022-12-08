@@ -5,6 +5,7 @@ import { addMessage, addStrikedFigure, createGame, endGame, initGameData, setSha
 import { setConnectStatus } from './store/slices/ws';
 import { setGames } from './store/slices/gamelist';
 import { setUserData } from './store/slices/user';
+import { setTimers } from './store/slices/timers';
 
 export enum ServerMessageTypes {
   Game = 'Game',
@@ -33,6 +34,7 @@ export const WsHandler = ({ accessToken }: any): null => {
       break;
     case GameServerResponses.INIT_GAME:
       dispatch(initGameData(data));
+      dispatch(setTimers(data));
       break;
     case GameServerResponses.GAME_START:
       dispatch(startGame());

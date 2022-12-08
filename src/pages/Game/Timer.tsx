@@ -1,30 +1,28 @@
 import * as React from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateTimer } from '../../store/slices/timers';
 
-export const GameTimer = ({ side, time }: { side: 'w' | 'b', time: number, increment: number}) => {
+export const GameTimer = ({ side }: { side: 'w' | 'b' }) => {
+  const dispatch = useDispatch();
+  const time = useSelector((state: any) => side === 'w' ? state.timers.whiteTimer : state.timers.blackTimer);
   const isEnded = useSelector((state: any) => state.game.isEnded);
   const isTicking = useSelector((state: any) => side === state.game.movingSide);
   const isWaiting = useSelector((state: any) => state.game.isWaiting);
-  const [ minutes, setMinutes ] = React.useState(Math.round(time / (1000 * 60)));
-  const [ seconds, setSeconds ] = React.useState(Math.round((time - minutes * 1000 * 60) / 1000));
   const [ intervalMark, setIntervalFunc ] = React.useState<any>();
 
   const getTime = () => {
-    time -= 1000;
-    const newMinuntes = Math.floor(time / (1000 * 60));
-    const newSeconds = Math.round((time - newMinuntes * 1000 * 60) / 1000);
-    setMinutes(newMinuntes);
-    setSeconds(newSeconds);
+    dispatch(updateTimer(side));
   };
+
+  const minutes = Math.floor(time / (1000 * 60));
+  const seconds = Math.round((time - minutes * 1000 * 60) / 1000);
 
   if (isEnded || (minutes <= 0 && seconds <= 0)) clearInterval(intervalMark);
 
   React.useEffect(() => {
     if (isTicking && !isWaiting) {
       setIntervalFunc(setInterval(() => getTime(), 1000));
-
-      return () => clearInterval(intervalMark);
-    }
+    } else if (!isWaiting && !isTicking) clearInterval(intervalMark);
   }, [ isTicking, isWaiting ]);
 
   const beautySeconds = seconds === 0 ?
