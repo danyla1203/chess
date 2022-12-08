@@ -24,10 +24,8 @@ enum GameServerResponses {
   CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 
-
-export const WsHandler = (): null => {
+export const WsHandler = ({ accessToken }: any): null => {
   const dispatch = useDispatch();
-
   const GameHandler = (data: any) => {
     switch (data.type) {
     case GameServerResponses.GAME_CREATED:
@@ -66,6 +64,9 @@ export const WsHandler = (): null => {
   const { readyState } = useWebSocket('ws://localhost:3000', {
     protocols: 'echo-protocol',
     share: true,
+    queryParams: {
+      'Authorization': accessToken,
+    },
     onMessage: ({ data }) => {
       try {
         data = JSON.parse(data);

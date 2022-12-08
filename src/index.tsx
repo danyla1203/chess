@@ -11,7 +11,8 @@ import { Signup } from './pages/Signup/Signup';
 import { UserPage } from './pages/User/User';
 import { WsHandler } from './WsHandler';
 
-import { getTokens, userMeRequest } from './store/slices/user';
+import { userMeRequest } from './store/slices/user';
+import { getTokens } from './store/slices/tokens';
 
 import './index.scss';
 import { GameList } from './pages/GameList/GameList';
@@ -24,48 +25,52 @@ export enum GameTypes {
   CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 
-const App = () => {
-  const wsStatus = useSelector((state: any) => state.wsConnection.isConnected);
-  const accessToken = useSelector((state: any) => state.user.accessToken);
-  const dispatch = useDispatch<any>();
-  
-  React.useEffect(() => {
-    if (accessToken) {
-      dispatch(userMeRequest(accessToken));
-      return;
-    };
-    const refresh = localStorage.getItem('refreshToken');
-    if (refresh) {
-      dispatch(getTokens(refresh));
-    }
-  }, [ accessToken ]);
-
+const Router = () => {
+  const wsStatus = useSelector((state: any) => state.wsConnection);
   if (wsStatus) {
     return (
-      <div className="wrapper">
-        <BrowserRouter>
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/game" element={<GamePage />} />
-            <Route path='/lobby' element={<GameList />}/>
-            <Route path='/user' element={<UserPage />}/>
-          </Routes>
-        </ BrowserRouter>
-      </div>
+      <BrowserRouter>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/game" element={<GamePage />} />
+          <Route path='/lobby' element={<GameList />} />
+          <Route path='/user' element={<UserPage />} />
+        </Routes>
+      </ BrowserRouter>
     );
   }
-  return (
-    <div>loading</div>
-  );
+};
+
+const App = () => {
+  const tokens = useSelector((state: any) => state.tokens);
+  const dispatch = useDispatch<any>();
+  console.log(tokens);
+  React.useEffect(() => {
+    dispatch(getTokens(localStorage.getItem('refreshToken')));
+  }, []);
+  React.useEffect(() => {
+    if (tokens.accessToken) {
+      dispatch(userMeRequest(tokens.accessToken));
+    }
+  }, [ tokens.accessToken ]);
+  if (tokens.isGetTokenLoaded) {
+    return (
+      <div className="wrapper">
+        <WsHandler accessToken={tokens.accessToken}/>
+        <Router />
+      </div>
+    );
+  } else {
+    return <div>Loading</div>;
+  }
 };
 
 const WrappedApp = () => {
   return (
     <Provider store={store}>
-      <WsHandler />
       <App />
     </Provider>
   );

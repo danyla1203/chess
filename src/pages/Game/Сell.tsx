@@ -6,7 +6,13 @@ import { GameTypes } from '../..';
 import { ServerMessageTypes } from '../../WsHandler';
 
 export const Cell = (props: any) => {
-  const { sendJsonMessage } = useWebSocket('ws://localhost:3000', { share: true });
+  const accessToken = useSelector((state: any) => state.tokens.accessToken);
+  const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
+    share: true,
+    queryParams: {
+      'Authorization': accessToken,
+    },
+  });
   const dispatch = useDispatch();
   
   const { figure, side } = useSelector(({ game: { board: { white, black } } }) => {

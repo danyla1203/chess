@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
-import { loginRequest } from '../../store/slices/user';
+import { loginRequest } from '../../store/slices/tokens';
 
 export const LoginPage = () => {
   const [ email, setEmail ] = React.useState('');
   const [ password, setPassword ] = React.useState('');
-  const err = useSelector((state: any) => state.user.error);
-  const isLoaded = useSelector((state: any) => !!state.user.accessToken);
+  const err = useSelector((state: any) => state.tokens.error);
+  const isLoaded = useSelector((state: any) => !!state.tokens.accessToken);
   const dispatch = useDispatch<any>();
 
   const login = () => {

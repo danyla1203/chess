@@ -21,7 +21,13 @@ export const GameChat = () => {
   const [ text, setText ] = React.useState();
   const gameId = useSelector((state: any) => state.game.id);
   const chatMessages = useSelector((state: any) => state.game.chatMessages);
-  const { sendJsonMessage } = useWebSocket('ws://localhost:3000', { share: true });
+  const accessToken = useSelector((state: any) => state.tokens.accessToken);
+  const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
+    share: true,
+    queryParams: {
+      'Authorization': accessToken,
+    },
+  });
 
   const sendMessage = () => {
     sendJsonMessage({ type: ServerMessageTypes.Game, body: { type: GameTypes.CHAT_MESSAGE, body: { gameId, message: { text } } } });
