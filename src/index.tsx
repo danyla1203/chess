@@ -47,7 +47,6 @@ const Router = () => {
 const App = () => {
   const tokens = useSelector((state: any) => state.tokens);
   const dispatch = useDispatch<any>();
-  console.log(tokens);
   React.useEffect(() => {
     dispatch(getTokens(localStorage.getItem('refreshToken')));
   }, []);

@@ -312,7 +312,6 @@ export const gameSlice = createSlice({
       state.highlightedCels = [];
       state.selectedFigure = { figure: null, cell: null };
       state.shahData = { shachedSide: null, figure: null };
-      console.log('1234');
       state.movingSide = state.movingSide === 'w' ? 'b':'w';
     },
     addStrikedFigure: (state, { payload: { strikedSide, figure } }) => {

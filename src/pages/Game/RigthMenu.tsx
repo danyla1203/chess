@@ -7,10 +7,10 @@ export const RigthMenu = () => {
   const strikedFigures = useSelector((state: any) => state.game.strikedFigures);
 
   const strikedBlack = strikedFigures.black.map((figure: string) =>
-    <div className={'game__rigth-menu__striked__figure' + ` ${figure.replace(/\d/, '')}` + ' b'}></div>
+    <div className={'game__rigth-menu__striked__figure' + ` ${figure.replace(/\d/, '')}` + ' b'} key={`${figure}-b`}></div>
   );
   const strikedWhite = strikedFigures.white.map((figure: string) =>
-    <div className={'game__rigth-menu__striked__figure' + ` ${figure.replace(/\d/, '')}` + ' w'}></div>
+    <div className={'game__rigth-menu__striked__figure' + ` ${figure.replace(/\d/, '')}` + ' w'} key={`${figure}-w`}></div>
   );
   return (
     <div className="game__rigth-menu">
