@@ -5,7 +5,7 @@ import { addMessage, addStrikedFigure, createGame, endGame, initGameData, setSha
 import { setConnectStatus } from './store/slices/ws';
 import { setGames } from './store/slices/gamelist';
 import { setUserData } from './store/slices/user';
-import { setTimers } from './store/slices/timers';
+import { setTimers, updateTimerByServerEvent } from './store/slices/timers';
 
 export enum ServerMessageTypes {
   Game = 'Game',
@@ -18,6 +18,7 @@ enum GameServerResponses {
   GAME_CREATED = 'GAME_CREATED',
   GAME_START = 'GAME_START',
   UPDATE_STATE = 'UPDATE_STATE',
+  UPDATE_TIMERS = 'UPDATE_TIMERS',
   STRIKE = 'STRIKE',
   SHAH = 'SHAH',
   MATE = 'MATE',
@@ -56,6 +57,9 @@ export const WsHandler = ({ accessToken }: any): null => {
       break;
     case GameServerResponses.CHAT_MESSAGE:
       dispatch(addMessage(data.payload));
+      break;
+    case GameServerResponses.UPDATE_TIMERS:
+      dispatch(updateTimerByServerEvent(data.payload));
       break;
     }
   };

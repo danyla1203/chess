@@ -13,10 +13,15 @@ export const timersSlice = createSlice({
     },
     updateTimer: (state, { payload }: any) => {
       payload === 'w' ? state.whiteTimer -= 1000 : state.blackTimer -= 1000;
+    },
+    updateTimerByServerEvent: (state, { payload }: any) => {
+      payload.side === 'w' ? 
+        state.whiteTimer = payload.timeRemain : 
+        state.blackTimer = payload.timeRemain;
     }
   }
 });
 
-export const { setTimers, updateTimer } = timersSlice.actions;
+export const { setTimers, updateTimer, updateTimerByServerEvent } = timersSlice.actions;
 
 export default timersSlice.reducer;
