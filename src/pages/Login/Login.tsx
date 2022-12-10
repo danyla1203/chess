@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import { loginRequest } from '../../store/slices/user';
 
+import './Login.scss';
+
 export const LoginPage = () => {
   const [ email, setEmail ] = React.useState('');
   const [ password, setPassword ] = React.useState('');
@@ -20,8 +22,8 @@ export const LoginPage = () => {
   return (
     <div className='login'>
       <div className="login__container">
-        <input value={email} onChange={(e: any) => setEmail(e.target.value)}/>
-        <input type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} />
+        <input placeholder={'Name:'} value={email} onChange={(e: any) => setEmail(e.target.value)}/>
+        <input placeholder={'Password:'} type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} />
         <button onClick={login}>Login</button>
       </div>
       { err.text }
