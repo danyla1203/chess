@@ -4,15 +4,14 @@ import useWebSocket from 'react-use-websocket';
 import { GameTypes } from '../..';
 import { ServerMessageTypes } from '../../WsHandler';
 
-const Message = ({ text, date }: any) => {
-  const userName = useSelector((state: any) => state.user.name);
-  date = new Date(date);
-  const time = `${date.getHours()}:${date.getMinutes()}`;
+const Message = ({ author, message }: any) => {
+  const outputData = new Date(message.date);
+  const beautyTime = `${outputData.getHours()}:${outputData.getMinutes()}`;
   return (
-    <div className="game__chat__messages__item" key={date}>
-      <h4 className='game__chat__messages__item-name'>{userName}</h4>
-      <h3 className='game__chat__messages__item-message'>{text}</h3>
-      <h2 className='game__chat__messages__item-time'>{time}</h2>
+    <div className="game__chat__messages__item" key={message.date}>
+      <h4 className='game__chat__messages__item-name'>{author.name}</h4>
+      <h3 className='game__chat__messages__item-message'>{message.text}</h3>
+      <h2 className='game__chat__messages__item-time'>{beautyTime}</h2>
     </div>
   );
 };
@@ -36,7 +35,7 @@ export const GameChat = () => {
   return (
     <div className='game__chat'>
       <div className="game__chat__messages">
-        { chatMessages.map((message: any) => <Message {...message} /> )}
+        { chatMessages.map((messageData: any) => <Message message={messageData.message} author={messageData.author} /> )}
       </div>
       <div className="game__chat__input">
         <input 

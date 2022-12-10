@@ -323,8 +323,8 @@ export const gameSlice = createSlice({
       state.shahData.figure = byFigure;
       state.shahData.shachedSide = shachedSide;
     },
-    addMessage: (state, { payload: { message } }) => {
-      state.chatMessages.push(message);
+    addMessage: (state, { payload }: any) => {
+      state.chatMessages.push(payload);
     }
   },
 });
