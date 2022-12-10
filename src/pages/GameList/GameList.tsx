@@ -7,7 +7,7 @@ import { GameData } from '../../store/slices/gamelist';
 import { ServerMessageTypes } from '../../WsHandler';
 
 export const GameList = () => {
-  const accessToken = useSelector((state: any) => state.tokens.accessToken);
+  const accessToken = useSelector((state: any) => state.user.accessToken);
   const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
     share: true,
     queryParams: {

@@ -12,7 +12,7 @@ import { UserPage } from './pages/User/User';
 import { WsHandler } from './WsHandler';
 
 import { userMeRequest } from './store/slices/user';
-import { getTokens } from './store/slices/tokens';
+import { getTokens } from './store/slices/user';
 
 import './index.scss';
 import { GameList } from './pages/GameList/GameList';
@@ -45,20 +45,21 @@ const Router = () => {
 };
 
 const App = () => {
-  const tokens = useSelector((state: any) => state.tokens);
+  const accessToken = useSelector((state: any) => state.user.accessToken);
+  const isGetTokenLoaded = useSelector((state: any) => state.user.isGetTokenLoaded);
   const dispatch = useDispatch<any>();
   React.useEffect(() => {
     dispatch(getTokens(localStorage.getItem('refreshToken')));
   }, []);
   React.useEffect(() => {
-    if (tokens.accessToken) {
-      dispatch(userMeRequest(tokens.accessToken));
+    if (accessToken) {
+      dispatch(userMeRequest(accessToken));
     }
-  }, [ tokens.accessToken ]);
-  if (tokens.isGetTokenLoaded) {
+  }, [ accessToken ]);
+  if (isGetTokenLoaded) {
     return (
       <div className="wrapper">
-        <WsHandler accessToken={tokens.accessToken}/>
+        <WsHandler accessToken={accessToken}/>
         <Router />
       </div>
     );

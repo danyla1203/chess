@@ -3,7 +3,6 @@ import gameList from './slices/gamelist';
 import wsConnection from './slices/ws';
 import game from './slices/game';
 import user from './slices/user';
-import tokens from './slices/tokens';
 import timers from './slices/timers';
 
 export const store = configureStore({
@@ -12,7 +11,6 @@ export const store = configureStore({
     gameList,
     game,
     user,
-    tokens,
     timers
   },
 });

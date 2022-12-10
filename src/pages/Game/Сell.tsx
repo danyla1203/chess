@@ -6,7 +6,7 @@ import { GameTypes } from '../..';
 import { ServerMessageTypes } from '../../WsHandler';
 
 export const Cell = (props: any) => {
-  const accessToken = useSelector((state: any) => state.tokens.accessToken);
+  const accessToken = useSelector((state: any) => state.user.accessToken);
   const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
     share: true,
     queryParams: {
