@@ -1,0 +1,26 @@
+.game-list {
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(206, 206, 206);
+  padding: 50px;
+  padding-top: 5px;
+  width: 40vw;
+  &__labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 30px;
+    border-bottom: 2px solid black;
+    &__item {
+      font: 300 15px system-ui
+    }
+  }
+  &__item {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    height: 40px;
+    margin-top: 10px;
+    align-items: center;
+  }
+}
