@@ -28,13 +28,14 @@ export const GameList = () => {
   const renderedGameList = games.map((game: GameData) => {
     const beautyMaxTime = Math.floor(game.maxTime / (1000 * 60));
     const beautyTimeIncrement = Math.floor(game.timeIncrement / 1000);
+
     return (
       <div className='game-list__item' key={game.id} onClick={() => connectToGame(game.id)} >
         <div className='game-list__item__data-block'>
-          <h3 className='game-list__item__'>{game.players[0].name}</h3>
+          <h3 className='game-list__item__name'>{game.players[0].name}</h3>
         </div>
         <div className='game-list__item__data-block'>
-          <h3 className='game-list__item__side-selection__value'>{game.side}</h3>
+          <span className={`game-list__item__side-selection-circle ${game.side}-circle`}></span>
         </div>
         <div className='game-list__item__data-block'>
           <h3>{beautyMaxTime}-{beautyTimeIncrement}</h3>
