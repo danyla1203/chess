@@ -1,0 +1,23 @@
+.notifications {
+  position: absolute;
+  top: 60px;
+  right: 1vw;
+  &__item {
+    background-color: rgb(252, 138, 138);
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border-color: rgb(252, 30, 30);
+    border-style: solid;
+    user-select: none;
+    &__text {
+      font: 18px system-ui
+    }
+  }
+}
+.visible-mode {
+  display: block;
+}
+.hidden-mode {
+  display: none;
+}

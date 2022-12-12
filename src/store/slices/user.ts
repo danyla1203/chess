@@ -123,10 +123,7 @@ export const userSlice = createSlice({
       state.authorized = true;
       localStorage.setItem('refreshToken', payload.refresh);
     });
-    builder.addCase(loginRequest.rejected, (state, { payload }: any) => {
-      state.error.code = payload.code;
-      state.error.text = payload.error;
-    });
+    
     builder.addCase(getTokens.fulfilled, (state, { payload }: any) => {
       state.accessToken = payload.access;
       state.authorized = true;

@@ -9,6 +9,7 @@ import { store } from './store/index';
 import { GamePage } from './pages/Game/Game';
 import { Signup } from './pages/Signup/Signup';
 import { UserPage } from './pages/User/User';
+import { Notifications } from './components/Notification/Notifications';
 import { WsHandler } from './WsHandler';
 
 import { userMeRequest } from './store/slices/user';
@@ -71,6 +72,7 @@ const App = () => {
 const WrappedApp = () => {
   return (
     <Provider store={store}>
+      <Notifications />
       <App />
     </Provider>
   );

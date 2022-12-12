@@ -6,12 +6,14 @@ import { setConnectStatus } from './store/slices/ws';
 import { setGames } from './store/slices/gamelist';
 import { setUserData } from './store/slices/user';
 import { setTimers, updateTimerByServerEvent } from './store/slices/timers';
+import { addError } from './store/slices/errors';
 
 export enum ServerMessageTypes {
   Game = 'Game',
   GameChat = 'GameChat',
   GameList = 'GameList',
   User = 'User',
+  USER_ALREADY_IN_GAME = 'USER_ALREADY_IN_GAME'
 }
 enum GameServerResponses {
   INIT_GAME = 'INIT_GAME',
@@ -88,6 +90,9 @@ export const WsHandler = ({ accessToken }: any): null => {
         break;
       case ServerMessageTypes.User:
         dispatch(setUserData(data.payload));
+        break;
+      case ServerMessageTypes.USER_ALREADY_IN_GAME:
+        dispatch(addError(data.payload));
         break;
       }
     }

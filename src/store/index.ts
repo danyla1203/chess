@@ -4,6 +4,7 @@ import wsConnection from './slices/ws';
 import game from './slices/game';
 import user from './slices/user';
 import timers from './slices/timers';
+import errors from './slices/errors';
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     gameList,
     game,
     user,
-    timers
+    timers,
+    errors
   },
 });

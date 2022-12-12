@@ -9,7 +9,6 @@ export const Signup = () => {
   const [ email, setEmail ] = React.useState('');
   const [ name, setName ] = React.useState('');
   const [ password, setPassword ] = React.useState('');
-  const err = useSelector((state: any) => state.user.error);
   const isLoaded = useSelector((state: any) => !!state.user.accessToken);
   const dispatch = useDispatch<any>();
 
@@ -28,7 +27,6 @@ export const Signup = () => {
         <input placeholder={'Password:'} type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} />
         <button onClick={signup}>Sign up</button>
       </div>
-      {err.text}
     </div>
   );
 };
