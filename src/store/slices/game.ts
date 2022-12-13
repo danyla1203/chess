@@ -265,6 +265,13 @@ export const gameSlice = createSlice({
   },
   reducers: {
     initGameData: (state, { payload }) => {
+      state.chatMessages = [];
+      state.selectedFigure = { figure: null, cell: null };
+      state.strikedFigures = { black: [], white: [] };
+      state.shahData = { shachedSide: null, figure: null, },
+      state.highlightedCels = [];
+      state.isEnded = false;
+
       state.side = payload.payload.side;
 
       possibleMovesLogic.setData(payload.payload.board, payload.payload.side);
