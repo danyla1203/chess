@@ -6,7 +6,11 @@ import { ServerMessageTypes } from '../../WsHandler';
 
 const Message = ({ author, message }: any) => {
   const outputData = new Date(message.date);
-  const beautyTime = `${outputData.getHours()}:${outputData.getMinutes()}`;
+  const minutes = outputData.getMinutes();
+  const hours = outputData.getHours();
+  const beautyMinutes = minutes < 10 ? `0${minutes}` : minutes;
+  const beautyHours = hours < 10 ? `0${hours}` : hours;
+  const beautyTime = `${beautyHours}:${beautyMinutes}`;
   return (
     <div className="game__chat__messages__item" key={message.date}>
       <h4 className='game__chat__messages__item-name'>{author.name}</h4>
@@ -17,7 +21,7 @@ const Message = ({ author, message }: any) => {
 };
 
 export const GameChat = () => {
-  const [ text, setText ] = React.useState();
+  const [ inputText, setText ] = React.useState();
   const gameId = useSelector((state: any) => state.game.id);
   const chatMessages = useSelector((state: any) => state.game.chatMessages);
   const accessToken = useSelector((state: any) => state.user.accessToken);
@@ -28,8 +32,14 @@ export const GameChat = () => {
     },
   });
 
-  const sendMessage = () => {
-    sendJsonMessage({ type: ServerMessageTypes.Game, body: { type: GameTypes.CHAT_MESSAGE, body: { gameId, message: { text } } } });
+  const sendMessage = (text: string = inputText) => {
+    sendJsonMessage({ 
+      type: ServerMessageTypes.Game,
+      body: {
+        type: GameTypes.CHAT_MESSAGE,
+        body: { gameId, message: { text } }
+      }
+    });
   };
 
   return (
@@ -41,10 +51,23 @@ export const GameChat = () => {
         <input 
           className="game__chat__input__message" 
           onChange={(e: any) => setText(e.target.value)} 
-          value={text}
+          value={inputText}
         />
-        <button className="game__chat__input__btn" onClick={sendMessage}>Send</button>
-        
+        <div className="game__chat__input__quick-messages">
+          <button 
+            className="game__chat__input__quick-messages__btn" 
+            onClick={() => sendMessage('Good game!')}
+          >GG</button>
+          <button 
+            className="game__chat__input__quick-messages__btn" 
+            onClick={() => sendMessage('Well played!')}
+          >WP</button>
+          <button 
+            className="game__chat__input__quick-messages__btn"
+            onClick={() => sendMessage('Have fun!')}
+          >HF</button>
+        </div>
+        <button className="game__chat__input__btn" onClick={() => sendMessage()}>Send</button>
       </div>
     </div>
   );

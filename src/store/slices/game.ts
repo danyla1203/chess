@@ -282,6 +282,10 @@ export const gameSlice = createSlice({
     },
     endGame: (state) => {
       state.isEnded = true;
+      state.chatMessages.push({ 
+        message: { text: 'Game over!', date: new Date() }, 
+        author: { name: 'System' } }
+      );
     },
     startGame: (state) => {
       state.isWaiting = false;
