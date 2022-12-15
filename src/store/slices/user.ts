@@ -93,6 +93,24 @@ export const userMeRequest = createAsyncThunk(
   }
 );
 
+export const userGameList = createAsyncThunk(
+  '/user/game/list',
+  async (accessToken: string, thunk) => {
+    const reqBody = { 
+      method: 'GET', 
+      headers: { 
+        accept: 'application/json',
+        'Authorization': `Bearer ${accessToken}` 
+      }
+    };
+    const response = await fetch('http://localhost:3000/user/games', reqBody);
+    if (response.status !== 200) {
+      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
+    }
+    return response.json();
+  }
+);
+
 export const userSlice = createSlice({
   name: 'user',
   initialState: {
@@ -103,6 +121,7 @@ export const userSlice = createSlice({
     isGetTokenLoaded: false,
     accessToken: null,
     error: { code: null, text: null },
+    gameHistory: []
   },
   reducers: {
     setUserData: (state, { payload }) => {
@@ -149,6 +168,10 @@ export const userSlice = createSlice({
       state.email = null;
       state.name = payload.name;
       state.id = payload.id;
+    });
+
+    builder.addCase(userGameList.fulfilled, (state, { payload }) => {
+      state.gameHistory = payload;
     });
   }
 });
