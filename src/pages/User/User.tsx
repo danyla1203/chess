@@ -3,11 +3,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import { logoutRequest, userGameList } from '../../store/slices/user';
 
+import './User.scss';
+
 const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, playersId } }: any) => {
+  const beautyMaxTime = Math.floor(maxTime / (1000 * 60));
+  const beautyTimeIncrement = Math.floor(timeIncrement / 1000);
   return (
     <div className='user-page__game-history__item'>
-      <h3 className='user-page__game-history__item__timings'>{maxTime}-{timeIncrement}</h3>
-      <h3 className='user-page__game-history__item__side-selecting'>{sideSelecting}</h3>
+      <h3 className='user-page__game-history__item__timings'>{beautyMaxTime}-{beautyTimeIncrement}</h3>
+      <span className={`user-page__game-history__item__side-selecting ${sideSelecting}-circle`}></span>
       <div className='user-page__game-history__item__players'>
         <h3 className='user-page__game-history__item__players__item'>{playersId[0].name}</h3>
         <h3 className='user-page__game-history__item__players__item'>{playersId[1].name}</h3>
@@ -21,6 +25,12 @@ const GameHistory = () => {
   console.log(gameHistory);
   return (
     <div className='user-page__game-history'>
+      <h2 className='user-page__game-history__label'>Games history</h2>
+      <div className="user-page__game-history__labels">
+        <h3 className='user-page__game-history__labels__item'>Timings:</h3>
+        <h3 className='user-page__game-history__labels__item'>Side:</h3>
+        <h3 className='user-page__game-history__labels__item'>Players:</h3>
+      </div>
       { gameHistory.map((game: any) => <GameHistoryItem data={game}/>) }
     </div>
   );
@@ -39,10 +49,13 @@ export const UserPage = () => {
   return (
     <div className="user-page">
       <div className="user-page__personal">
-        <h3>{ userName }</h3>
-        <button onClick={() => dispatch(logoutRequest())}>Logout</button>
-        <GameHistory />
+        <h3 className='user-page__personal__name'>{ userName }</h3>
+        <button 
+          onClick={() => dispatch(logoutRequest())}
+          className='user-page__personal__btn'
+        >Logout</button>
       </div>
+      <GameHistory />
     </div>
   );
 };
