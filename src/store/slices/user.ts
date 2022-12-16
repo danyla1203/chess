@@ -171,7 +171,7 @@ export const userSlice = createSlice({
     });
 
     builder.addCase(userGameList.fulfilled, (state, { payload }) => {
-      state.gameHistory = payload;
+      state.gameHistory = payload.games;
     });
   }
 });

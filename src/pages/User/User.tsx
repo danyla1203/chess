@@ -5,7 +5,7 @@ import { logoutRequest, userGameList } from '../../store/slices/user';
 
 import './User.scss';
 
-const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, playersId } }: any) => {
+const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, players } }: any) => {
   const beautyMaxTime = Math.floor(maxTime / (1000 * 60));
   const beautyTimeIncrement = Math.floor(timeIncrement / 1000);
   return (
@@ -13,8 +13,8 @@ const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, player
       <h3 className='user-page__game-history__item__timings'>{beautyMaxTime}-{beautyTimeIncrement}</h3>
       <span className={`user-page__game-history__item__side-selecting ${sideSelecting}-circle`}></span>
       <div className='user-page__game-history__item__players'>
-        <h3 className='user-page__game-history__item__players__item'>{playersId[0].name}</h3>
-        <h3 className='user-page__game-history__item__players__item'>{playersId[1].name}</h3>
+        <h3 className='user-page__game-history__item__players__item'>{players[0].name}</h3>
+        <h3 className='user-page__game-history__item__players__item'>{players[1].name}</h3>
       </div>
     </div>
   );
