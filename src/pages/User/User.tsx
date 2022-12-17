@@ -8,13 +8,18 @@ import './User.scss';
 const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, players } }: any) => {
   const beautyMaxTime = Math.floor(maxTime / (1000 * 60));
   const beautyTimeIncrement = Math.floor(timeIncrement / 1000);
+  let winner, looser;
+  for (let player of players) {
+    if (player.isWinner) winner = player;
+    else looser = player;
+  }
   return (
     <div className='user-page__game-history__item'>
       <h3 className='user-page__game-history__item__timings'>{beautyMaxTime}-{beautyTimeIncrement}</h3>
       <span className={`user-page__game-history__item__side-selecting ${sideSelecting}-circle`}></span>
       <div className='user-page__game-history__item__players'>
-        <h3 className='user-page__game-history__item__players__item'>{players[0].name}</h3>
-        <h3 className='user-page__game-history__item__players__item'>{players[1].name}</h3>
+        <h3 className='user-page__game-history__item__players__item'>{winner.user.name}-win</h3>
+        <h3 className='user-page__game-history__item__players__item'>{looser.user.name}</h3>
       </div>
     </div>
   );
