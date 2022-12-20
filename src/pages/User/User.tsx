@@ -5,7 +5,7 @@ import { logoutRequest, userGameList } from '../../store/slices/user';
 
 import './User.scss';
 
-const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, players } }: any) => {
+const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, players, id } }: any) => {
   const beautyMaxTime = Math.floor(maxTime / (1000 * 60));
   const beautyTimeIncrement = Math.floor(timeIncrement / 1000);
   let winner, looser;
@@ -14,7 +14,7 @@ const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, player
     else looser = player;
   }
   return (
-    <div className='user-page__game-history__item'>
+    <div className='user-page__game-history__item' key={id}>
       <h3 className='user-page__game-history__item__timings'>{beautyMaxTime}-{beautyTimeIncrement}</h3>
       <span className={`user-page__game-history__item__side-selecting ${sideSelecting}-circle`}></span>
       <div className='user-page__game-history__item__players'>
@@ -35,7 +35,7 @@ const GameHistory = () => {
         <h3 className='user-page__game-history__labels__item'>Side:</h3>
         <h3 className='user-page__game-history__labels__item'>Players:</h3>
       </div>
-      { gameHistory.map((game: any) => <GameHistoryItem data={game}/>) }
+      { gameHistory.map((game: any) => <GameHistoryItem data={game} key={game.id}/>) }
     </div>
   );
 };
