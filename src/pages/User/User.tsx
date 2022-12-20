@@ -27,7 +27,6 @@ const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, player
 
 const GameHistory = () => {
   const gameHistory = useSelector((state: any) => state.user.gameHistory);
-  console.log(gameHistory);
   return (
     <div className='user-page__game-history'>
       <h2 className='user-page__game-history__label'>Games history</h2>
