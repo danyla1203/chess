@@ -30,6 +30,7 @@
     "ts-loader": "9.4.1"
   },
   "scripts": {
-    "start": "webpack-dev-server --open"
+    "start": "webpack-dev-server --open",
+    "build": "webpack"
   }
 }
