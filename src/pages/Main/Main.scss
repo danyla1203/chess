@@ -1,0 +1,12 @@
+.create-game {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  &__minutes {
+    display: flex;
+    flex-direction: column;
+  }
+  &__select-side {
+    display: flex;
+  }
+}

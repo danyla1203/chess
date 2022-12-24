@@ -1,10 +1,16 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
+    "jsx": "react",
+    "module": "commonjs",
     "noImplicitAny": true,
-    "module": "es6",
-    "target": "es2017",
-    "allowJs": true,
-    "moduleResolution": "node",
-  }
+    "outDir": "./build/",
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "target": "ESNext",
+    "experimentalDecorators": true,
+  },
+  "include": [
+    "src/index.tsx"
+  ]
 }

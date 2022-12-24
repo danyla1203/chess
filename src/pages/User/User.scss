@@ -1,0 +1,38 @@
+.user-page {
+  &__personal {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    &__name {
+      font: 600 35px system-ui
+    }
+    &__btn {
+      width: 100px;
+    }
+  }
+  &__game-history {
+    border-top: 1px solid;
+    width: 30vw;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    &__label {
+      font: 400 24px system-ui;
+      margin-bottom: 30px;
+    }
+    &__labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      &__item {
+        font: 300 15px system-ui
+      }
+    }
+    &__item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+}

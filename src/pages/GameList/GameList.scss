@@ -1,0 +1,78 @@
+$circle-diameter: 16px;
+
+.game-list {
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(206, 206, 206);
+  padding: 50px;
+  padding-top: 5px;
+  width: 40vw;
+  &__labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 30px;
+    border-bottom: 2px solid black;
+    &__item {
+      font: 300 15px system-ui
+    }
+  }
+  &__item {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    height: 40px;
+    margin-top: 10px;
+    align-items: center;
+    &__name {
+      font: 600 20px system-ui
+    } 
+    &__data-block {
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+.w-circle {
+  height: 15px;
+  width: 15px;
+  background: rgb(248, 248, 248);
+  border-radius: 50%;
+  display: inline-block;
+}
+.b-circle {
+  height: 15px;
+  width: 15px;
+  background: rgb(45, 45, 45);
+  border-radius: 50%;
+  display: inline-block;
+}
+.rand-circle {
+  width: $circle-diameter;
+  height: $circle-diameter;
+  border-radius: 100%;
+  display: flex;
+  align-items: center;
+  
+  &:before,
+  &:after {
+    content: '';
+    width: $circle-diameter/2;
+    height: $circle-diameter;
+  }
+  
+  &:before {
+    float: left;
+    border-top-left-radius: $circle-diameter/2;
+    border-bottom-left-radius: $circle-diameter/2;
+    background: rgb(45, 45, 45);
+  }
+  
+  &:after {
+    float: right;
+    border-top-right-radius: $circle-diameter/2;
+    border-bottom-right-radius: $circle-diameter/2;
+    background: rgb(248, 248, 248);
+  }
+}
+

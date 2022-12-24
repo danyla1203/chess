@@ -1,48 +1,51 @@
+import { createSlice } from '@reduxjs/toolkit';
 
-import { Board, Figure, Cell, Player, White, Black, Striked, ShahData, MateData } from './sharedTypes';
-export interface GameRenderI {
-  setFiguresOnBoard(transform: 'w'|'b', white: White, black: Black): void
-  renderPossibleMoves(moves: Cell[]): void
-  removePossibleMoves(): void
-  moveFigure(playingSide: string, figure: Figure, newCell: Cell): void
-  findCellByCoord(side: 'w'|'b', x: number, y: number): Cell
-  setStrikedFigure(playindSide: 'w'|'b', color: 'w'|'b', figure: Figure): void
-  removeFigure(side: 'w'|'b', figure: Figure): void;
-  highlightFigure(side: 'w'|'b', figure: Figure): void
-}
-export interface GameProccessI {
-  gameId: string,
-  updateBoard(newBoard: Board): void
-  moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string
-  possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void
-  findCell(x: number, y: number): Cell
-  removePossibleMoves(): void
-  showStriked(striked: Striked): void
-  removeFigure(striked: Striked): void
-  highlightFigure(shahData: ShahData): void
-  setMate(mate: MateData): void;
-  set sideToPlay(side: Player);
+export type Figure = string;
+export type Cell = string;
+type White = {[index: Figure]: Cell}
+type Black = White;
+
+export type Board = {
+  white: White
+  black: Black
 }
 
-export class GameProccess implements GameProccessI {
-  public gameId: string;
-  private Render: GameRenderI;
-  private Letters: string[];
-  
+class HighlightedCels {
   private Board: Board;
-  private playingSide: Player;
-  private moves: Cell[];
+  private playingSide: 'w'|'b';
+  private Letters: string[];
 
-  set sideToPlay(side: Player) {
-    this.playingSide = side;
+  public setData(board: Board, playindSide: 'w'|'b') {
+    this.Board = board;
+    this.playingSide = playindSide;
   }
-
-  constructor(render: GameRenderI) {
-    this.Render = render;
-    this.moves = [];
+  public setUpdatedBoard(board: Board) {
+    this.Board = board;
+  }
+  constructor() {
     this.Letters = [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' ];
   }
-
+  private checkIsCellEmpty(cell: string): boolean {
+    if (parseInt(cell[1], 10) > 8) return false;
+    for (let figure in this.Board.white) {
+      if (this.Board.white[figure] === cell) return false;
+    }
+    for (let figure in this.Board.black) {
+      if (this.Board.black[figure] === cell) return false;
+    }
+    return true;
+  }
+  private isEnemyInCell(cell: Cell): boolean {
+    if (this.playingSide == 'w') {
+      for (let figure in this.Board.black) {
+        if (this.Board.black[figure] === cell) return true;
+      }
+    } else {
+      for (let figure in this.Board.white) {
+        if (this.Board.white[figure] === cell) return true;
+      }
+    }
+  }
   private findNextLetter(letter: string): string[] {
     let result = [];
     for (let i = 0; i < this.Letters.length; i++) {
@@ -222,17 +225,15 @@ export class GameProccess implements GameProccessI {
   }
   private knMove(currentCell: Cell): Cell[] {
     let cells = this.getCellsAround(currentCell);
-    console.log(cells);
     for (let i = 0; i < cells.length; i++) {
       if (!this.checkIsCellEmpty(cells[i]) && !this.isEnemyInCell(cells[i])) {
-        console.log(cells[i]);
         cells.splice(i, 1);
         i--;
       }
     }
     return cells;
   }
-  private createPossibleMoves(figure: Figure, currentCell: Cell): Cell[] {
+  public createPossibleMoves(figure: Figure, currentCell: Cell): Cell[] {
     if (/pawn/.test(figure)) return this.pawnMove(currentCell);
     if (/R/.test(figure)) return this.rockMove(currentCell);
     if (/Kn/.test(figure)) return this.knMove(currentCell);
@@ -242,87 +243,103 @@ export class GameProccess implements GameProccessI {
 
     return [];
   }
-
-  private checkIsCellEmpty(cell: string): boolean {
-    if (parseInt(cell[1], 10) > 8) return false;
-    for (let figure in this.Board.white) {
-      if (this.Board.white[figure] === cell) return false;
-    }
-    for (let figure in this.Board.black) {
-      if (this.Board.black[figure] === cell) return false;
-    }
-    return true;
-  }
-  private isEnemyInCell(cell: Cell): boolean {
-    if (this.playingSide == 'w') {
-      for (let figure in this.Board.black) {
-        if (this.Board.black[figure] === cell) return true;
-      }
-    } else {
-      for (let figure in this.Board.white) {
-        if (this.Board.white[figure] === cell) return true;
-      }
-    }
-  }
-
-  private canMove(moves: Cell[], cell: Cell): boolean {
-    for (let i = 0; i < moves.length; i++) {
-      if (moves[i] == cell) return true;
-    }
-    return false;
-  }
-  private verifyUserSelect(figureSide: 'w'|'b', figure: Figure, cell: Cell): boolean {
-    if (!figure || !cell) return false;
-    if (cell.length !== 2) return false;
-    if (figure.length == 0) return false;
-    console.log(figureSide, this.playingSide);
-    if (figureSide != this.playingSide) return false;
-    return true;
-  }
-  public updateBoard(newBoard: Board): void {
-    this.Board = newBoard;
-    this.Render.setFiguresOnBoard(this.playingSide, newBoard.white, newBoard.black);
-  }
-
-  public moveFigure(figureSide: 'w'|'b', figure: Figure, cell: Cell): string {
-    if (this.verifyUserSelect(figureSide, figure, cell) && this.canMove(this.moves, cell)) {
-      this.Render.removePossibleMoves();
-      this.moves = [];
-      return 'ok';
-    } else {
-      return 'err';
-    }
-  }
-  public possibleMoves(figureSide: 'w'|'b', figure: Figure, cell: Cell): void {
-    if (this.verifyUserSelect(figureSide, figure, cell)) {
-      this.Render.removePossibleMoves();
-      this.moves = this.createPossibleMoves(figure, cell);
-      this.Render.renderPossibleMoves(this.moves);
-    }
-  }
-  public findCell(x: number, y: number): Cell {
-    return this.Render.findCellByCoord(this.playingSide, x, y);
-  }
-  public removePossibleMoves(): void {
-    this.Render.removePossibleMoves();
-  }
-  public showStriked(striked: Striked): void {
-    this.Render.setStrikedFigure(this.playingSide, striked.strikedSide, striked.figure);
-  }
-  public removeFigure(striked: Striked): void {
-    if (striked.strikedSide == 'w') {
-      this.Render.removeFigure('w', striked.figure);
-      delete this.Board.white[striked.figure];
-    } else {
-      this.Render.removeFigure('b', striked.figure);
-      delete this.Board.black[striked.figure];
-    }
-  }
-  public highlightFigure(shahData: ShahData): void {
-    let side: 'w'|'b' = shahData.shachedSide == 'w' ? 'b':'w';
-    this.Render.highlightFigure(side, shahData.byFigure);
-  }
-  public setMate(): void {
-    alert('Game is finished');
-  }
 }
+
+const possibleMovesLogic = new HighlightedCels();
+export const gameSlice = createSlice({
+  name: 'game',
+  initialState: {
+    id: null,
+    isWaiting: null,
+    isEnded: false,
+    side: null,
+    movingSide: 'w',
+    board: null,
+    time: null,
+    timeIncrement: null,
+    highlightedCels: [],
+    selectedFigure: { figure: null, cell: null },
+    strikedFigures: { black: [], white: [] },
+    shahData: { shachedSide: null, figure: null, },
+    chatMessages: [],
+  },
+  reducers: {
+    initGameData: (state, { payload }) => {
+      state.chatMessages = [];
+      state.selectedFigure = { figure: null, cell: null };
+      state.strikedFigures = { black: [], white: [] };
+      state.shahData = { shachedSide: null, figure: null, },
+      state.highlightedCels = [];
+      state.isEnded = false;
+
+      state.side = payload.payload.side;
+
+      possibleMovesLogic.setData(payload.payload.board, payload.payload.side);
+      const board = payload.payload.board;
+      const boardState: any = { white: {}, black: {} };
+      for (const side in board) {
+        for (const figure in board[side]) {
+          boardState[side][board[side][figure]] = figure;
+        }
+      }
+
+      state.board = boardState;
+      state.timeIncrement = parseInt(payload.payload.timeIncrement, 10);
+      state.id = payload.payload.gameId;
+    },
+    endGame: (state) => {
+      state.isEnded = true;
+      state.chatMessages.push({ 
+        message: { text: 'Game over!', date: new Date() }, 
+        author: { name: 'System' } }
+      );
+    },
+    startGame: (state) => {
+      state.isWaiting = false;
+    },
+    createGame: (state: any) => {
+      state.isWaiting = true;
+    },
+    selectFigure: (state, { payload }) => {
+      const figure = state.side === 'w' ? state.board.white[payload] : state.board.black[payload];;
+      if (!figure) return;
+
+      const possibleMoves = possibleMovesLogic.createPossibleMoves(figure, payload);
+      state.highlightedCels = possibleMoves;
+      if (possibleMoves.length >= 1) {
+        state.selectedFigure = { figure, cell: payload };
+      }
+    },
+    updateBoard: (state, { payload }) => {
+      possibleMovesLogic.setUpdatedBoard(payload.payload.board);
+      const board = payload.payload.board;
+      const boardState: any = { white: {}, black: {} };
+      for (const side in board) {
+        for (const figure in board[side]) {
+          boardState[side][board[side][figure]] = figure;
+        }
+      }
+      state.board = boardState;
+      state.highlightedCels = [];
+      state.selectedFigure = { figure: null, cell: null };
+      state.shahData = { shachedSide: null, figure: null };
+      state.movingSide = state.movingSide === 'w' ? 'b':'w';
+    },
+    addStrikedFigure: (state, { payload: { strikedSide, figure } }) => {
+      strikedSide === 'w' ?
+        state.strikedFigures.white.push(figure):
+        state.strikedFigures.black.push(figure);
+    },
+    setShah: (state, { payload: { shachedSide, byFigure } }) => {
+      state.shahData.figure = byFigure;
+      state.shahData.shachedSide = shachedSide;
+    },
+    addMessage: (state, { payload }: any) => {
+      state.chatMessages.push(payload);
+    }
+  },
+});
+
+export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure, setShah, createGame, endGame, addMessage } = gameSlice.actions;
+
+export default gameSlice.reducer;
