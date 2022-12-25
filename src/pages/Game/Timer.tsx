@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateTimer } from '../../store/slices/timers';
 
 export const GameTimer = ({ side }: { side: 'w' | 'b' }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const time = useSelector((state: any) => side === 'w' ? state.timers.whiteTimer : state.timers.blackTimer);
   const isEnded = useSelector((state: any) => state.game.isEnded);
   const isTicking = useSelector((state: any) => side === state.game.movingSide);
