@@ -11,7 +11,7 @@ export const GameTimer = ({ side }: { side: 'w' | 'b' }) => {
   const dispatch = useDispatch<any>();
 
   const getTime = () => {
-    dispatch(updateTimer(side as string));
+    dispatch(updateTimer(side as any) as any);
   };
 
   const minutes = Math.floor(time / (1000 * 60));
