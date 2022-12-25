@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { config } from '../../config';
 
 export const getTokens = createAsyncThunk(
   '/use-refresh',
@@ -11,7 +12,7 @@ export const getTokens = createAsyncThunk(
         'Content-Type': 'application/json'
       }
     };
-    const response = await fetch('http://localhost:3000/refresh-token', reqBody);
+    const response = await fetch(`${config.apiHost}/refresh-toke`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -30,7 +31,7 @@ export const loginRequest = createAsyncThunk(
         'Content-Type': 'application/json' 
       } 
     };
-    const response = await fetch('http://localhost:3000/login', reqBody);
+    const response = await fetch(`${config.apiHost}/login`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -48,7 +49,7 @@ export const signUpRequest = createAsyncThunk(
         'Content-Type': 'application/json' 
       } 
     };
-    const response = await fetch('http://localhost:3000/signup', reqBody);
+    const response = await fetch(`${config.apiHost}/signup`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -67,7 +68,7 @@ export const logoutRequest = createAsyncThunk(
         'Authorization': `Bearer ${state.user.accessToken}` 
       } 
     };
-    const response = await fetch('http://localhost:3000/logout', reqBody);
+    const response = await fetch(`${config.apiHost}/logout`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -85,7 +86,7 @@ export const userMeRequest = createAsyncThunk(
         'Authorization': `Bearer ${accessToken}` 
       }
     };
-    const response = await fetch('http://localhost:3000/me', reqBody);
+    const response = await fetch(`${config.apiHost}/me`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -103,7 +104,7 @@ export const userGameList = createAsyncThunk(
         'Authorization': `Bearer ${accessToken}` 
       }
     };
-    const response = await fetch('http://localhost:3000/user/games', reqBody);
+    const response = await fetch(`${config.apiHost}/user/games`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
