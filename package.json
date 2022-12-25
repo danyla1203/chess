@@ -26,7 +26,7 @@
     "typescript": "4.5.2",
     "webpack": "5.64.1",
     "webpack-cli": "4.10.0",
-    "webpack-dev-server": "4.5.0"
+    "webpack-dev-server": "^4.11.1"
   },
   "scripts": {
     "start": "webpack-dev-server --open --env API_HOST=http://localhost:3000",
