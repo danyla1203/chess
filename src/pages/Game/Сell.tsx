@@ -4,10 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectFigure } from '../../store/slices/game';
 import { GameTypes } from '../..';
 import { ServerMessageTypes } from '../../WsHandler';
+import { config } from '../../config';
 
 export const Cell = (props: any) => {
   const accessToken = useSelector((state: any) => state.user.accessToken);
-  const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
+  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
     share: true,
     queryParams: {
       'Authorization': accessToken,

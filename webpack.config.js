@@ -40,8 +40,12 @@ module.exports = (env) => {
         template: path.resolve(__dirname, 'src', 'index.html'),
       }),
       new EnvironmentPlugin({
-        API_HOST: env.API_HOST
+        API_HOST: env.API_HOST,
+        API_DOMAIN: env.API_DOMAIN,
       })
     ],
+    devServer: {
+      historyApiFallback: true,
+    },
   };
 };

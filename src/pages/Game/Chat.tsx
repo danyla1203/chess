@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useSelector } from 'react-redux';
 import useWebSocket from 'react-use-websocket';
 import { GameTypes } from '../..';
+import { config } from '../../config';
 import { ServerMessageTypes } from '../../WsHandler';
 
 const Message = ({ author, message }: any) => {
@@ -25,7 +26,7 @@ export const GameChat = () => {
   const gameId = useSelector((state: any) => state.game.id);
   const chatMessages = useSelector((state: any) => state.game.chatMessages);
   const accessToken = useSelector((state: any) => state.user.accessToken);
-  const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
+  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
     share: true,
     queryParams: {
       'Authorization': accessToken,

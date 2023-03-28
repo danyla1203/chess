@@ -6,11 +6,14 @@ import { signUpRequest } from '../../store/slices/user';
 import './Signup.scss';
 
 export const Signup = () => {
-  const [ email, setEmail ] = React.useState('');
-  const [ name, setName ] = React.useState('');
+  const [ name, setName ] = React.useState();
   const [ password, setPassword ] = React.useState('');
+  const email = useSelector((state: any) => state.user.email);
   const isLoaded = useSelector((state: any) => !!state.user.accessToken);
+  const isEmailConfirmed = useSelector((state: any) => state.user.emailConfirmed);
   const dispatch = useDispatch<any>();
+
+  if (!isEmailConfirmed) return <Navigate to='/email-confirmation' />;
 
   const signup = () => {
     const deviceId: string = (Math.random() + 1).toString(36).substring(7);
@@ -22,8 +25,8 @@ export const Signup = () => {
   return (
     <div className="signup">
       <div className="signup__container">
+        <h3>{email}</h3>
         <input placeholder={'Name:'} type="text" value={name} onChange={(e: any) => setName(e.target.value)}/>
-        <input placeholder={'Email:'} type="text" value={email} onChange={(e: any) => setEmail(e.target.value)} />
         <input placeholder={'Password:'} type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} />
         <button onClick={signup}>Sign up</button>
       </div>

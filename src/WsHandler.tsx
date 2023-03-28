@@ -7,6 +7,7 @@ import { setGames } from './store/slices/gamelist';
 import { setUserData } from './store/slices/user';
 import { setTimers, updateTimerByServerEvent } from './store/slices/timers';
 import { addError } from './store/slices/errors';
+import { config } from './config';
 
 export enum ServerMessageTypes {
   Game = 'Game',
@@ -69,7 +70,7 @@ export const WsHandler = ({ accessToken }: any): null => {
     dispatch(setGames(data));
   };
 
-  const { readyState } = useWebSocket('ws://localhost:3000', {
+  const { readyState } = useWebSocket(`ws://${config.apiDomain}`, {
     protocols: 'echo-protocol',
     share: true,
     queryParams: {

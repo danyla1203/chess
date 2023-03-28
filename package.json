@@ -1,14 +1,15 @@
 {
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.0",
-    "node-sass": "^8.0.0",
+    "node-sass": "8.0.0",
+    "query-string": "^8.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.4.3",
     "react-use-websocket": "^4.2.0",
     "sass-loader": "^13.2.0",
-    "scss-loader": "0.0.1",
+    "scss-loader": "latest",
     "style-loader": "^3.3.1"
   },
   "devDependencies": {
@@ -29,8 +30,8 @@
     "webpack-dev-server": "^4.11.1"
   },
   "scripts": {
-    "start": "webpack-dev-server --open --env API_HOST=http://localhost:3000",
-    "build:dev": "webpack --env API_HOST=http://localhost:3000",
-    "build:prod": "webpack --env API_HOST=http://chessbackend-env.eba-kwak4mh2.us-east-1.elasticbeanstalk.com"
+    "start": "webpack-dev-server --open --env API_HOST=http://localhost:9200/api --env API_DOMAIN=localhost:9200",
+    "build:dev": "webpack --env API_HOST=http://localhost:9200/api API_DOMAIN=localhost:9200",
+    "build:prod": "webpack --env API_HOST=https://chess-backend-api.com API_DOMAIN=chess-backend-api.com"
   }
 }

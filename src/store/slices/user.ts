@@ -12,7 +12,7 @@ export const getTokens = createAsyncThunk(
         'Content-Type': 'application/json'
       }
     };
-    const response = await fetch(`${config.apiHost}/refresh-toke`, reqBody);
+    const response = await fetch(`${config.apiHost}/refresh-token`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -112,6 +112,75 @@ export const userGameList = createAsyncThunk(
   }
 );
 
+export const sendVerificationEmail = createAsyncThunk(
+  '/user/send-verification-email',
+  async (email: string, thunk) => {
+    const reqBody = {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      headers: { 
+        accept: 'application/json', 
+        'Content-Type': 'application/json' 
+      }
+    };
+
+    const response = await fetch(`${config.apiHost}/send-verification-mail`, reqBody);
+    if (response.status !== 200) {
+      return thunk.rejectWithValue({
+        code: response.status,
+        error: response.statusText,
+      });
+    }
+    return { email, data: await response.json() };
+  }
+);
+
+export const confirmCode = createAsyncThunk(
+  '/user/confirm-code',
+  async (data: any, thunk) => {
+    const reqBody = {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 
+        accept: 'application/json', 
+        'Content-Type': 'application/json' 
+      } 
+    };
+
+    const response = await fetch(`${config.apiHost}/verify-email`, reqBody);
+    if (response.status !== 200) {
+      return thunk.rejectWithValue({
+        code: response.status,
+        error: response.statusText,
+      });
+    }
+    return response.json();
+  }
+);
+
+export const googleAuth = createAsyncThunk(
+  '/user/google/oauth',
+  async (code: string, thunk) => {
+    const reqBody = {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    };
+
+    const response = await fetch(`${config.apiHost}/google/oauth`, reqBody);
+    if (response.status !== 200) {
+      return thunk.rejectWithValue({
+        code: response.status,
+        error: response.statusText,
+      });
+    }
+    return response.json();
+  }
+);
+
 export const userSlice = createSlice({
   name: 'user',
   initialState: {
@@ -122,7 +191,9 @@ export const userSlice = createSlice({
     isGetTokenLoaded: false,
     accessToken: null,
     error: { code: null, text: null },
-    gameHistory: []
+    gameHistory: [],
+    confirmationEmailSended: null,
+    emailConfirmed: false
   },
   reducers: {
     setUserData: (state, { payload }) => {
@@ -132,6 +203,23 @@ export const userSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(googleAuth.fulfilled, (state, { payload }) => {
+      state.email = payload.email;
+      state.emailConfirmed = true;
+    });
+    builder.addCase(sendVerificationEmail.fulfilled, (state, { payload }) => {
+      state.email = payload.email;
+      state.confirmationEmailSended = true;
+    });
+    builder.addCase(sendVerificationEmail.rejected, (state) => {
+      state.error = { code: 400, text: 'Something went wrong' };
+      state.confirmationEmailSended = false;
+    });
+
+    builder.addCase(confirmCode.fulfilled, (state) => {
+      state.emailConfirmed = true;
+    });
+
     builder.addCase(userMeRequest.fulfilled, (state, { payload }: any) => {
       state.id = payload.id;
       state.name = payload.name;
@@ -166,6 +254,7 @@ export const userSlice = createSlice({
     builder.addCase(logoutRequest.fulfilled, (state, { payload }) => {
       state.accessToken = null;
       state.authorized = false;
+      state.emailConfirmed = false;
       state.email = null;
       state.name = payload.name;
       state.id = payload.id;

@@ -6,12 +6,13 @@ import { Link } from 'react-router-dom';
 import './Main.scss';
 import { ServerMessageTypes } from '../../WsHandler';
 import { useSelector } from 'react-redux';
+import { config } from '../../config';
 
 export const MainPage = () => {
   const accessToken = useSelector((state: any) => state.user.accessToken);
   const [ minutes, setMinutes ] = React.useState(6);
   const [ timeAdd, setTimeAdd ] = React.useState(15);
-  const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
+  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
     share: true,
     queryParams: {
       'Authorization': accessToken,

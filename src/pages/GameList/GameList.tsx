@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import useWebSocket from 'react-use-websocket';
 import { GameTypes } from '../..';
+import { config } from '../../config';
 import { GameData } from '../../store/slices/gamelist';
 import { ServerMessageTypes } from '../../WsHandler';
 
@@ -11,7 +12,7 @@ import './GameList.scss';
 export const GameList = () => {
   const [ isConnected, setIsConnected ] = React.useState(false);
   const accessToken = useSelector((state: any) => state.user.accessToken);
-  const { sendJsonMessage } = useWebSocket('ws://localhost:3000', {
+  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
     share: true,
     queryParams: {
       'Authorization': accessToken,

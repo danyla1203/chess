@@ -8,9 +8,11 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/index';
 import { GamePage } from './pages/Game/Game';
 import { Signup } from './pages/Signup/Signup';
+import { EmailConfirmation } from './pages/Signup/EmailConfirmation';
 import { UserPage } from './pages/User/User';
 import { Notifications } from './components/Notification/Notifications';
 import { WsHandler } from './WsHandler';
+import { GoogleConfirm } from './pages/Signup/GoogleConfirm';
 
 import { userMeRequest } from './store/slices/user';
 import { getTokens } from './store/slices/user';
@@ -36,6 +38,8 @@ const Router = () => {
           <Route path="/" element={<MainPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/email-confirmation" element={<EmailConfirmation />} />
+          <Route path="/complete-registration" element={<GoogleConfirm />}/>
           <Route path="/game" element={<GamePage />} />
           <Route path='/lobby' element={<GameList />} />
           <Route path='/user' element={<UserPage />} />
@@ -57,6 +61,7 @@ const App = () => {
       dispatch(userMeRequest(accessToken));
     }
   }, [ accessToken ]);
+
   if (isGetTokenLoaded) {
     return (
       <div className="wrapper">
