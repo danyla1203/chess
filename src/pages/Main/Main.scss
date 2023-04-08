@@ -1,4 +1,47 @@
+main { 
+  display: flex;
+  width: 100vw;
+  align-items: center;
+  height: 90vh;
+}
+
+.chat {
+  margin-left: 40px;
+  height: 560px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 30vw;
+  &__messages {
+    overflow: scroll;
+    padding: 10px;
+    box-shadow: inset 1px -1px 6px 1px grey;
+    height: calc(71px * 7);
+    &__message {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      &-name {
+        font: 500 13px system-ui;
+        margin-right: 10px;
+      }
+      &-message {
+        font: 200 12px system-ui
+      }
+      &-time {
+        font: 500 12px system-ui;
+        margin-left: auto;
+        margin-right: 10px;
+      }
+    }
+  }
+}
+
 .create-game {
+  width: 70vw;
+  align-items: center;
+  justify-content: center;
   padding: 10px;
   display: flex;
   flex-direction: column;

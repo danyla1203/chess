@@ -5,6 +5,7 @@ import game from './slices/game';
 import user from './slices/user';
 import timers from './slices/timers';
 import errors from './slices/errors';
+import chat from './slices/chat';
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     game,
     user,
     timers,
-    errors
+    errors,
+    chat
   },
 });

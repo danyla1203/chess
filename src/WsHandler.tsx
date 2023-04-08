@@ -8,6 +8,7 @@ import { setUserData } from './store/slices/user';
 import { setTimers, updateTimerByServerEvent } from './store/slices/timers';
 import { addError } from './store/slices/errors';
 import { config } from './config';
+import { pushMessage, setMessages } from './store/slices/chat';
 
 export enum ServerMessageTypes {
   Game = 'Game',
@@ -52,6 +53,9 @@ export const WsHandler = ({ accessToken }: any): null => {
       case 'LOBBY':
         dispatch(setGames(data.payload));
         break;
+      case 'NEW_MESSAGE':
+        dispatch(pushMessage(data.payload));
+        break;
       case ServerMessageTypes.User:
         dispatch(setUserData(data.payload));
         break;
@@ -85,6 +89,9 @@ export const WsHandler = ({ accessToken }: any): null => {
       case GameServerResponses.UPDATE_TIMERS:
         dispatch(updateTimerByServerEvent(data.payload));
         break;
+      case 'CHAT':
+        dispatch(setMessages(data.payload));
+        break;
       }
     }
   });
@@ -95,7 +102,7 @@ export const WsHandler = ({ accessToken }: any): null => {
     [ReadyState.CLOSED]: 'Closed',
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
   }[readyState];
-  
+
   React.useEffect(() => {
     if (connectionStatus === 'Open') {
       dispatch(setConnectStatus());

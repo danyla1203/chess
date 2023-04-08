@@ -1,6 +1,7 @@
 import * as React from 'react';
 import useWebSocket from 'react-use-websocket';
 import { Link } from 'react-router-dom';
+import { Chat } from './Chat';
 
 import './Main.scss';
 import { useSelector } from 'react-redux';
@@ -28,6 +29,7 @@ export const MainPage = () => {
 
   return (
     <main>
+      <Chat />
       <div className="create-game">
         <div className="create-game__time-config">
           <h4>Minutes per side: {minutes}</h4>
