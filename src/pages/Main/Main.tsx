@@ -1,10 +1,8 @@
 import * as React from 'react';
 import useWebSocket from 'react-use-websocket';
-import { GameTypes } from '../..';
 import { Link } from 'react-router-dom';
 
 import './Main.scss';
-import { ServerMessageTypes } from '../../WsHandler';
 import { useSelector } from 'react-redux';
 import { config } from '../../config';
 
@@ -25,7 +23,7 @@ export const MainPage = () => {
       time: minutes * 60 * 1000,
       timeIncrement: timeAdd * 1000
     };
-    sendJsonMessage({ type: ServerMessageTypes.Game, body: { type: GameTypes.START_NEW, body } });
+    sendJsonMessage({ action: '/game/new-game', body });
   };
 
   return (

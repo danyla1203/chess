@@ -20,8 +20,9 @@ export const gameList = createSlice({
     games: [],
   },
   reducers: {
-    setGames: (state, { payload }) => {
-      state.games = payload;
+    setGames: (state, { payload }: any) => {
+      console.log(payload);
+      state.games = payload.games;
     }
   },
 });

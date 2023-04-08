@@ -264,7 +264,8 @@ export const gameSlice = createSlice({
     chatMessages: [],
   },
   reducers: {
-    initGameData: (state, { payload }) => {
+    initGameData: (state, { payload }: any) => {
+      console.log(payload);
       state.chatMessages = [];
       state.selectedFigure = { figure: null, cell: null };
       state.strikedFigures = { black: [], white: [] };
@@ -272,10 +273,10 @@ export const gameSlice = createSlice({
       state.highlightedCels = [];
       state.isEnded = false;
 
-      state.side = payload.payload.side;
+      state.side = payload.side;
 
-      possibleMovesLogic.setData(payload.payload.board, payload.payload.side);
-      const board = payload.payload.board;
+      possibleMovesLogic.setData(payload.board, payload.side);
+      const board = payload.board;
       const boardState: any = { white: {}, black: {} };
       for (const side in board) {
         for (const figure in board[side]) {
@@ -284,8 +285,8 @@ export const gameSlice = createSlice({
       }
 
       state.board = boardState;
-      state.timeIncrement = parseInt(payload.payload.timeIncrement, 10);
-      state.id = payload.payload.gameId;
+      state.timeIncrement = parseInt(payload.timeIncrement, 10);
+      state.id = payload.gameId;
     },
     endGame: (state) => {
       state.isEnded = true;
@@ -330,9 +331,10 @@ export const gameSlice = createSlice({
         state.strikedFigures.white.push(figure):
         state.strikedFigures.black.push(figure);
     },
-    setShah: (state, { payload: { shachedSide, byFigure } }) => {
-      state.shahData.figure = byFigure;
-      state.shahData.shachedSide = shachedSide;
+    setShah: (state, { payload }) => {
+      console.log(payload);
+      state.shahData.figure = payload.byFigure;
+      state.shahData.shachedSide = payload.shachedSide;
     },
     addMessage: (state, { payload }: any) => {
       state.chatMessages.push(payload);

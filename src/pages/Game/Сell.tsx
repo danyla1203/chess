@@ -2,8 +2,6 @@ import * as React from 'react';
 import useWebSocket from 'react-use-websocket';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectFigure } from '../../store/slices/game';
-import { GameTypes } from '../..';
-import { ServerMessageTypes } from '../../WsHandler';
 import { config } from '../../config';
 
 export const Cell = (props: any) => {
@@ -32,11 +30,13 @@ export const Cell = (props: any) => {
   const cellClick = () => {
     if (isCellHighlithed && !isCellSelected) {
       sendJsonMessage({ 
-        type: ServerMessageTypes.Game,
+        action: '/game/make-turn',
         body: { 
-          type: GameTypes.MAKE_TURN, 
           gameId,
-          body: { figure: selectedFigure.figure, cell: props.name }
+          body: {
+            figure: selectedFigure.figure,
+            cell: props.name
+          }
         } 
       });
     } else {

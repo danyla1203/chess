@@ -8,8 +8,8 @@ export const timersSlice = createSlice({
   },
   reducers: {
     setTimers: (state, { payload }: any) => {
-      state.blackTimer = payload.payload.maxTime;
-      state.whiteTimer = payload.payload.maxTime;
+      state.blackTimer = payload.maxTime;
+      state.whiteTimer = payload.maxTime;
     },
     updateTimer: (state, { payload }: any) => {
       payload === 'w' ? state.whiteTimer -= 1000 : state.blackTimer -= 1000;

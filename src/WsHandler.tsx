@@ -12,8 +12,8 @@ import { config } from './config';
 export enum ServerMessageTypes {
   Game = 'Game',
   GameChat = 'GameChat',
-  GameList = 'GameList',
-  User = 'User',
+  GameList = 'LOBBY',
+  User = 'User_INIT',
   USER_ALREADY_IN_GAME = 'USER_ALREADY_IN_GAME'
 }
 enum GameServerResponses {
@@ -31,44 +31,6 @@ enum GameServerResponses {
 
 export const WsHandler = ({ accessToken }: any): null => {
   const dispatch = useDispatch();
-  const GameHandler = (data: any) => {
-    switch (data.type) {
-    case GameServerResponses.GAME_CREATED:
-      dispatch(createGame());
-      break;
-    case GameServerResponses.INIT_GAME:
-      dispatch(initGameData(data));
-      dispatch(setTimers(data));
-      break;
-    case GameServerResponses.GAME_START:
-      dispatch(startGame());
-      break;
-    case GameServerResponses.UPDATE_STATE:
-      dispatch(updateBoard(data));
-      break;
-    case GameServerResponses.STRIKE:
-      dispatch(addStrikedFigure(data.payload));
-      break;
-    case GameServerResponses.SHAH:
-      dispatch(setShah(data.payload));
-      break;
-    case GameServerResponses.MATE:
-      dispatch(endGame());
-      break;
-    case GameServerResponses.PLAYER_TIMEOUT:
-      dispatch(endGame());
-      break;
-    case GameServerResponses.CHAT_MESSAGE:
-      dispatch(addMessage(data.payload));
-      break;
-    case GameServerResponses.UPDATE_TIMERS:
-      dispatch(updateTimerByServerEvent(data.payload));
-      break;
-    }
-  };
-  const GameListHandler = (data: any) => {
-    dispatch(setGames(data));
-  };
 
   const { readyState } = useWebSocket(`ws://${config.apiDomain}`, {
     protocols: 'echo-protocol',
@@ -83,17 +45,45 @@ export const WsHandler = ({ accessToken }: any): null => {
         return;
       }
       switch (data.type) {
-      case ServerMessageTypes.GameList:
-        GameListHandler(data.payload);
+      case GameServerResponses.INIT_GAME:
+        dispatch(initGameData(data.payload));
+        dispatch(setTimers(data.payload));
         break;
-      case ServerMessageTypes.Game:
-        GameHandler(data.payload);
+      case 'LOBBY':
+        dispatch(setGames(data.payload));
         break;
       case ServerMessageTypes.User:
         dispatch(setUserData(data.payload));
         break;
       case ServerMessageTypes.USER_ALREADY_IN_GAME:
         dispatch(addError(data.payload));
+        break;
+      case GameServerResponses.GAME_CREATED:
+        dispatch(createGame());
+        break;
+      case GameServerResponses.GAME_START:
+        dispatch(startGame());
+        break;
+      case GameServerResponses.UPDATE_STATE:
+        dispatch(updateBoard(data));
+        break;
+      case GameServerResponses.STRIKE:
+        dispatch(addStrikedFigure(data.payload));
+        break;
+      case GameServerResponses.SHAH:
+        dispatch(setShah(data.payload));
+        break;
+      case GameServerResponses.MATE:
+        dispatch(endGame());
+        break;
+      case GameServerResponses.PLAYER_TIMEOUT:
+        dispatch(endGame());
+        break;
+      case GameServerResponses.CHAT_MESSAGE:
+        dispatch(addMessage(data.payload));
+        break;
+      case GameServerResponses.UPDATE_TIMERS:
+        dispatch(updateTimerByServerEvent(data.payload));
         break;
       }
     }
@@ -105,7 +95,7 @@ export const WsHandler = ({ accessToken }: any): null => {
     [ReadyState.CLOSED]: 'Closed',
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
   }[readyState];
-
+  
   React.useEffect(() => {
     if (connectionStatus === 'Open') {
       dispatch(setConnectStatus());

@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import useWebSocket from 'react-use-websocket';
-import { GameTypes } from '../..';
 import { config } from '../../config';
-import { ServerMessageTypes } from '../../WsHandler';
 
 const Message = ({ author, message }: any) => {
   const outputData = new Date(message.date);
@@ -35,11 +33,8 @@ export const GameChat = () => {
 
   const sendMessage = (text: string = inputText) => {
     sendJsonMessage({ 
-      type: ServerMessageTypes.Game,
-      body: {
-        type: GameTypes.CHAT_MESSAGE,
-        body: { gameId, message: { text } }
-      }
+      action: '/game/chat/message',
+      body: { gameId, text }
     });
   };
 
