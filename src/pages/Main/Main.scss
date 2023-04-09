@@ -12,6 +12,16 @@ main {
   flex-direction: column;
   box-sizing: border-box;
   width: 30vw;
+  &__input {
+    width: 30vw;
+    display: flex;
+    &-inp {
+      width: 25vw;
+    }
+    &-send-message {
+      width: 5vw;
+    }
+  }
   &__messages {
     overflow: scroll;
     padding: 10px;
@@ -21,18 +31,22 @@ main {
       width: 100%;
       display: flex;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 20px;
       &-name {
         font: 500 13px system-ui;
         margin-right: 10px;
+        user-select: none;
       }
       &-message {
-        font: 200 12px system-ui
+        font: 200 12px system-ui;
+        line-break:anywhere;
+        width: 20vw;
       }
       &-time {
         font: 500 12px system-ui;
         margin-left: auto;
         margin-right: 10px;
+        user-select: none;
       }
     }
   }

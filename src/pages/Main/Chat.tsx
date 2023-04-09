@@ -13,7 +13,7 @@ const Message = (props: any) => {
   return (
     <div className="chat__messages__message">
       <h3 className='chat__messages__message-name'>{ props.user.name }</h3>
-      <h3 className="chat__messages__message-message">{ props.text }</h3>
+      <p className="chat__messages__message-message">{ props.text }</p>
       <h3 className="chat__messages__message-time">{beautyTime}</h3>
     </div>
   );
@@ -38,15 +38,15 @@ export const Chat = () => {
   let chatInput = null;
   if (isAuthorized) {
     chatInput = (
-      <div className="chat_input">
+      <div className="chat__input">
         <input 
           type="text" 
-          className="chat_input_inp" 
+          className="chat__input-inp" 
           value={text} 
           onChange={(e) => setText(e.target.value)}
         />
         <button 
-          className="chat_send-message"
+          className="chat__input-send-message"
           onClick={sendMessage}>Send</button>
       </div>
     );
