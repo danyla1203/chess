@@ -4,6 +4,7 @@ import { GameTimer } from './Timer';
 
 export const RigthMenu = () => {
   const { side } = useSelector((state: any) => state.game);
+  const opponentOnPage = useSelector((state: any) => state.game.opponentOnPage);
   const strikedFigures = useSelector((state: any) => state.game.strikedFigures);
 
   const strikedBlack = strikedFigures.black.map((figure: string) =>
@@ -12,8 +13,10 @@ export const RigthMenu = () => {
   const strikedWhite = strikedFigures.white.map((figure: string) =>
     <div className={'game__rigth-menu__striked__figure' + ` ${figure.replace(/\d/, '')}` + ' w'} key={`${figure}-w`}></div>
   );
+
   return (
     <div className="game__rigth-menu">
+      <span className={'game__rigth-menu__opponent-status-' + opponentOnPage } ></span>
       <div className={'game__rigth-menu__striked'}>
         {side === 'w' ? strikedWhite : strikedBlack}
       </div>

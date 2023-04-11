@@ -262,6 +262,7 @@ export const gameSlice = createSlice({
     strikedFigures: { black: [], white: [] },
     shahData: { shachedSide: null, figure: null, },
     chatMessages: [],
+    opponentOnPage: null
   },
   reducers: {
     initGameData: (state, { payload }: any) => {
@@ -272,7 +273,6 @@ export const gameSlice = createSlice({
       state.shahData = { shachedSide: null, figure: null, },
       state.highlightedCels = [];
       state.isEnded = false;
-
       state.side = payload.side;
 
       possibleMovesLogic.setData(payload.board, payload.side);
@@ -288,6 +288,7 @@ export const gameSlice = createSlice({
       state.timeIncrement = parseInt(payload.timeIncrement, 10);
       state.id = payload.gameId;
     },
+
     endGame: (state) => {
       state.isEnded = true;
       state.chatMessages.push({ 
@@ -297,6 +298,10 @@ export const gameSlice = createSlice({
     },
     startGame: (state) => {
       state.isWaiting = false;
+      state.opponentOnPage = true;
+    },
+    userLeave: (state: any) => {
+      state.opponentOnPage = false;
     },
     createGame: (state: any) => {
       state.isWaiting = true;
@@ -342,6 +347,17 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { initGameData, startGame, selectFigure, updateBoard, addStrikedFigure, setShah, createGame, endGame, addMessage } = gameSlice.actions;
+export const { 
+  initGameData,
+  startGame,
+  selectFigure,
+  updateBoard,
+  addStrikedFigure,
+  setShah,
+  createGame,
+  endGame,
+  addMessage,
+  userLeave
+} = gameSlice.actions;
 
 export default gameSlice.reducer;

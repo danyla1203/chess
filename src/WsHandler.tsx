@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import * as React from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { addMessage, addStrikedFigure, createGame, endGame, initGameData, setShah, startGame, updateBoard } from './store/slices/game';
+import { addMessage, addStrikedFigure, createGame, endGame, initGameData, setShah, startGame, updateBoard, userLeave } from './store/slices/game';
 import { setConnectStatus } from './store/slices/ws';
 import { setGames } from './store/slices/gamelist';
 import { setUserData } from './store/slices/user';
@@ -92,6 +92,8 @@ export const WsHandler = ({ accessToken }: any): null => {
       case 'CHAT':
         dispatch(setMessages(data.payload));
         break;
+      case 'OPPONENT_LEAVE':
+        dispatch(userLeave());
       }
     }
   });
