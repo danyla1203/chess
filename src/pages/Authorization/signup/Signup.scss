@@ -10,6 +10,12 @@
   background-image: url('../../../../assets/phpD3T7bN.jpg');
   background-size: cover;
   background-repeat: no-repeat;
+  
+  h5 {
+    color: rgb(138, 103, 172) !important;
+    font-size: 30px;
+    font-family: 'Roboto';
+  }
 
   & .MuiTextField-root {
     margin-bottom: 5px;

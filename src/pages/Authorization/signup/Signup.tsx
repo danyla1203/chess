@@ -4,11 +4,11 @@ import { Navigate } from 'react-router-dom';
 
 import './Signup.scss';
 import { signUpRequest } from '../../../store/slices/user';
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, Typography } from '@mui/material';
 
 export const Signup = () => {
-  const [ name, setName ] = React.useState();
   const [ password, setPassword ] = React.useState('');
+  const [ name, setName ] = React.useState(useSelector((state: any) => state.user.name));
   const email = useSelector((state: any) => state.user.email);
   const isLoaded = useSelector((state: any) => !!state.user.accessToken);
   const isEmailConfirmed = useSelector((state: any) => state.user.emailConfirmed);
@@ -25,11 +25,13 @@ export const Signup = () => {
   if (isLoaded) return <Navigate to='/' />;
   return (
     <div className="signup__container">
-      <h3>{email}</h3>
+      <Typography gutterBottom variant='h5'>
+        {email}
+      </Typography>
       <TextField 
         label="Name" 
         variant="filled" 
-        value={email} 
+        value={name} 
         onChange={(e: any) => setName(e.target.value)}
       />
       <TextField 

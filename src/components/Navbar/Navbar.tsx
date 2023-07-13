@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import './Navbar.scss';
 
 export const Navbar = () => {
-  const user = useSelector((state: any) => state.user);
+  const user = useSelector((state: any) => state.isAuthorized ? state.user : { name: 'Anonymous' });
   return (
     <div className='navbar'>
       <ul className='navbar__navigation'>

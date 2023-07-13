@@ -205,6 +205,7 @@ export const userSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(googleAuth.fulfilled, (state, { payload }) => {
       state.email = payload.email;
+      state.name = payload.name;
       state.emailConfirmed = true;
     });
     builder.addCase(sendVerificationEmail.fulfilled, (state, { payload }) => {

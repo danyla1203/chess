@@ -25,7 +25,7 @@ export const EmailConfirmation = () => {
   return (
     <div className='confirmation'>
       <TextField 
-        label="Email" 
+        label="Email"
         variant="filled" 
         value={email} 
         onChange={(e: any) => setEmail(e.target.value)}
