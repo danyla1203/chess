@@ -4,6 +4,7 @@ import { clearError } from '../../store/slices/errors';
 //import { clearError } from '../../store/slices/errors';
 
 import './Notifications.scss';
+import { Alert } from '@mui/material';
 
 const Notification = ({ code, text }: any) => {
   return (
@@ -26,7 +27,7 @@ export const Notifications = (): any => {
   }
   return (
     <div className='notifications'>
-      { errors.map(({ code, error }) => <Notification text={error} code={code}/>) }
+      { errors.map(({ code, error }) => <Alert severity="error">{code} - {error}</Alert>) }
     </div>
   );
 };

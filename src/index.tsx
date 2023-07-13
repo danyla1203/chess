@@ -1,18 +1,18 @@
 import * as React from 'react';
 import ReactDOM = require('react-dom');
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { LoginPage } from './pages/Login/Login';
+import { LoginPage } from './pages/Authorization/Authorization';
 import { MainPage } from './pages/Main/Main';
 import { Navbar } from './components/Navbar/Navbar';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/index';
 import { GamePage } from './pages/Game/Game';
-import { Signup } from './pages/Signup/Signup';
-import { EmailConfirmation } from './pages/Signup/EmailConfirmation';
 import { UserPage } from './pages/User/User';
 import { Notifications } from './components/Notification/Notifications';
 import { WsHandler } from './WsHandler';
-import { GoogleConfirm } from './pages/Signup/GoogleConfirm';
+import { EmailConfirmation } from './pages/Authorization/signup/EmailConfirmation';
+import { GoogleConfirm } from './pages/Authorization/signup/GoogleConfirm';
+import { Signup } from './pages/Authorization/signup/Signup';
 
 import { userMeRequest } from './store/slices/user';
 import { getTokens } from './store/slices/user';

@@ -1,0 +1,34 @@
+.confirmation {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  height: 250px;
+  
+  & .MuiTextField-root {
+    margin-bottom: 5px;
+    background-color: rgba(177, 155, 199, 0.696);
+    & .Mui-focused {
+      color: rgb(105, 4, 199) !important;
+      font-size: 19px !important;
+      font-weight: 500;
+    }
+    
+    & .MuiFormLabel-root {
+      color: rgba(69, 18, 117, 0.75) !important;
+    }
+  }
+  & .oauth {
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    a {
+      margin-left: 10px;
+      color: rgb(138, 103, 172) !important;
+      font-size: 18px;
+      font-family: 'Roboto';
+    }
+    svg {
+      color: rgb(138, 103, 172) !important;
+    }
+  }
+}

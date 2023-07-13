@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
-import { signUpRequest } from '../../store/slices/user';
 
 import './Signup.scss';
+import { signUpRequest } from '../../../store/slices/user';
+import { Button, TextField } from '@mui/material';
 
 export const Signup = () => {
   const [ name, setName ] = React.useState();
@@ -13,7 +14,7 @@ export const Signup = () => {
   const isEmailConfirmed = useSelector((state: any) => state.user.emailConfirmed);
   const dispatch = useDispatch<any>();
 
-  if (!isEmailConfirmed) return <Navigate to='/email-confirmation' />;
+  if (!isEmailConfirmed) return <Navigate to='/login' />;
 
   const signup = () => {
     const deviceId: string = (Math.random() + 1).toString(36).substring(7);
@@ -23,13 +24,21 @@ export const Signup = () => {
 
   if (isLoaded) return <Navigate to='/' />;
   return (
-    <div className="signup">
-      <div className="signup__container">
-        <h3>{email}</h3>
-        <input placeholder={'Name:'} type="text" value={name} onChange={(e: any) => setName(e.target.value)}/>
-        <input placeholder={'Password:'} type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} />
-        <button onClick={signup}>Sign up</button>
-      </div>
+    <div className="signup__container">
+      <h3>{email}</h3>
+      <TextField 
+        label="Name" 
+        variant="filled" 
+        value={email} 
+        onChange={(e: any) => setName(e.target.value)}
+      />
+      <TextField 
+        label="Password" 
+        variant="filled" 
+        value={password} 
+        onChange={(e: any) => setPassword(e.target.value)}
+      />
+      <Button variant="contained" onClick={signup}>Create account</Button>
     </div>
   );
 };

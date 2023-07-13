@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
-import { confirmCode } from '../../store/slices/user';
+import { confirmCode } from '../../../store/slices/user';
 
 export const EmailConfirmed = ({ email }: any) => {
   const [ code, setCode ] = React.useState('');

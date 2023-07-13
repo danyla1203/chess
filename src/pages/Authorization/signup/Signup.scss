@@ -1,0 +1,30 @@
+.signup__container {
+  padding: 20px;
+  padding-top: 40px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 250px;
+  width: 780px;
+  background-image: url('../../../../assets/phpD3T7bN.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  & .MuiTextField-root {
+    margin-bottom: 5px;
+
+    background-color: rgba(177, 155, 199, 0.696);
+    box-sizing: border-box !important;
+
+    & .Mui-focused {
+      color: rgb(105, 4, 199) !important;
+      font-size: 19px !important;
+      font-weight: 500;
+    }
+
+    & .MuiFormLabel-root {
+      color: rgba(69, 18, 117, 0.75) !important;
+    }
+  }
+}
