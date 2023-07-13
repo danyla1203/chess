@@ -1,0 +1,35 @@
+.configuration {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 253.3px 253.3px 253.3px;
+  grid-template-rows: 170px 170px 170px 170px;
+  grid-gap: 10px;
+  &__item {
+    background-color: rgba(177, 155, 199, 0.696);
+
+    border: 1px solid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    h3 {
+      line-height: 20px;
+    }
+  }
+}
+.MuiTabPanel-root {
+  width: 780px;
+  background-image: url('../../../../assets/phpD3T7bN.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  padding: 5px;
+}
+.MuiTabs-root {
+  margin-top: 20px;
+}
+.MuiButtonBase-root {
+  background-color: rgba(177, 155, 199, 0.150) !important;
+}
+.MuiButtonBase-root[aria-selected=false] {
+  color: rgb(159, 159, 190) !important;
+}

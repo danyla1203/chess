@@ -10,10 +10,10 @@ export const Navbar = () => {
     <div className='navbar'>
       <ul className='navbar__navigation'>
         <li className='navbar__navigation-item'>
-          <Link to="/">Home</Link>
+          👾
         </li>
         <li className='navbar__navigation-item'>
-          <Link to="/lobby">Lobby</Link>
+          <Link to="/">Home</Link>
         </li>
         <li className='navbar__navigation-item'>
           <Link to="/login">Login</Link>

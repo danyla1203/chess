@@ -8,6 +8,7 @@ main {
 .chat {
   margin-left: 40px;
   height: 560px;
+  background-color: red;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -49,21 +50,5 @@ main {
         user-select: none;
       }
     }
-  }
-}
-
-.create-game {
-  width: 70vw;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  &__minutes {
-    display: flex;
-    flex-direction: column;
-  }
-  &__select-side {
-    display: flex;
   }
 }

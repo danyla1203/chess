@@ -18,7 +18,10 @@ import { userMeRequest } from './store/slices/user';
 import { getTokens } from './store/slices/user';
 
 import './index.scss';
-import { GameList } from './pages/GameList/GameList';
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
 
 export enum GameTypes {
   START_NEW = 'START_NEW',
@@ -41,7 +44,6 @@ const Router = () => {
           <Route path="/email-confirmation" element={<EmailConfirmation />} />
           <Route path="/complete-registration" element={<GoogleConfirm />}/>
           <Route path="/game" element={<GamePage />} />
-          <Route path='/lobby' element={<GameList />} />
           <Route path='/user' element={<UserPage />} />
         </Routes>
       </ BrowserRouter>

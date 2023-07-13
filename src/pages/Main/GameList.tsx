@@ -3,9 +3,30 @@ import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import useWebSocket from 'react-use-websocket';
 import { config } from '../../config';
-import { GameData } from '../../store/slices/gamelist';
+
+
+const GameItem = ({ game, connectToGame }) => {
+  const beautyMaxTime = Math.floor(game.maxTime / (1000 * 60));
+  const beautyTimeIncrement = Math.floor(game.timeIncrement / 1000);
+
+  return (
+    <div className='game-list__item' key={game.id} onClick={() => connectToGame(game.id)} >
+      <div className='game-list__item__data-block'>
+        <h3 className='game-list__item__name'>{game.players[0].name}</h3>
+      </div>
+      <div className='game-list__item__data-block'>
+        <span className={`game-list__item__side-selection-circle ${game.side}-circle`}></span>
+      </div>
+      <div className='game-list__item__data-block'>
+        <h3>{beautyMaxTime}-{beautyTimeIncrement}</h3>
+      </div>
+    </div>
+  );
+};
+
 
 import './GameList.scss';
+import { GameData } from '../../store/slices/gamelist';
 
 export const GameList = () => {
   const [ isConnected, setIsConnected ] = React.useState(false);
@@ -24,24 +45,6 @@ export const GameList = () => {
   };
 
   if (isConnected) return <Navigate to='/game' />;
-  const renderedGameList = games.map((game: GameData) => {
-    const beautyMaxTime = Math.floor(game.maxTime / (1000 * 60));
-    const beautyTimeIncrement = Math.floor(game.timeIncrement / 1000);
-
-    return (
-      <div className='game-list__item' key={game.id} onClick={() => connectToGame(game.id)} >
-        <div className='game-list__item__data-block'>
-          <h3 className='game-list__item__name'>{game.players[0].name}</h3>
-        </div>
-        <div className='game-list__item__data-block'>
-          <span className={`game-list__item__side-selection-circle ${game.side}-circle`}></span>
-        </div>
-        <div className='game-list__item__data-block'>
-          <h3>{beautyMaxTime}-{beautyTimeIncrement}</h3>
-        </div>
-      </div>
-    );
-  });
   return (
     <div className='game-list'>
       <div className="game-list__labels">
@@ -49,7 +52,9 @@ export const GameList = () => {
         <h3 className='game-list__labels__item'>Side:</h3>
         <h3 className='game-list__labels__item'>Time:</h3>
       </div>
-      { renderedGameList }
+      { 
+        games.map((game) => <GameItem game={game} connectToGame={connectToGame} />) 
+      }
     </div>
   );
 };
