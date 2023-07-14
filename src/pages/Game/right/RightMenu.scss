@@ -23,7 +23,7 @@
     height: 2.5vw;
     display: flex;
     align-items: center;
-    background-color: rgba(223, 223, 241, 0.459);
+    background-color: rgba(179, 158, 222, 0.7);
     padding: 5px;
 
     &__figure {
@@ -43,9 +43,10 @@
     justify-content: space-between;
     &__timer {
       padding: 10px;
-      background-color: rgba(186, 186, 219, 0.459);
+      background-color: rgba(91, 70, 132, 0.7);
   
       &-text {
+        color: rgba(200, 181, 238, 0.7);
         font: 23px system-ui;
       }
     }

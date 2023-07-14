@@ -3,57 +3,6 @@
   display: flex;
   align-items: center;
   height: 70vh;
-  &__chat {
-    height: 36vw;
-    width: 20vw;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    &__messages {
-      height: 70vh;
-      background-color: rgba(186, 186, 219, 0.459);
-      padding: 10px;
-      box-shadow: inset 1px -1px 6px 1px grey;
-      &__item {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-        &-name {
-          font: 500 15px system-ui;
-          margin-right: 10px;
-        }
-        &-message {
-          font: 200 14px system-ui
-        }
-        &-time {
-          font: 500 14px system-ui;
-          margin-left: auto;
-          margin-right: 10px;
-        }
-      }
-    }
-    &__input {
-      display: flex;
-      flex-direction: column;
-      &__message {
-        height: 20px !important;
-      }
-      .MuiButton-root {
-        height: 30px;
-      }
-      &__quick-messages {
-        display: flex;
-        .MuiButtonGroup-root {
-          height: 30px;
-          width: 27vw;
-          button {
-            width: 34% !important;
-          }
-        }
-      }
-    }
-  }
 }
 
 .board {
