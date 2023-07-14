@@ -7,6 +7,8 @@ import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { Login } from './login/Login';
 import { EmailConfirmation } from './signup/EmailConfirmation';
 
+import './Authorization.scss';
+
 export const LoginPage = () => {
   const [ value, setValue ] = React.useState(1);
 
