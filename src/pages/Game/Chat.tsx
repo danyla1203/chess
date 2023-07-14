@@ -2,9 +2,10 @@ import * as React from 'react';
 import { useSelector } from 'react-redux';
 import useWebSocket from 'react-use-websocket';
 import { config } from '../../config';
+import { Button, ButtonGroup } from '@mui/material';
 
 const Message = ({ author, message }: any) => {
-  const outputData = new Date(message.date);
+  const outputData = new Date();
   const minutes = outputData.getMinutes();
   const hours = outputData.getHours();
   const beautyMinutes = minutes < 10 ? `0${minutes}` : minutes;
@@ -21,7 +22,7 @@ const Message = ({ author, message }: any) => {
 
 export const GameChat = () => {
   const [ inputText, setText ] = React.useState();
-  const gameId = useSelector((state: any) => state.game.id);
+  const gameId = useSelector((state: any) => state.game.id)
   const chatMessages = useSelector((state: any) => state.game.chatMessages);
   const accessToken = useSelector((state: any) => state.user.accessToken);
   const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
@@ -41,7 +42,14 @@ export const GameChat = () => {
   return (
     <div className='game__chat'>
       <div className="game__chat__messages">
-        { chatMessages.map((messageData: any) => <Message message={messageData.message} author={messageData.author} /> )}
+        { 
+          chatMessages.map((messageData: any) => 
+            <Message 
+              message={messageData.message} 
+              author={messageData.author} 
+            /> 
+          )
+        }
       </div>
       <div className="game__chat__input">
         <input 
@@ -50,20 +58,13 @@ export const GameChat = () => {
           value={inputText}
         />
         <div className="game__chat__input__quick-messages">
-          <button 
-            className="game__chat__input__quick-messages__btn" 
-            onClick={() => sendMessage('Good game!')}
-          >GG</button>
-          <button 
-            className="game__chat__input__quick-messages__btn" 
-            onClick={() => sendMessage('Well played!')}
-          >WP</button>
-          <button 
-            className="game__chat__input__quick-messages__btn"
-            onClick={() => sendMessage('Have fun!')}
-          >HF</button>
+          <ButtonGroup variant="contained" aria-label="outlined primary button group">
+            <Button onClick={() => sendMessage('Good game!')}>GG</Button>
+            <Button onClick={() => sendMessage('Well played!')}>WP</Button>
+            <Button >HF</Button>
+          </ButtonGroup>
         </div>
-        <button className="game__chat__input__btn" onClick={() => sendMessage()}>Send</button>
+        <Button onClick={() => sendMessage()}>Send</Button>
       </div>
     </div>
   );

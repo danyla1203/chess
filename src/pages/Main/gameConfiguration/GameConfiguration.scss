@@ -1,12 +1,10 @@
 .configuration {
-  margin-top: 10px;
   display: grid;
-  grid-template-columns: 253.3px 253.3px 253.3px;
-  grid-template-rows: 170px 170px 170px 170px;
+  grid-template-columns: 14vw 14vw 14vw;
+  grid-template-rows: 17vh 17vh 17vh 17vh;
   grid-gap: 10px;
   &__item {
     background-color: rgba(177, 155, 199, 0.696);
-
     border: 1px solid;
     display: flex;
     flex-direction: column;
@@ -18,11 +16,9 @@
   }
 }
 .MuiTabPanel-root {
-  width: 780px;
   background-image: url('../../../../assets/phpD3T7bN.jpg');
   background-size: cover;
   background-repeat: no-repeat;
-  padding: 5px;
 }
 .MuiTabs-root {
   margin-top: 20px;
