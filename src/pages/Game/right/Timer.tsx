@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateTimer } from '../../store/slices/timers';
+import { updateTimer } from '../../../store/slices/timers';
 
 export const GameTimer = ({ side }: { side: 'w' | 'b' }) => {
   const time = useSelector((state: any) => side === 'w' ? state.timers.whiteTimer : state.timers.blackTimer);
@@ -30,8 +30,8 @@ export const GameTimer = ({ side }: { side: 'w' | 'b' }) => {
     seconds < 10 ? `0${seconds}`: seconds;
   const beautyMinutes = minutes < 10 ? `0${minutes}` : minutes;
   return (
-    <div className='board__timers__timer'>
-      <span className='board__timers__timer-text'>{beautyMinutes}:{beautySeconds}</span>
+    <div className='game__right-menu__timers__timer'>
+      <span className='game__right-menu__timers__timer-text'>{beautyMinutes}:{beautySeconds}</span>
     </div>
   );
 };

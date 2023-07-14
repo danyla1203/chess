@@ -1,0 +1,53 @@
+.game__right-menu {
+  margin-left: 30px;
+
+  &__opponent-status {
+    &-false {
+      background-color: red;
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    &-true {
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      background-color: #bbb;
+    }
+  }
+
+  &__striked {
+    height: 2.5vw;
+    display: flex;
+    align-items: center;
+    background-color: rgba(223, 223, 241, 0.459);
+    padding: 5px;
+
+    &__figure {
+      width: 2vw;
+      height: 2vw;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+  }
+
+  &__timers {
+    width: 20vw;
+    height: 20vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    &__timer {
+      padding: 10px;
+      background-color: rgba(186, 186, 219, 0.459);
+  
+      &-text {
+        font: 23px system-ui;
+      }
+    }
+  }
+}

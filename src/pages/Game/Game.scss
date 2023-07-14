@@ -54,72 +54,12 @@
       }
     }
   }
-  &__rigth-menu {
-    margin-left: 30px;
-    &__opponent-status {
-      &-false {
-        background-color: red;
-        height: 10px;
-        width: 10px;
-        border-radius: 50%;
-        display: inline-block;
-      }
-      &-true {
-        height: 10px;
-        width: 10px;
-        border-radius: 50%;
-        display: inline-block;
-        background-color: #bbb;
-      }
-    }
-    &__striked {
-      height: 20px;
-      display: flex;
-  
-      &__figure {
-        width: 20px;
-        height: 20px;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-      }
-    }
-    &__timers {
-      width: 300px;
-      height: 200px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-
-      &__timer {
-        padding: 10px;
-        background-color: bisque;
-        &-text {
-          font: 19px system-ui
-        }
-      }
-    }
-  }
 }
 
 .board {
   align-items: center;
   display: flex;
   flex-direction: column;
-  &__timers {
-    width: 300px;
-    height: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    &__timer {
-      padding: 10px;
-      background-color: bisque;
-      &-text {
-        font: 19px system-ui;
-      }
-    }
-  }
   &__row {
     display: flex;
     width: fit-content;

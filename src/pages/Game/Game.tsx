@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import { Board } from './Board';
-import { RigthMenu } from './RigthMenu';
-import { GameChat } from './Chat';
+import { RigthMenu } from './right/RightMenu';
+import { GameChat } from './chat/Chat';
 
 import './Game.scss';
 

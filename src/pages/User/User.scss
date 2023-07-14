@@ -1,9 +1,9 @@
 .user-page {
+  width: 50vw;
   background-image: url('../../../assets/phpD3T7bN.jpg');
   background-repeat: no-repeat;
   background-size: cover;
   margin-top: 20px;
-  width: 600px;
   padding: 20px;
   height: 600px;
   &__personal {
@@ -17,7 +17,7 @@
   }
   &__game-history {
     border-top: 1px solid;
-    width: 30vw;
+    width: 40vw;
     padding: 20px;
     display: flex;
     flex-direction: column;

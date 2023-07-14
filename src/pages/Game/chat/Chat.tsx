@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import useWebSocket from 'react-use-websocket';
-import { config } from '../../config';
+import { config } from '../../../config';
 import { Button, ButtonGroup } from '@mui/material';
+
+import './Chat.scss';
 
 const Message = ({ author, message }: any) => {
   const outputData = new Date();
@@ -22,7 +24,7 @@ const Message = ({ author, message }: any) => {
 
 export const GameChat = () => {
   const [ inputText, setText ] = React.useState();
-  const gameId = useSelector((state: any) => state.game.id)
+  const gameId = useSelector((state: any) => state.game.id);
   const chatMessages = useSelector((state: any) => state.game.chatMessages);
   const accessToken = useSelector((state: any) => state.user.accessToken);
   const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
