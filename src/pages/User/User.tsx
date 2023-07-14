@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { logoutRequest, userGameList } from '../../store/slices/user';
 
 import './User.scss';
+import { Button, Typography } from '@mui/material';
 
 const GameHistoryItem = ({ data: { maxTime, timeIncrement, sideSelecting, players, id } }: any) => {
   const beautyMaxTime = Math.floor(maxTime / (1000 * 60));
@@ -29,11 +30,11 @@ const GameHistory = () => {
   const gameHistory = useSelector((state: any) => state.user.gameHistory);
   return (
     <div className='user-page__game-history'>
-      <h2 className='user-page__game-history__label'>Games history</h2>
+      <Typography variant="h5" component='h3'>Games history</Typography>
       <div className="user-page__game-history__labels">
-        <h3 className='user-page__game-history__labels__item'>Timings:</h3>
-        <h3 className='user-page__game-history__labels__item'>Side:</h3>
-        <h3 className='user-page__game-history__labels__item'>Players:</h3>
+        <Typography variant="h6" component='h4'>Timings</Typography>
+        <Typography variant="h6" component='h4'>Side</Typography>
+        <Typography variant="h6" component='h4'>Players</Typography>
       </div>
       { gameHistory.map((game: any) => <GameHistoryItem data={game} key={game.id}/>) }
     </div>
@@ -54,11 +55,13 @@ export const UserPage = () => {
   return (
     <div className="user-page">
       <div className="user-page__personal">
-        <h3 className='user-page__personal__name'>{ userName }</h3>
-        <button 
-          onClick={() => dispatch(logoutRequest())}
-          className='user-page__personal__btn'
-        >Logout</button>
+        <Typography variant="h4" component='h3'>{userName}</Typography>
+        <Button 
+          onClick={() => dispatch(logoutRequest())} 
+          variant="contained" 
+          color="primary"
+        >Logout
+        </Button>
       </div>
       <GameHistory />
     </div>

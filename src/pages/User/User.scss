@@ -1,14 +1,18 @@
 .user-page {
+  background-image: url('../../../assets/phpD3T7bN.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  margin-top: 20px;
+  width: 600px;
+  padding: 20px;
+  height: 600px;
   &__personal {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 20px;
-    &__name {
-      font: 600 35px system-ui
-    }
-    &__btn {
-      width: 100px;
+    h3 {
+      color: rgb(159, 159, 190);
+      margin-bottom: 20px;
     }
   }
   &__game-history {
@@ -17,6 +21,9 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
+    & > * {
+      color: rgb(159, 159, 190)
+    }
     &__label {
       font: 400 24px system-ui;
       margin-bottom: 30px;

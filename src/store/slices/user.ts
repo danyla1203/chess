@@ -1,12 +1,12 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { config } from '../../config';
 
-export const getTokens = createAsyncThunk(
+export const getUserByRefresh = createAsyncThunk(
   '/use-refresh',
-  async (refreshToken: string, thunk) => {
+  async (token: string, thunk) => {
     const reqBody = { 
       method: 'PUT',
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({ refreshToken: token }),
       headers: { 
         accept: 'application/json',
         'Content-Type': 'application/json'
@@ -16,7 +16,25 @@ export const getTokens = createAsyncThunk(
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
-    return response.json();
+
+    const { access, refresh } = await response.json();
+
+    const userMe = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${access}`,
+      },
+    };
+    const userRequest = await fetch(`${config.apiHost}/me`, userMe);
+    if (userRequest.status !== 200) {
+      return thunk.rejectWithValue({
+        code: response.status,
+        error: response.statusText,
+      });
+    }
+    const userData = await userRequest.json();
+    return { ...userData, access, refresh };
   }
 );
 
@@ -69,24 +87,6 @@ export const logoutRequest = createAsyncThunk(
       } 
     };
     const response = await fetch(`${config.apiHost}/logout`, reqBody);
-    if (response.status !== 200) {
-      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
-    }
-    return response.json();
-  }
-);
-
-export const userMeRequest = createAsyncThunk(
-  '/me',
-  async (accessToken: string, thunk) => {
-    const reqBody = { 
-      method: 'GET', 
-      headers: { 
-        accept: 'application/json',
-        'Authorization': `Bearer ${accessToken}` 
-      }
-    };
-    const response = await fetch(`${config.apiHost}/me`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -172,6 +172,7 @@ export const googleAuth = createAsyncThunk(
 
     const response = await fetch(`${config.apiHost}/google/oauth`, reqBody);
     if (response.status !== 200) {
+      console.log(response);
       return thunk.rejectWithValue({
         code: response.status,
         error: response.statusText,
@@ -208,6 +209,11 @@ export const userSlice = createSlice({
       state.name = payload.name;
       state.emailConfirmed = true;
     });
+    builder.addCase(googleAuth.rejected, (state, { payload }: any) => {
+      console.log(payload);
+      state.error = { code: payload.code, text: payload.error };
+    });
+
     builder.addCase(sendVerificationEmail.fulfilled, (state, { payload }) => {
       state.email = payload.email;
       state.confirmationEmailSended = true;
@@ -221,25 +227,22 @@ export const userSlice = createSlice({
       state.emailConfirmed = true;
     });
 
-    builder.addCase(userMeRequest.fulfilled, (state, { payload }: any) => {
-      state.id = payload.id;
-      state.name = payload.name;
-      state.email = payload.email;
-    });
-
     builder.addCase(loginRequest.fulfilled, (state, { payload }: any) => {
       state.accessToken = payload.access;
       state.authorized = true;
       localStorage.setItem('refreshToken', payload.refresh);
     });
     
-    builder.addCase(getTokens.fulfilled, (state, { payload }: any) => {
+    builder.addCase(getUserByRefresh.fulfilled, (state, { payload }: any) => {
       state.accessToken = payload.access;
       state.authorized = true;
       state.isGetTokenLoaded = true;
+      state.id = payload.id;
+      state.name = payload.name;
+      state.email = payload.email;
       localStorage.setItem('refreshToken', payload.refresh);
     });
-    builder.addCase(getTokens.rejected, (state) => {
+    builder.addCase(getUserByRefresh.rejected, (state) => {
       state.accessToken = null;
       state.authorized = false;
       state.isGetTokenLoaded = true;

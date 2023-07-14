@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import './Navbar.scss';
 
 export const Navbar = () => {
-  const user = useSelector((state: any) => state.isAuthorized ? state.user : { name: 'Anonymous' });
+  const userName = useSelector((state: any) => state.user.authorized ? state.user.name : 'Anonymous');
   return (
     <div className='navbar'>
       <ul className='navbar__navigation'>
@@ -20,7 +20,7 @@ export const Navbar = () => {
         </li>
       </ul>
       <div className='navbar__user'>
-        <Link to={'/user'}><h3 className='navbar__user-name'>{user.name}</h3></Link>
+        <Link to={'/user'}><h3 className='navbar__user-name'>{userName}</h3></Link>
       </div>
     </div>
   );
