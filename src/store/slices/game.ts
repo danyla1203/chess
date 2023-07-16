@@ -274,7 +274,7 @@ export const gameSlice = createSlice({
       state.timers.w = payload.maxTime;
     },
     updateTimerByServerEvent: (state) => {
-      state.side === 'w' ? 
+      state.movingSide === 'w' ? 
         state.timers.w -= 1000 :
         state.timers.b -= 1000;
     },
@@ -342,7 +342,7 @@ export const gameSlice = createSlice({
       state.highlightedCels = [];
       state.selectedFigure = { figure: null, cell: null };
       state.shahData = { shachedSide: null, figure: null };
-      state.movingSide = state.movingSide === 'w' ? 'b':'w';
+      state.movingSide = state.movingSide === 'w' ? 'b' : 'w';
     },
     addStrikedFigure: (state, { payload: { strikedSide, figure } }) => {
       strikedSide === 'w' ?
@@ -350,7 +350,6 @@ export const gameSlice = createSlice({
         state.strikedFigures.black.push(figure);
     },
     setShah: (state, { payload }) => {
-      console.log(payload);
       state.shahData.figure = payload.byFigure;
       state.shahData.shachedSide = payload.shachedSide;
     },

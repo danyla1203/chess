@@ -19,14 +19,14 @@ export const RigthMenu = () => {
   return (
     <div className="game__right-menu">
       <span className={'game__right-menu__opponent-status-' + opponentOnPage } ></span>
-      <div className={'game__right-menu__striked'}>
+      <div className='game__right-menu__striked'>
         {side === 'w' ? strikedWhite : strikedBlack}
       </div>
       <div className="game__right-menu__timers">
         <GameTimer side={side === 'w' ? 'b' : 'w'} />
         <GameTimer side={side} />
       </div>
-      <div className={'game__right-menu__striked'}>
+      <div className='game__right-menu__striked'>
         {side === 'w' ? strikedBlack : strikedWhite}
       </div>
     </div>
