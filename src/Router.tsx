@@ -8,7 +8,6 @@ import { Signup } from './pages/Authorization/signup/Signup';
 import { LoginPage } from './pages/Authorization/Authorization';
 import { MainPage } from './pages/Main/Main';
 import { Navbar } from './components/Navbar/Navbar';
-import { GamePage } from './pages/Game/Game';
 import { UserPage } from './pages/User/User';
 
 export const Router = () => {
@@ -23,10 +22,9 @@ export const Router = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/email-confirmation" element={<EmailConfirmation />} />
           <Route path="/complete-registration" element={<GoogleConfirm />}/>
-          <Route path="/game" element={<GamePage />} />
           <Route path='/user' element={<UserPage />} />
         </Routes>
-      </ BrowserRouter>
+      </BrowserRouter>
     );
   }
 };

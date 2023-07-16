@@ -3,14 +3,13 @@ import { ConfiguratorMenu } from './Configurator';
 
 import './GameConfiguration.scss';
 import { Typography } from '@mui/material';
-import { Link } from 'react-router-dom';
 
 const ConfigPanel = ({ time, increment, name, createGame }) => {
   return (
-    <Link to='/game' onClick={() => createGame('rand', time, increment)} className="configuration__item">
+    <div onClick={() => createGame('rand', time, increment)} className="configuration__item">
       <Typography variant="h6" component='h3'>{time}-{increment}</Typography>
       <Typography variant="h6" component='h3'>{name}</Typography>
-    </Link>
+    </div>
   );
 };
 

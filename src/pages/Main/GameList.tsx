@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
-import { Navigate } from 'react-router-dom';
 import useWebSocket from 'react-use-websocket';
 import { config } from '../../config';
 
@@ -29,7 +28,6 @@ import './GameList.scss';
 import { GameData } from '../../store/slices/gamelist';
 
 export const GameList = () => {
-  const [ isConnected, setIsConnected ] = React.useState(false);
   const accessToken = useSelector((state: any) => state.user.accessToken);
   const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
     share: true,
@@ -38,13 +36,10 @@ export const GameList = () => {
     },
   });
   const games: GameData[] = useSelector((state: any) => state.gameList.games);
-  console.log(games);
   const connectToGame = (gameId: string) => {
     sendJsonMessage({ action: '/game/connect/player', body: { gameId } });
-    setIsConnected(true);
   };
 
-  if (isConnected) return <Navigate to='/game' />;
   return (
     <div className='game-list'>
       <div className="game-list__labels">

@@ -4,6 +4,7 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/index';
 import { Notifications } from './components/Notification/Notifications';
 import { WsHandler } from './WsHandler';
+import { GameWaiting } from './components/GameWaiting/GameWaiting';
 import { Router } from './Router';
 
 import { getUserByRefresh } from './store/slices/user';
@@ -48,6 +49,7 @@ const WrappedApp = () => {
     <Provider store={store}>
       <Notifications />
       <App />
+      <GameWaiting />
     </Provider>
   );
 };

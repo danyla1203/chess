@@ -9,10 +9,12 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import { Tab } from '@mui/material';
 import { GameList } from './GameList';
+import { Game } from '../Game/Game';
 
 
 export const MainPage = () => {
   const [ value, setValue ] = React.useState(1);
+  const isWaitingForGame = useSelector((state: any) => state.game.isWaiting);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -34,16 +36,18 @@ export const MainPage = () => {
     };
     sendJsonMessage({ action: '/game/new-game', body });
   };
-
+  
   return (
     <main>
       <TabContext value={value + ''}>
         <TabList onChange={handleChange} aria-label="lab API tabs example">
           <Tab label="Create" value="1" />
           <Tab label="Lobby" value="2" />
+          { isWaitingForGame === false && <Tab label="Game" value="3"/> }
         </TabList>
         <TabPanel value="1"><GameConfiguration createGame={createGame}/></TabPanel>
         <TabPanel value="2"><GameList/></TabPanel>
+        { isWaitingForGame === false && <TabPanel value="3"><Game /></TabPanel> }
       </TabContext>
     </main>
   );
