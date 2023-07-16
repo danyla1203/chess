@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 import useWebSocket from 'react-use-websocket';
 import { config } from '../../config';
 
-
 const GameItem = ({ game, connectToGame }) => {
   const beautyMaxTime = Math.floor(game.maxTime / (1000 * 60));
   const beautyTimeIncrement = Math.floor(game.timeIncrement / 1000);

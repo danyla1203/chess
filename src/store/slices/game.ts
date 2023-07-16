@@ -257,6 +257,10 @@ export const gameSlice = createSlice({
     board: null,
     time: null,
     timeIncrement: null,
+    timers: { 
+      w: null,
+      b: null,
+    },
     highlightedCels: [],
     selectedFigure: { figure: null, cell: null },
     strikedFigures: { black: [], white: [] },
@@ -265,6 +269,15 @@ export const gameSlice = createSlice({
     opponentOnPage: null
   },
   reducers: {
+    setTimers: (state, { payload }: any) => {
+      state.timers.b = payload.maxTime;
+      state.timers.w = payload.maxTime;
+    },
+    updateTimerByServerEvent: (state) => {
+      state.side === 'w' ? 
+        state.timers.w -= 1000 :
+        state.timers.b -= 1000;
+    },
     initGameData: (state, { payload }: any) => {
       console.log(payload);
       state.chatMessages = [];
@@ -347,7 +360,7 @@ export const gameSlice = createSlice({
   },
 });
 
-export const { 
+export const {
   initGameData,
   startGame,
   selectFigure,
@@ -357,7 +370,9 @@ export const {
   createGame,
   endGame,
   addMessage,
-  userLeave
+  userLeave,
+  setTimers,
+  updateTimerByServerEvent
 } = gameSlice.actions;
 
 export default gameSlice.reducer;

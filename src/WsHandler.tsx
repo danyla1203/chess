@@ -1,11 +1,22 @@
 import { useDispatch } from 'react-redux';
 import * as React from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { addMessage, addStrikedFigure, createGame, endGame, initGameData, setShah, startGame, updateBoard, userLeave } from './store/slices/game';
+import { 
+  addMessage,
+  addStrikedFigure,
+  createGame,
+  endGame,
+  initGameData,
+  setShah,
+  startGame,
+  updateBoard,
+  userLeave,
+  setTimers,
+  updateTimerByServerEvent
+} from './store/slices/game';
 import { setConnectStatus } from './store/slices/ws';
 import { setGames } from './store/slices/gamelist';
 import { setUserData } from './store/slices/user';
-import { setTimers, updateTimerByServerEvent } from './store/slices/timers';
 import { addError } from './store/slices/errors';
 import { config } from './config';
 import { pushMessage, setMessages } from './store/slices/chat';
@@ -46,6 +57,9 @@ export const WsHandler = ({ accessToken }: any): null => {
         return;
       }
       switch (data.type) {
+      case '0':
+        dispatch(updateTimerByServerEvent());
+        break;
       case GameServerResponses.INIT_GAME:
         dispatch(initGameData(data.payload));
         dispatch(setTimers(data.payload));
