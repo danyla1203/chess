@@ -6,6 +6,7 @@ import { config } from '../../config';
 
 export const Cell = (props: any) => {
   const accessToken = useSelector((state: any) => state.user.accessToken);
+  const isGameEnded = useSelector((state: any) => state.game.isGameEnded);
   const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
     share: true,
     queryParams: {
@@ -27,7 +28,7 @@ export const Cell = (props: any) => {
   const isCellHighlithed = useSelector((state: any) => state.game.highlightedCels.includes(props.name));
   const isCellSelected = selectedFigure.cell === props.name;
   
-  const cellClick = () => {
+  let cellClick = () => {
     if (isCellHighlithed && !isCellSelected) {
       sendJsonMessage({ 
         action: '/game/make-turn',
@@ -48,6 +49,7 @@ export const Cell = (props: any) => {
   if (isCellSelected) className += ' selected';
   if (figure) className += ` ${figure.replace(/\d/, '')} ${side}`;
   if (isCellShached) className += ' shahed';
+  if (isGameEnded) cellClick = () => {};
   return (
     <div className={className} onClick={cellClick}>
       {

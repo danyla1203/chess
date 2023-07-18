@@ -10,8 +10,9 @@ export const GameTimer = ({ side }: { side: 'w' | 'b' }) => {
     '00':
     seconds < 10 ? `0${seconds}`: seconds;
   const beautyMinutes = minutes < 10 ? `0${minutes}` : minutes;
+  const ended = beautyMinutes === '00' && beautySeconds === '00';
   return (
-    <div className='game__right-menu__timers__timer'>
+    <div className={`game__right-menu__timers__timer ended_${ended}`}>
       <span className='game__right-menu__timers__timer-text'>{beautyMinutes}:{beautySeconds}</span>
     </div>
   );
