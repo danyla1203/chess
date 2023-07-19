@@ -1,6 +1,6 @@
-import { useDispatch } from 'react-redux';
-import * as React from 'react';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { config } from '../config';
+import { store } from '.';
+import { setConnectStatus } from './slices/ws';
 import { 
   addMessage,
   addStrikedFigure,
@@ -13,13 +13,11 @@ import {
   userLeave,
   setTimers,
   updateTimerByServerEvent
-} from './store/slices/game';
-import { setConnectStatus } from './store/slices/ws';
-import { setGames } from './store/slices/gamelist';
-import { setUserData } from './store/slices/user';
-import { addError } from './store/slices/errors';
-import { config } from './config';
-import { pushMessage, setMessages } from './store/slices/chat';
+} from '../store/slices/game';
+import { setGames } from '../store/slices/gamelist';
+import { setUserData } from '../store/slices/user';
+import { addError } from '../store/slices/errors';
+import { pushMessage, setMessages } from '../store/slices/chat';
 
 export enum ServerMessageTypes {
   Game = 'Game',
@@ -41,16 +39,22 @@ enum GameServerResponses {
   CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 
-export const WsHandler = ({ accessToken }: any): null => {
-  const dispatch = useDispatch();
 
-  const { readyState } = useWebSocket(`ws://${config.apiDomain}`, {
-    protocols: 'echo-protocol',
-    share: true,
-    queryParams: {
-      'Authorization': accessToken,
-    },
-    onMessage: ({ data }) => {
+
+const dispatch = (action) => {
+  store.dispatch(action);
+};
+
+export class WebsocketClient {
+  socket: WebSocket;
+
+  connect(accessToken: string) {
+    this.socket = new WebSocket(
+      `ws://${config.apiDomain}?Authorization=${accessToken}`,
+      'echo-protocol',
+    );
+    this.socket.onopen = () => dispatch(setConnectStatus());
+    this.socket.onmessage = ({ data }) => {
       try {
         data = JSON.parse(data);
       } catch (e) {
@@ -109,21 +113,16 @@ export const WsHandler = ({ accessToken }: any): null => {
       case 'OPPONENT_LEAVE':
         dispatch(userLeave());
       }
-    }
-  });
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: 'Connecting',
-    [ReadyState.OPEN]: 'Open',
-    [ReadyState.CLOSING]: 'Closing',
-    [ReadyState.CLOSED]: 'Closed',
-    [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
-  }[readyState];
+    };
+  }
 
-  React.useEffect(() => {
-    if (connectionStatus === 'Open') {
-      dispatch(setConnectStatus());
-    }
-  });
+  close() {
+    if (this.socket) this.socket.close();
+  }
+  send(data: any) {
+    this.socket.send(JSON.stringify(data));
+  }
+  
+}
 
-  return null;
-};
+export const ws = new WebsocketClient();

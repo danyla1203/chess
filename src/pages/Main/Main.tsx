@@ -1,40 +1,33 @@
 import * as React from 'react';
-import useWebSocket from 'react-use-websocket';
 import { GameConfiguration } from './gameConfiguration/GameConfiguration';
 
-import { useSelector } from 'react-redux';
-import { config } from '../../config';
+import { useDispatch, useSelector } from 'react-redux';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import { Tab } from '@mui/material';
 import { GameList } from './GameList';
 import { Game } from '../Game/Game';
+import { sendMessage } from '../../store/slices/ws';
 
 
 export const MainPage = () => {
   const [ value, setValue ] = React.useState(1);
   const isWaitingForGame = useSelector((state: any) => state.game.isWaiting);
+  const dispatch = useDispatch();
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
-  const accessToken = useSelector((state: any) => state.user.accessToken);
   
-  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
-    share: true,
-    queryParams: {
-      'Authorization': accessToken,
-    }, 
-  });
-
   const createGame = (side: 'w'|'b'|'rand', minutes, timeIncrement) => {
     const body = {
       side,
       time: minutes * 60 * 1000,
       timeIncrement: timeIncrement * 1000
     };
-    sendJsonMessage({ action: '/game/new-game', body });
+    console.log('here');
+    dispatch(sendMessage({ action: '/game/new-game', body }));
   };
   
   return (

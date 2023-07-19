@@ -3,17 +3,18 @@ import ReactDOM = require('react-dom');
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/index';
 import { Notifications } from './components/Notification/Notifications';
-import { WsHandler } from './WsHandler';
 import { GameWaiting } from './components/GameWaiting/GameWaiting';
 import { Router } from './Router';
 
 import { getUserByRefresh } from './store/slices/user';
+
 
 import './index.scss';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
+import { connect, close } from './store/slices/ws';
 
 export enum GameTypes {
   START_NEW = 'START_NEW',
@@ -26,16 +27,24 @@ export enum GameTypes {
 const App = () => {
   const accessToken = useSelector((state: any) => state.user.accessToken);
   const isGetTokenLoaded = useSelector((state: any) => state.user.isGetTokenLoaded);
+  const isWsLoaded = useSelector((state: any) => state.ws.isConnected);
   const dispatch = useDispatch<any>();
-  
+
   React.useEffect(() => {
-    dispatch(getUserByRefresh(localStorage.getItem('refreshToken')));
+    const refresh = localStorage.getItem('refreshToken');
+    dispatch(getUserByRefresh(refresh));
   }, []);
 
-  if (isGetTokenLoaded) {
+  React.useEffect(() => {
+    if (isGetTokenLoaded) {
+      dispatch(close());
+      dispatch(connect(accessToken));
+    }
+  }, [ isGetTokenLoaded, accessToken ]);
+
+  if (isGetTokenLoaded && isWsLoaded) {
     return (
       <div className="wrapper">
-        <WsHandler accessToken={accessToken}/>
         <Router />
       </div>
     );

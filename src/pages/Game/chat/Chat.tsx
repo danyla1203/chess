@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { useSelector } from 'react-redux';
-import useWebSocket from 'react-use-websocket';
-import { config } from '../../../config';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button, ButtonGroup } from '@mui/material';
+import { sendMessage } from '../../../store/slices/ws';
 
 import './Chat.scss';
 
@@ -26,19 +25,13 @@ export const GameChat = () => {
   const [ inputText, setText ] = React.useState();
   const gameId = useSelector((state: any) => state.game.id);
   const chatMessages = useSelector((state: any) => state.game.chatMessages);
-  const accessToken = useSelector((state: any) => state.user.accessToken);
-  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
-    share: true,
-    queryParams: {
-      'Authorization': accessToken,
-    },
-  });
+  const dispatch = useDispatch<any>();
 
-  const sendMessage = (text: string = inputText) => {
-    sendJsonMessage({ 
+  const send = (text: string = inputText) => {
+    dispatch(sendMessage({ 
       action: '/game/chat/message',
       body: { gameId, text }
-    });
+    }));
   };
 
   return (
@@ -61,12 +54,12 @@ export const GameChat = () => {
         />
         <div className="game__chat__input__quick-messages">
           <ButtonGroup variant="contained" aria-label="outlined primary button group">
-            <Button onClick={() => sendMessage('Good game!')}>GG</Button>
-            <Button onClick={() => sendMessage('Well played!')}>WP</Button>
+            <Button onClick={() => send('Good game!')}>GG</Button>
+            <Button onClick={() => send('Well played!')}>WP</Button>
             <Button >HF</Button>
           </ButtonGroup>
         </div>
-        <Button onClick={() => sendMessage()}>Send</Button>
+        <Button onClick={() => send()}>Send</Button>
       </div>
     </div>
   );

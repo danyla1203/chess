@@ -1,7 +1,6 @@
 import * as React from 'react';
-import useWebSocket from 'react-use-websocket';
-import { config } from '../../config';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { sendMessage } from '../../store/slices/ws';
 
 const Message = (props: any) => {
   const date = new Date(props.date);
@@ -22,20 +21,14 @@ const Message = (props: any) => {
 export const Chat = () => {
   const [ text, setText ] = React.useState('');
   const isAuthorized = useSelector((state: any) => state.user.authorized);
-  const accessToken = useSelector((state: any) => state.user.accessToken);
   const messages = useSelector((state: any) => state.chat.messages);
-  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
-    share: true,
-    queryParams: {
-      'Authorization': accessToken,
-    }, 
-  });
-
-  const sendMessage = () => {
-    sendJsonMessage({ action: '/chat/push-message', body: { text } });
+  const dispatch = useDispatch();
+ 
+  const send = () => {
+    dispatch(sendMessage({ action: '/chat/push-message', body: { text } }));
   };
 
-  let chatInput = null;
+  let chatInput: any = null;
   if (isAuthorized) {
     chatInput = (
       <div className="chat__input">
@@ -47,7 +40,7 @@ export const Chat = () => {
         />
         <button 
           className="chat__input-send-message"
-          onClick={sendMessage}>Send</button>
+          onClick={send}>Send</button>
       </div>
     );
   }

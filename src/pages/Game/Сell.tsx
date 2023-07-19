@@ -1,18 +1,10 @@
 import * as React from 'react';
-import useWebSocket from 'react-use-websocket';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectFigure } from '../../store/slices/game';
-import { config } from '../../config';
+import { sendMessage } from '../../store/slices/ws';
 
 export const Cell = (props: any) => {
-  const accessToken = useSelector((state: any) => state.user.accessToken);
   const isGameEnded = useSelector((state: any) => state.game.isGameEnded);
-  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
-    share: true,
-    queryParams: {
-      'Authorization': accessToken,
-    },
-  });
   const dispatch = useDispatch();
   
   const { figure, side } = useSelector(({ game: { board: { white, black } } }) => {
@@ -30,7 +22,7 @@ export const Cell = (props: any) => {
   
   let cellClick = () => {
     if (isCellHighlithed && !isCellSelected) {
-      sendJsonMessage({ 
+      dispatch(sendMessage({ 
         action: '/game/make-turn',
         body: { 
           gameId,
@@ -39,7 +31,7 @@ export const Cell = (props: any) => {
             cell: props.name
           }
         } 
-      });
+      }));
     } else {
       dispatch(selectFigure(props.name));
     }

@@ -1,7 +1,5 @@
 import * as React from 'react';
-import { useSelector } from 'react-redux';
-import useWebSocket from 'react-use-websocket';
-import { config } from '../../config';
+import { useDispatch, useSelector } from 'react-redux';
 
 const GameItem = ({ game, connectToGame }) => {
   const beautyMaxTime = Math.floor(game.maxTime / (1000 * 60));
@@ -25,18 +23,14 @@ const GameItem = ({ game, connectToGame }) => {
 
 import './GameList.scss';
 import { GameData } from '../../store/slices/gamelist';
+import { sendMessage } from '../../store/slices/ws';
 
 export const GameList = () => {
-  const accessToken = useSelector((state: any) => state.user.accessToken);
-  const { sendJsonMessage } = useWebSocket(`ws://${config.apiDomain}`, {
-    share: true,
-    queryParams: {
-      'Authorization': accessToken,
-    },
-  });
   const games: GameData[] = useSelector((state: any) => state.gameList.games);
+  const dispatch = useDispatch();
+  
   const connectToGame = (gameId: string) => {
-    sendJsonMessage({ action: '/game/connect/player', body: { gameId } });
+    dispatch(sendMessage({ action: '/game/connect/player', body: { gameId } }));
   };
 
   return (
