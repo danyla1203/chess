@@ -14,7 +14,7 @@ export const wsSlice = createSlice({
       ws.connect(payload);
     },
     sendMessage: (_, { payload }) => {
-      ws.send(payload);
+      ws.send(payload.event, payload.data);
     },
     close: () => {
       ws.close();

@@ -22,7 +22,7 @@ export const gameList = createSlice({
   reducers: {
     setGames: (state, { payload }: any) => {
       console.log(payload);
-      state.games = payload.games;
+      state.games = payload;
     }
   },
 });

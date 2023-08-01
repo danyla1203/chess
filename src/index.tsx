@@ -8,7 +8,6 @@ import { Router } from './Router';
 
 import { getUserByRefresh } from './store/slices/user';
 
-
 import './index.scss';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -41,7 +40,7 @@ const App = () => {
       dispatch(connect(accessToken));
     }
   }, [ isGetTokenLoaded, accessToken ]);
-
+  
   if (isGetTokenLoaded && isWsLoaded) {
     return (
       <div className="wrapper">

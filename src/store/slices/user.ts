@@ -12,7 +12,7 @@ export const getUserByRefresh = createAsyncThunk(
         'Content-Type': 'application/json'
       }
     };
-    const response = await fetch(`${config.apiHost}/refresh-token`, reqBody);
+    const response = await fetch(`${config.apiHost}/auth/use-refresh`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
