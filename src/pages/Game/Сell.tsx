@@ -24,13 +24,11 @@ export const Cell = (props: any) => {
   let cellClick = () => {
     if (isCellHighlithed && !isCellSelected) {
       dispatch(sendMessage({ 
-        action: '/game/make-turn',
+        event: 'move',
         body: { 
           gameId,
-          body: {
-            figure: selectedFigure.figure,
-            cell: props.name
-          }
+          figure: selectedFigure.figure,
+          cell: props.name
         } 
       }));
     } else {

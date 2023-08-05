@@ -328,12 +328,11 @@ export const gameSlice = createSlice({
       }
     },
     updateBoard: (state, { payload }) => {
-      possibleMovesLogic.setUpdatedBoard(payload.payload.board);
-      const board = payload.payload.board;
+      possibleMovesLogic.setUpdatedBoard(payload);
       const boardState: any = { white: {}, black: {} };
-      for (const side in board) {
-        for (const figure in board[side]) {
-          boardState[side][board[side][figure]] = figure;
+      for (const side in payload) {
+        for (const figure in payload[side]) {
+          boardState[side][payload[side][figure]] = figure;
         }
       }
       state.board = boardState;
