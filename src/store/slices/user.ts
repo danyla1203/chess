@@ -26,7 +26,7 @@ export const getUserByRefresh = createAsyncThunk(
         Authorization: `Bearer ${access}`,
       },
     };
-    const userRequest = await fetch(`${config.apiHost}/me`, userMe);
+    const userRequest = await fetch(`${config.apiHost}/user`, userMe);
     if (userRequest.status !== 200) {
       return thunk.rejectWithValue({
         code: response.status,
@@ -41,7 +41,7 @@ export const getUserByRefresh = createAsyncThunk(
 export const loginRequest = createAsyncThunk(
   '/login',
   async (loginData: string, thunk) => {
-    const reqBody = { 
+    const login = { 
       method: 'POST', 
       body: loginData, 
       headers: { 
@@ -49,11 +49,33 @@ export const loginRequest = createAsyncThunk(
         'Content-Type': 'application/json' 
       } 
     };
-    const response = await fetch(`${config.apiHost}/login`, reqBody);
-    if (response.status !== 200) {
-      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
+    const response = await fetch(`${config.apiHost}/auth/login`, login);
+    if (response.status !== 201) {
+      return thunk.rejectWithValue({
+        code: response.status,
+        error: response.statusText,
+      });
     }
-    return response.json();
+    const { access, refresh } = await response.json();
+    const profile = {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${access}`,
+      }
+    };
+    const profileRequest = await fetch(`${config.apiHost}/user`, profile);
+    if (profileRequest.status !== 200) {
+      return thunk.rejectWithValue({
+        code: response.status,
+        error: response.statusText,
+      });
+    }
+    const userData = await profileRequest.json();
+    return {
+      ...userData,
+      access,
+      refresh
+    };
   }
 );
 export const signUpRequest = createAsyncThunk(
@@ -67,7 +89,7 @@ export const signUpRequest = createAsyncThunk(
         'Content-Type': 'application/json' 
       } 
     };
-    const response = await fetch(`${config.apiHost}/signup`, reqBody);
+    const response = await fetch(`${config.apiHost}/auth/signup`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -86,7 +108,7 @@ export const logoutRequest = createAsyncThunk(
         'Authorization': `Bearer ${state.user.accessToken}` 
       } 
     };
-    const response = await fetch(`${config.apiHost}/logout`, reqBody);
+    const response = await fetch(`${config.apiHost}/auth/logout`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -228,7 +250,11 @@ export const userSlice = createSlice({
     });
 
     builder.addCase(loginRequest.fulfilled, (state, { payload }: any) => {
+      console.log(payload);
       state.accessToken = payload.access;
+      state.name = payload.name;
+      state.email = payload.email;
+      state.id = payload.id;
       state.authorized = true;
       localStorage.setItem('refreshToken', payload.refresh);
     });
@@ -255,17 +281,16 @@ export const userSlice = createSlice({
       localStorage.setItem('refreshToken', payload.refresh);
     });
 
-    builder.addCase(logoutRequest.fulfilled, (state, { payload }) => {
+    builder.addCase(logoutRequest.fulfilled, (state) => {
       state.accessToken = null;
       state.authorized = false;
       state.emailConfirmed = false;
       state.email = null;
-      state.name = payload.name;
-      state.id = payload.id;
+      state.name = 'Anonymous';
     });
 
     builder.addCase(userGameList.fulfilled, (state, { payload }) => {
-      state.gameHistory = payload.items;
+      state.gameHistory = payload.games;
     });
   }
 });

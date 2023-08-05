@@ -269,17 +269,13 @@ export const gameSlice = createSlice({
     opponentOnPage: null
   },
   reducers: {
-    setTimers: (state, { payload }: any) => {
-      state.timers.b = payload.maxTime;
-      state.timers.w = payload.maxTime;
-    },
     updateTimerByServerEvent: (state) => {
       state.movingSide === 'w' ? 
         state.timers.w -= 1000 :
         state.timers.b -= 1000;
     },
     initGameData: (state, { payload }: any) => {
-      console.log(payload);
+      console.log('inited', payload);
       state.chatMessages = [];
       state.selectedFigure = { figure: null, cell: null };
       state.strikedFigures = { black: [], white: [] };
@@ -299,6 +295,8 @@ export const gameSlice = createSlice({
 
       state.board = boardState;
       state.timeIncrement = parseInt(payload.timeIncrement, 10);
+      state.timers.b = parseInt(payload.maxTime, 10);
+      state.timers.w = parseInt(payload.maxTime, 10);
       state.id = payload.gameId;
     },
 
@@ -370,7 +368,6 @@ export const {
   endGame,
   addMessage,
   userLeave,
-  setTimers,
   updateTimerByServerEvent
 } = gameSlice.actions;
 

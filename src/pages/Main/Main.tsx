@@ -10,7 +10,6 @@ import { GameList } from './GameList';
 import { Game } from '../Game/Game';
 import { sendMessage } from '../../store/slices/ws';
 
-
 export const MainPage = () => {
   const [ value, setValue ] = React.useState(1);
   const isWaitingForGame = useSelector((state: any) => state.game.isWaiting);
@@ -26,8 +25,7 @@ export const MainPage = () => {
       time: minutes * 60 * 1000,
       timeIncrement: timeIncrement * 1000
     };
-    console.log('here');
-    dispatch(sendMessage({ action: '/game/new-game', body }));
+    dispatch(sendMessage({ event: 'create', body }));
   };
   
   return (

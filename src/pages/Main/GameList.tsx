@@ -2,16 +2,18 @@ import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 const GameItem = ({ game, connectToGame }) => {
-  const beautyMaxTime = Math.floor(game.maxTime / (1000 * 60));
-  const beautyTimeIncrement = Math.floor(game.timeIncrement / 1000);
+  const beautyMaxTime = Math.floor(game.config.time / (1000 * 60));
+  const beautyTimeIncrement = Math.floor(game.config.timeIncrement / 1000);
+
+  const creator: any = Object.values(game.players)[0];
 
   return (
     <div className='game-list__item' key={game.id} onClick={() => connectToGame(game.id)} >
       <div className='game-list__item__data-block'>
-        <h3 className='game-list__item__name'>{game.players[0].name}</h3>
+        <h3 className='game-list__item__name'>{creator.name}</h3>
       </div>
       <div className='game-list__item__data-block'>
-        <span className={`game-list__item__side-selection-circle ${game.side}-circle`}></span>
+        <span className={`game-list__item__side-selection-circle ${game.config.side}-circle`}></span>
       </div>
       <div className='game-list__item__data-block'>
         <h3>{beautyMaxTime}-{beautyTimeIncrement}</h3>
@@ -19,7 +21,6 @@ const GameItem = ({ game, connectToGame }) => {
     </div>
   );
 };
-
 
 import './GameList.scss';
 import { GameData } from '../../store/slices/gamelist';
@@ -30,7 +31,7 @@ export const GameList = () => {
   const dispatch = useDispatch();
   
   const connectToGame = (gameId: string) => {
-    dispatch(sendMessage({ action: '/game/connect/player', body: { gameId } }));
+    dispatch(sendMessage({ event: 'join', body: { gameId } }));
   };
 
   return (

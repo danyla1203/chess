@@ -12,6 +12,7 @@ export const Cell = (props: any) => {
     if (black[props.name]) return { side: 'b', figure: black[props.name] };
     return {};
   });
+  
   const isCellShached = useSelector(({ game: { shahData } }) => {
     if (shahData.shachedSide === side && figure === 'Kn') return true;
   });

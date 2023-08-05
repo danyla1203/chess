@@ -48,9 +48,8 @@ export const UserPage = () => {
   const dispatch = useDispatch<any>();
   
   React.useEffect(() => {
-    dispatch(userGameList(accessToken));
+    if (isAuthorized) dispatch(userGameList(accessToken));
   }, []);
-
   if (!isAuthorized) return <Navigate to={'/'} />;
   return (
     <div className="user-page">
