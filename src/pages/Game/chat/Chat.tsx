@@ -5,7 +5,7 @@ import { sendMessage } from '../../../store/slices/ws';
 
 import './Chat.scss';
 
-const Message = ({ author, message }: any) => {
+const Message = ({ author, text, date }: any) => {
   const outputData = new Date();
   const minutes = outputData.getMinutes();
   const hours = outputData.getHours();
@@ -13,9 +13,9 @@ const Message = ({ author, message }: any) => {
   const beautyHours = hours < 10 ? `0${hours}` : hours;
   const beautyTime = `${beautyHours}:${beautyMinutes}`;
   return (
-    <div className="game__chat__messages__item" key={message.date}>
+    <div className="game__chat__messages__item" key={date}>
       <h4 className='game__chat__messages__item-name'>{author.name}</h4>
-      <h3 className='game__chat__messages__item-message'>{message.text}</h3>
+      <h3 className='game__chat__messages__item-message'>{text}</h3>
       <h2 className='game__chat__messages__item-time'>{beautyTime}</h2>
     </div>
   );
@@ -29,7 +29,7 @@ export const GameChat = () => {
 
   const send = (text: string = inputText) => {
     dispatch(sendMessage({ 
-      action: '/game/chat/message',
+      event: 'chat-message',
       body: { gameId, text }
     }));
   };
@@ -40,8 +40,10 @@ export const GameChat = () => {
         { 
           chatMessages.map((messageData: any) => 
             <Message 
-              message={messageData.message} 
-              author={messageData.author} 
+              key={messageData.id}
+              text={messageData.text} 
+              author={messageData.author}
+              date={messageData.date}
             /> 
           )
         }

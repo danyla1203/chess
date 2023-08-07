@@ -3,6 +3,7 @@ import { config } from '../config';
 import { store } from '.';
 import { setConnectStatus } from './slices/ws';
 import { 
+  addMessage,
   addStrikedFigure,
   endGame,
   initGameData,
@@ -36,6 +37,7 @@ export class WebsocketClient {
     this.socket.on('game:mate', (payload) => dispatch(endGame(payload))); 
     this.socket.on('game:time', (payload) => dispatch(updateTimerByServerEvent(payload)));
     this.socket.on('game:end', () => dispatch(endGame()));
+    this.socket.on('game:chat-message', (payload) => dispatch(addMessage(payload)));
   }
 
   close() {
