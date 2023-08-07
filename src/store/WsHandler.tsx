@@ -34,7 +34,7 @@ export class WebsocketClient {
     this.socket.on('game:strike', (payload) => dispatch(addStrikedFigure(payload)));
     this.socket.on('game:shah', (payload) => dispatch(setShah(payload)));
     this.socket.on('game:mate', (payload) => dispatch(endGame(payload))); 
-    this.socket.on('game:time', () => dispatch(updateTimerByServerEvent()));
+    this.socket.on('game:time', (payload) => dispatch(updateTimerByServerEvent(payload)));
   }
 
   close() {

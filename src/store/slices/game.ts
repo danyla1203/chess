@@ -269,13 +269,11 @@ export const gameSlice = createSlice({
     opponentOnPage: null
   },
   reducers: {
-    updateTimerByServerEvent: (state) => {
-      state.movingSide === 'w' ? 
-        state.timers.w -= 1000 :
-        state.timers.b -= 1000;
+    updateTimerByServerEvent: (state, { payload }) => {
+      state.timers.w = payload.w;
+      state.timers.b = payload.b;
     },
     initGameData: (state, { payload }: any) => {
-      console.log('inited', payload);
       state.chatMessages = [];
       state.selectedFigure = { figure: null, cell: null };
       state.strikedFigures = { black: [], white: [] };
