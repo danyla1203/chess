@@ -135,7 +135,7 @@ export const userGameList = createAsyncThunk(
 );
 
 export const sendVerificationEmail = createAsyncThunk(
-  '/user/send-verification-email',
+  '/auth/send-verification-email',
   async (email: string, thunk) => {
     const reqBody = {
       method: 'POST',
@@ -146,8 +146,8 @@ export const sendVerificationEmail = createAsyncThunk(
       }
     };
 
-    const response = await fetch(`${config.apiHost}/send-verification-mail`, reqBody);
-    if (response.status !== 200) {
+    const response = await fetch(`${config.apiHost}/auth/send-verification-mail`, reqBody);
+    if (response.status !== 201) {
       return thunk.rejectWithValue({
         code: response.status,
         error: response.statusText,
@@ -169,7 +169,7 @@ export const confirmCode = createAsyncThunk(
       } 
     };
 
-    const response = await fetch(`${config.apiHost}/verify-email`, reqBody);
+    const response = await fetch(`${config.apiHost}/auth/verify-email`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({
         code: response.status,
