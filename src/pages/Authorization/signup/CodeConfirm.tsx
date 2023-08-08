@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
 import { confirmCode } from '../../../store/slices/user';
+import { Button, TextField, Typography } from '@mui/material';
+import './CodeConfirm.scss';
 
 export const EmailConfirmed = ({ email }: any) => {
   const [ code, setCode ] = React.useState('');
@@ -16,14 +18,17 @@ export const EmailConfirmed = ({ email }: any) => {
   if (isEmailConfirmed) return <Navigate to='/signup' />;
 
   return (
-    <div>
-      Check email and input code
-      <input 
-        placeholder={'Code:'} 
-        type="text" value={code} 
-        onChange={(e: any) => setCode(e.target.value)} 
+    <div className='code-confirm'>
+      <Typography gutterBottom variant='h5'>
+        Check email and input code
+      </Typography>
+      <TextField 
+        label="Email"
+        variant="filled" 
+        value={email} 
+        onChange={(e: any) => setCode(e.target.value)}
       />
-      <button onClick={submitCode}>Submit code</button>
+      <Button variant="contained" onClick={submitCode}>Confirm</Button>
     </div>
   );
 };

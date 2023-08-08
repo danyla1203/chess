@@ -1,0 +1,24 @@
+.code-confirm {
+  display: flex;
+  flex-direction: column;
+  h5 {
+    color: rgb(132, 38, 220) !important;
+  }
+
+  & .MuiTextField-root {
+    margin-bottom: 5px;
+
+    background-color: rgba(177, 155, 199, 0.696);
+    box-sizing: border-box !important;
+
+    & .Mui-focused {
+      color: rgb(105, 4, 199) !important;
+      font-size: 19px !important;
+      font-weight: 500;
+    }
+
+    & .MuiFormLabel-root {
+      color: rgba(69, 18, 117, 0.75) !important;
+    }
+  }
+}
