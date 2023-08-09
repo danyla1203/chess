@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
 import './Signup.scss';
-import { signUpRequest } from '../../../store/slices/user';
+import { signUpAction } from '../../../store/slices/user';
 import { Button, TextField, Typography } from '@mui/material';
 
 export const Signup = () => {
@@ -18,8 +18,8 @@ export const Signup = () => {
 
   const signup = () => {
     const deviceId: string = (Math.random() + 1).toString(36).substring(7);
-    const payload = JSON.stringify({ email, password, deviceId, name });
-    dispatch(signUpRequest(payload));
+    const payload = { email, password, deviceId, name };
+    dispatch(signUpAction(payload));
   };
 
   if (isLoaded) return <Navigate to='/' />;

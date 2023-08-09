@@ -9,7 +9,7 @@ import { MainPage } from './pages/Main/Main';
 import { Navbar } from './components/Navbar/Navbar';
 import { UserPage } from './pages/User/User';
 
-export const Router = () => {
+export function Router() {
   return (
     <BrowserRouter>
       <Navbar />
@@ -17,10 +17,16 @@ export const Router = () => {
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/email-confirmation" element={<EmailConfirmation />} />
-        <Route path="/complete-registration" element={<GoogleConfirm />}/>
-        <Route path='/user' element={<UserPage />} />
+        <Route
+          path="/email-confirmation"
+          element={<EmailConfirmation />}
+        />
+        <Route
+          path="/complete-registration"
+          element={<GoogleConfirm />}
+        />
+        <Route path="/user" element={<UserPage />} />
       </Routes>
     </BrowserRouter>
   );
-};
+}

@@ -18,11 +18,11 @@ export const wsSlice = createSlice({
     },
     close: () => {
       ws.close();
-    }
-    
+    },
   },
 });
 
-export const { setConnectStatus, connect, sendMessage, close } = wsSlice.actions;
+export const { setConnectStatus, connect, sendMessage, close } =
+  wsSlice.actions;
 
 export default wsSlice.reducer;

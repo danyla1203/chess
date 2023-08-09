@@ -1,32 +1,31 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 type PlayerData = {
-  id: string
-  name: string
-}
+  id: string;
+  name: string;
+};
 export type GameData = {
-  id: string,
-  spectators: number,
-  players: PlayerData[],
+  id: string;
+  spectators: number;
+  players: PlayerData[];
   isActive: boolean;
-  maxTime: number
-  timeIncrement: number
-  side: 'w'|'b'|'rand';
-}
+  maxTime: number;
+  timeIncrement: number;
+  side: 'w' | 'b' | 'rand';
+};
 
-export const gameList = createSlice({
+export const gameListSlice = createSlice({
   name: 'gameList',
   initialState: {
     games: [],
   },
   reducers: {
     setGames: (state, { payload }: any) => {
-      console.log(payload);
       state.games = payload;
-    }
+    },
   },
 });
 
-export const { setGames } = gameList.actions;
+export const { setGames } = gameListSlice.actions;
 
-export default gameList.reducer;
+export default gameListSlice.reducer;

@@ -1,207 +1,96 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { config } from '../../config';
+import {
+  Login,
+  Signup,
+  Verify,
+  confirmEmailRequest,
+  googleAuthRequest,
+  loginRequest,
+  logoutRequest,
+  sendVerificationMail,
+  signupRequest,
+  useRefresh,
+} from '../request/auth';
+import { getProfile, userGameList } from '../request/user';
 
-export const getUserByRefresh = createAsyncThunk(
+export const getUserByRefreshAction = createAsyncThunk(
   '/use-refresh',
   async (token: string, thunk) => {
-    const reqBody = { 
-      method: 'PUT',
-      body: JSON.stringify({ refreshToken: token }),
-      headers: { 
-        accept: 'application/json',
-        'Content-Type': 'application/json'
-      }
-    };
-    const response = await fetch(`${config.apiHost}/auth/use-refresh`, reqBody);
-    if (response.status !== 200) {
-      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
-    }
+    const tokens = await useRefresh(token);
+    if (tokens.err) thunk.rejectWithValue(tokens);
 
-    const { access, refresh } = await response.json();
-
-    const userMe = {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-        Authorization: `Bearer ${access}`,
-      },
-    };
-    const userRequest = await fetch(`${config.apiHost}/user`, userMe);
-    if (userRequest.status !== 200) {
-      return thunk.rejectWithValue({
-        code: response.status,
-        error: response.statusText,
-      });
-    }
-    const userData = await userRequest.json();
-    return { ...userData, access, refresh };
-  }
-);
-
-export const loginRequest = createAsyncThunk(
-  '/login',
-  async (loginData: string, thunk) => {
-    const login = { 
-      method: 'POST', 
-      body: loginData, 
-      headers: { 
-        accept: 'application/json', 
-        'Content-Type': 'application/json' 
-      } 
-    };
-    const response = await fetch(`${config.apiHost}/auth/login`, login);
-    if (response.status !== 201) {
-      return thunk.rejectWithValue({
-        code: response.status,
-        error: response.statusText,
-      });
-    }
-    const { access, refresh } = await response.json();
-    const profile = {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${access}`,
-      }
-    };
-    const profileRequest = await fetch(`${config.apiHost}/user`, profile);
-    if (profileRequest.status !== 200) {
-      return thunk.rejectWithValue({
-        code: response.status,
-        error: response.statusText,
-      });
-    }
-    const userData = await profileRequest.json();
+    const userData = await getProfile(tokens.data.access);
     return {
       ...userData,
-      access,
-      refresh
+      ...tokens.data,
     };
-  }
+  },
 );
-export const signUpRequest = createAsyncThunk(
+
+export const loginAction = createAsyncThunk(
+  '/login',
+  async (loginData: Login, thunk) => {
+    const tokens = await loginRequest(loginData);
+    if (tokens.err) thunk.rejectWithValue(loginData);
+    const userData = await getProfile(tokens.data.access);
+    return {
+      ...userData,
+      ...tokens.data,
+    };
+  },
+);
+export const signUpAction = createAsyncThunk(
   '/signup',
-  async (registraionData: string, thunk) => {
-    const reqBody = { 
-      method: 'POST', 
-      body: registraionData, 
-      headers: { 
-        accept: 'application/json', 
-        'Content-Type': 'application/json' 
-      } 
-    };
-    const response = await fetch(`${config.apiHost}/user/signup`, reqBody);
-    if (response.status !== 200) {
-      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
-    }
-    return response.json();
-  }
+  async (registraionData: Signup, thunk) => {
+    const tokens = await signupRequest(registraionData);
+    if (tokens.err) thunk.rejectWithValue(registraionData);
+    return tokens.data;
+  },
 );
-export const logoutRequest = createAsyncThunk(
+export const logoutAction = createAsyncThunk(
   '/logout',
   async (_, thunk: any) => {
     const state = thunk.getState();
-    const reqBody = { 
-      method: 'DELETE', 
-      body: thunk.getStore, 
-      headers: { 
-        accept: 'application/json', 
-        'Authorization': `Bearer ${state.user.accessToken}` 
-      } 
-    };
-    const response = await fetch(`${config.apiHost}/auth/logout`, reqBody);
-    if (response.status !== 200) {
-      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
-    }
-    return response.json();
-  }
+    const logout = await logoutRequest(state.user.accessToken);
+    if (logout.err) thunk.rejectWithValue(logout);
+    return logout.data;
+  },
 );
 
-export const userGameList = createAsyncThunk(
+export const userGameListAction = createAsyncThunk(
   '/user/game/list',
   async (accessToken: string, thunk) => {
-    const reqBody = { 
-      method: 'GET', 
-      headers: { 
-        accept: 'application/json',
-        'Authorization': `Bearer ${accessToken}` 
-      }
-    };
-    const response = await fetch(`${config.apiHost}/user/games`, reqBody);
-    if (response.status !== 200) {
-      return thunk.rejectWithValue({ code: response.status, error: response.statusText });
-    }
-    return response.json();
-  }
+    const games = await userGameList(accessToken);
+    if (games.err) thunk.rejectWithValue(games);
+    return games.data;
+  },
 );
 
-export const sendVerificationEmail = createAsyncThunk(
+export const sendVerificationEmailAction = createAsyncThunk(
   '/auth/send-verification-email',
   async (email: string, thunk) => {
-    const reqBody = {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-      headers: { 
-        accept: 'application/json', 
-        'Content-Type': 'application/json' 
-      }
-    };
-
-    const response = await fetch(`${config.apiHost}/auth/send-verification-mail`, reqBody);
-    if (response.status !== 201) {
-      return thunk.rejectWithValue({
-        code: response.status,
-        error: response.statusText,
-      });
-    }
-    return { email, data: await response.json() };
-  }
+    const req = await sendVerificationMail({ email });
+    if (req.err) thunk.rejectWithValue(req);
+    return req.data;
+  },
 );
 
-export const confirmCode = createAsyncThunk(
+export const confirmCodeAction = createAsyncThunk(
   '/user/confirm-code',
-  async (data: any, thunk) => {
-    const reqBody = {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: { 
-        accept: 'application/json', 
-        'Content-Type': 'application/json' 
-      } 
-    };
-
-    const response = await fetch(`${config.apiHost}/auth/verify-email`, reqBody);
-    if (response.status !== 201) {
-      return thunk.rejectWithValue({
-        code: response.status,
-        error: response.statusText,
-      });
-    }
-    return response.json();
-  }
+  async (data: Verify, thunk) => {
+    const req = await confirmEmailRequest(data);
+    if (req.err) thunk.rejectWithValue(req);
+    return req.data;
+  },
 );
 
-export const googleAuth = createAsyncThunk(
+export const googleAuthAction = createAsyncThunk(
   '/user/google/oauth',
   async (code: string, thunk) => {
-    const reqBody = {
-      method: 'POST',
-      body: JSON.stringify({ code }),
-      headers: {
-        accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    };
-
-    const response = await fetch(`${config.apiHost}/google/oauth`, reqBody);
-    if (response.status !== 200) {
-      console.log(response);
-      return thunk.rejectWithValue({
-        code: response.status,
-        error: response.statusText,
-      });
-    }
-    return response.json();
-  }
+    const req = await googleAuthRequest(code);
+    if (req.err) thunk.rejectWithValue(req);
+    return req.data;
+  },
 );
 
 export const userSlice = createSlice({
@@ -216,7 +105,7 @@ export const userSlice = createSlice({
     error: { code: null, text: null },
     gameHistory: [],
     confirmationEmailSended: null,
-    emailConfirmed: false
+    emailConfirmed: false,
   },
   reducers: {
     setUserData: (state, { payload }) => {
@@ -226,62 +115,78 @@ export const userSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(googleAuth.fulfilled, (state, { payload }) => {
-      state.email = payload.email;
-      state.name = payload.name;
-      state.emailConfirmed = true;
-    });
-    builder.addCase(googleAuth.rejected, (state, { payload }: any) => {
-      console.log(payload);
-      state.error = { code: payload.code, text: payload.error };
-    });
+    builder.addCase(
+      googleAuthAction.fulfilled,
+      (state, { payload }) => {
+        state.email = payload.email;
+        state.name = payload.name;
+        state.emailConfirmed = true;
+      },
+    );
+    builder.addCase(
+      googleAuthAction.rejected,
+      (state, { payload }: any) => {
+        state.error = { code: payload.code, text: payload.error };
+      },
+    );
 
-    builder.addCase(sendVerificationEmail.fulfilled, (state, { payload }) => {
-      state.email = payload.email;
-      state.confirmationEmailSended = true;
-    });
-    builder.addCase(sendVerificationEmail.rejected, (state) => {
+    builder.addCase(
+      sendVerificationEmailAction.fulfilled,
+      (state, { payload }) => {
+        state.email = payload.email;
+        state.confirmationEmailSended = true;
+      },
+    );
+    builder.addCase(sendVerificationEmailAction.rejected, (state) => {
       state.error = { code: 400, text: 'Something went wrong' };
       state.confirmationEmailSended = false;
     });
 
-    builder.addCase(confirmCode.fulfilled, (state) => {
+    builder.addCase(confirmCodeAction.fulfilled, (state) => {
       state.emailConfirmed = true;
     });
 
-    builder.addCase(loginRequest.fulfilled, (state, { payload }: any) => {
-      console.log(payload);
-      state.accessToken = payload.access;
-      state.name = payload.name;
-      state.email = payload.email;
-      state.id = payload.id;
-      state.authorized = true;
-      localStorage.setItem('refreshToken', payload.refresh);
-    });
-    
-    builder.addCase(getUserByRefresh.fulfilled, (state, { payload }: any) => {
-      state.accessToken = payload.access;
-      state.authorized = true;
-      state.isGetTokenLoaded = true;
-      state.id = payload.id;
-      state.name = payload.name;
-      state.email = payload.email;
-      localStorage.setItem('refreshToken', payload.refresh);
-    });
-    builder.addCase(getUserByRefresh.rejected, (state) => {
+    builder.addCase(
+      loginAction.fulfilled,
+      (state, { payload }: any) => {
+        state.accessToken = payload.access;
+        state.name = payload.name;
+        state.email = payload.email;
+        state.id = payload.id;
+        state.authorized = true;
+        localStorage.setItem('refreshToken', payload.refresh);
+      },
+    );
+
+    builder.addCase(
+      getUserByRefreshAction.fulfilled,
+      (state, { payload }: any) => {
+        state.accessToken = payload.access;
+        state.authorized = true;
+        state.isGetTokenLoaded = true;
+        state.id = payload.id;
+        state.name = payload.name;
+        state.email = payload.email;
+        localStorage.setItem('refreshToken', payload.refresh);
+      },
+    );
+    builder.addCase(getUserByRefreshAction.rejected, (state) => {
       state.accessToken = null;
       state.authorized = false;
       state.isGetTokenLoaded = true;
       localStorage.removeItem('refreshToken');
     });
 
-    builder.addCase(signUpRequest.fulfilled, (state, { payload }: any) => {
-      state.accessToken = payload.access;
-      state.authorized = true;
-      localStorage.setItem('refreshToken', payload.refresh);
-    });
+    builder.addCase(
+      signUpAction.fulfilled,
+      (state, { payload }: any) => {
+        state.accessToken = payload.access;
+        state.authorized = true;
+        localStorage.setItem('refreshToken', payload.refresh);
+      },
+    );
 
-    builder.addCase(logoutRequest.fulfilled, (state) => {
+    builder.addCase(logoutAction.fulfilled, (state) => {
       state.accessToken = null;
       state.authorized = false;
       state.emailConfirmed = false;
@@ -289,10 +194,13 @@ export const userSlice = createSlice({
       state.name = 'Anonymous';
     });
 
-    builder.addCase(userGameList.fulfilled, (state, { payload }) => {
-      state.gameHistory = payload.games;
-    });
-  }
+    builder.addCase(
+      userGameListAction.fulfilled,
+      (state, { payload }) => {
+        state.gameHistory = payload.games;
+      },
+    );
+  },
 });
 
 export const { setUserData } = userSlice.actions;

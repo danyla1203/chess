@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 export const chatSlice = createSlice({
   name: 'chat',
   initialState: {
-    messages: []
+    messages: [],
   },
   reducers: {
     setMessages: (state, { payload }) => {
@@ -16,12 +16,12 @@ export const chatSlice = createSlice({
         date: payload.date,
         user: {
           id: payload.user.id,
-          name: payload.user.name
-        }
+          name: payload.user.name,
+        },
       };
       state.messages.push(message);
-    }
-  }
+    },
+  },
 });
 
 export const { setMessages, pushMessage } = chatSlice.actions;

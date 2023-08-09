@@ -2,7 +2,7 @@ import queryString from 'query-string';
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
-import { googleAuth } from '../../../store/slices/user';
+import { googleAuthAction } from '../../../store/slices/user';
 
 export const GoogleConfirm = () => {
   const dispatch = useDispatch<any>();
@@ -10,7 +10,7 @@ export const GoogleConfirm = () => {
   const isEmailConfirmed = useSelector((state: any) => state.user.emailConfirmed);
 
   React.useEffect(() => {
-    dispatch(googleAuth(code as string));
+    dispatch(googleAuthAction(code as string));
   }, []);
 
   if (isEmailConfirmed) return <Navigate to='/signup' />;

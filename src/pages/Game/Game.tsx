@@ -5,7 +5,7 @@ import { GameChat } from './chat/Chat';
 
 import './Game.scss';
 
-export const Game = () => {
+export function Game() {
   return (
     <div className="game">
       <GameChat />
@@ -13,4 +13,4 @@ export const Game = () => {
       <RigthMenu />
     </div>
   );
-};
+}

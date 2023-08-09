@@ -3,49 +3,68 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectFigure } from '../../store/slices/game';
 import { sendMessage } from '../../store/slices/ws';
 
-export const Cell = (props: any) => {
-  const isGameEnded = useSelector((state: any) => state.game.isGameEnded);
+export function Cell({ name, color }: any) {
+  const isGameEnded = useSelector(
+    (state: any) => state.game.isGameEnded,
+  );
   const dispatch = useDispatch();
-  
-  const { figure, side } = useSelector(({ game: { board: { white, black } } }) => {
-    if (white[props.name]) return { side: 'w', figure: white[props.name] };
-    if (black[props.name]) return { side: 'b', figure: black[props.name] };
-    return {};
-  });
-  
-  const isCellShached = useSelector(({ game: { shahData } }) => {
+
+  const { figure, side } = useSelector(
+    ({
+      game: {
+        board: { white, black },
+      },
+    }) => {
+      for (const f in white) {
+        if (white[f] === name) return { side: 'w', figure: f };
+      }
+      for (const f in black) {
+        if (black[f] === name) return { side: 'b', figure: f };
+      }
+      return {};
+    },
+  );
+
+  const isCellShached = useSelector(({ game: { shahData } }: any) => {
     if (shahData.shachedSide === side && figure === 'Kn') return true;
+    return false;
   });
   const gameId = useSelector((state: any) => state.game.id);
-  const selectedFigure = useSelector((state: any) => state.game.selectedFigure);
-  const isCellHighlithed = useSelector((state: any) => state.game.highlightedCels.includes(props.name));
-  const isCellSelected = selectedFigure.cell === props.name;
-  
+  const selectedFigure = useSelector(
+    (state: any) => state.game.selectedFigure,
+  );
+  const isCellHighlithed = useSelector((state: any) =>
+    state.game.highlightedCels.includes(name),
+  );
+  const isCellSelected = selectedFigure.cell === name;
+
   let cellClick = () => {
     if (isCellHighlithed && !isCellSelected) {
-      dispatch(sendMessage({ 
-        event: 'move',
-        body: { 
-          gameId,
-          figure: selectedFigure.figure,
-          cell: props.name
-        } 
-      }));
+      dispatch(
+        sendMessage({
+          event: 'move',
+          body: {
+            gameId,
+            figure: selectedFigure.figure,
+            cell: name,
+          },
+        }),
+      );
     } else {
-      dispatch(selectFigure(props.name));
+      dispatch(selectFigure({ figure, cell: name }));
     }
   };
 
-  let className = `board__row__cell ${props.color}`;
+  let className = `board__row__cell ${color}`;
   if (isCellSelected) className += ' selected';
   if (figure) className += ` ${figure.replace(/\d/, '')} ${side}`;
   if (isCellShached) className += ' shahed';
   if (isGameEnded) cellClick = () => {};
   return (
     <div className={className} onClick={cellClick}>
-      {
-        isCellHighlithed ? <span className='board__row__cell-dot'></span>:null
-      }
+      {isCellHighlithed ? (
+        <span className="board__row__cell-dot" />
+      ) : null}
     </div>
   );
-};
+}

@@ -1,12 +1,12 @@
 import * as React from 'react';
-import ReactDOM = require('react-dom');
+import { createRoot } from 'react-dom/client';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/index';
 import { Notifications } from './components/Notification/Notifications';
 import { GameWaiting } from './components/GameWaiting/GameWaiting';
 import { Router } from './Router';
 
-import { getUserByRefresh } from './store/slices/user';
+import { getUserByRefreshAction } from './store/slices/user';
 
 import './index.scss';
 import '@fontsource/roboto/300.css';
@@ -23,15 +23,21 @@ export enum GameTypes {
   CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 
-const App = () => {
-  const accessToken = useSelector((state: any) => state.user.accessToken);
-  const isGetTokenLoaded = useSelector((state: any) => state.user.isGetTokenLoaded);
-  const isWsLoaded = useSelector((state: any) => state.ws.isConnected);
+function App() {
+  const accessToken = useSelector(
+    (state: any) => state.user.accessToken,
+  );
+  const isGetTokenLoaded = useSelector(
+    (state: any) => state.user.isGetTokenLoaded,
+  );
+  const isWsLoaded = useSelector(
+    (state: any) => state.ws.isConnected,
+  );
   const dispatch = useDispatch<any>();
 
   React.useEffect(() => {
     const refresh = localStorage.getItem('refreshToken');
-    dispatch(getUserByRefresh(refresh));
+    dispatch(getUserByRefreshAction(refresh));
   }, []);
 
   React.useEffect(() => {
@@ -39,20 +45,19 @@ const App = () => {
       dispatch(close());
       dispatch(connect(accessToken));
     }
-  }, [ isGetTokenLoaded, accessToken ]);
-  
+  }, [isGetTokenLoaded, accessToken]);
+
   if (isGetTokenLoaded && isWsLoaded) {
     return (
       <div className="wrapper">
         <Router />
       </div>
     );
-  } else {
-    return <div>Loading</div>;
   }
-};
+  return <div>Loading</div>;
+}
 
-const WrappedApp = () => {
+function WrappedApp() {
   return (
     <Provider store={store}>
       <Notifications />
@@ -60,6 +65,9 @@ const WrappedApp = () => {
       <GameWaiting />
     </Provider>
   );
-};
+}
 
-ReactDOM.render(<WrappedApp />, document.getElementById('output'));
+const out = document.getElementById('output');
+const root = createRoot(out);
+
+root.render(<WrappedApp />);

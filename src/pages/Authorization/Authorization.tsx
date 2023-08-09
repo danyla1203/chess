@@ -9,26 +9,38 @@ import { EmailConfirmation } from './signup/EmailConfirmation';
 
 import './Authorization.scss';
 
-export const LoginPage = () => {
-  const [ value, setValue ] = React.useState(1);
+export function LoginPage() {
+  const [value, setValue] = React.useState(1);
 
-  const isLoaded = useSelector((state: any) => !!state.user.accessToken);
+  const isLoaded = useSelector(
+    (state: any) => !!state.user.accessToken,
+  );
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (
+    event: React.SyntheticEvent,
+    newValue: number,
+  ) => {
     setValue(newValue);
   };
-  
-  if (isLoaded) return <Navigate to='/'/>;
+
+  if (isLoaded) return <Navigate to="/" />;
   return (
-    <div className='authorization'>
-      <TabContext value={value + ''}>
-        <TabList onChange={handleChange} aria-label="lab API tabs example">
+    <div className="authorization">
+      <TabContext value={`${value}`}>
+        <TabList
+          onChange={handleChange}
+          aria-label="lab API tabs example"
+        >
           <Tab label="Login" value="1" />
           <Tab label="Sign up" value="2" />
         </TabList>
-        <TabPanel value="1"><Login/></TabPanel>
-        <TabPanel value="2"><EmailConfirmation/></TabPanel>
+        <TabPanel value="1">
+          <Login />
+        </TabPanel>
+        <TabPanel value="2">
+          <EmailConfirmation />
+        </TabPanel>
       </TabContext>
     </div>
   );
-};
+}

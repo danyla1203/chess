@@ -13,6 +13,6 @@ export const store = configureStore({
     game,
     user,
     errors,
-    chat
+    chat,
   },
 });

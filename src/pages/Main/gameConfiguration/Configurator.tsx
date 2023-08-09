@@ -1,4 +1,12 @@
-import { Button, ButtonGroup, Slider, Typography, Input, Box, Grid } from '@mui/material';
+import {
+  Button,
+  ButtonGroup,
+  Slider,
+  Typography,
+  Input,
+  Box,
+  Grid,
+} from '@mui/material';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
@@ -48,7 +56,7 @@ function BootstrapDialogTitle(props: DialogTitleProps) {
 }
 
 export function ConfiguratorMenu({ createGame }) {
-  const [ open, setOpen ] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -67,22 +75,26 @@ export function ConfiguratorMenu({ createGame }) {
         aria-labelledby="customized-dialog-title"
         open={open}
       >
-        <BootstrapDialogTitle id="customized-dialog-title" onClose={handleClose}>
+        <BootstrapDialogTitle
+          id="customized-dialog-title"
+          onClose={handleClose}
+        >
           Configuration
         </BootstrapDialogTitle>
         <DialogContent dividers>
-          <Configurator createGame={createGame} handleClose={handleClose}/>
+          <Configurator
+            createGame={createGame}
+            handleClose={handleClose}
+          />
         </DialogContent>
       </BootstrapDialog>
     </>
   );
 }
 
-
-
-export const Configurator = ({ createGame, handleClose }) => {
-  const [ minutes, setMinutes ] = React.useState(6);
-  const [ timeAdd, setTimeAdd ] = React.useState(15);
+export function Configurator({ createGame, handleClose }) {
+  const [minutes, setMinutes] = React.useState(6);
+  const [timeAdd, setTimeAdd] = React.useState(15);
 
   const create = (side) => {
     createGame(side, minutes, timeAdd);
@@ -92,14 +104,14 @@ export const Configurator = ({ createGame, handleClose }) => {
   return (
     <div className="create-game">
       <Box sx={{ width: 400 }}>
-        <Typography gutterBottom variant='h5'>
-            Minutes per side
+        <Typography gutterBottom variant="h5">
+          Minutes per side
         </Typography>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs>
-            <Slider 
-              defaultValue={10} 
-              max={180} 
+            <Slider
+              defaultValue={10}
+              max={180}
               min={1}
               onChange={(e: any) => setMinutes(e.target.value)}
               value={minutes}
@@ -121,14 +133,14 @@ export const Configurator = ({ createGame, handleClose }) => {
           </Grid>
         </Grid>
 
-        <Typography gutterBottom variant='h5'>
-            Increment in seconds
+        <Typography gutterBottom variant="h5">
+          Increment in seconds
         </Typography>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs>
-            <Slider 
-              defaultValue={10} 
-              max={180} 
+            <Slider
+              defaultValue={10}
+              max={180}
               min={0}
               onChange={(e: any) => setTimeAdd(e.target.value)}
               value={timeAdd}
@@ -136,7 +148,7 @@ export const Configurator = ({ createGame, handleClose }) => {
           </Grid>
           <Grid item>
             <Input
-              value={timeAdd }
+              value={timeAdd}
               size="medium"
               onChange={(e: any) => setTimeAdd(e.target.value)}
               inputProps={{
@@ -150,17 +162,34 @@ export const Configurator = ({ createGame, handleClose }) => {
           </Grid>
         </Grid>
       </Box>
-      <ButtonGroup variant="outlined" aria-label="outlined primary button group" size='large' sx={{ marginTop: 5 }}>
-        <Button component={Link} to="/game" onClick={() => create('w')}>
+      <ButtonGroup
+        variant="outlined"
+        aria-label="outlined primary button group"
+        size="large"
+        sx={{ marginTop: 5 }}
+      >
+        <Button
+          component={Link}
+          to="/game"
+          onClick={() => create('w')}
+        >
           White
         </Button>
-        <Button component={Link} to="/game" onClick={() => create('b')}>
+        <Button
+          component={Link}
+          to="/game"
+          onClick={() => create('b')}
+        >
           Black
         </Button>
-        <Button component={Link} to="/game" onClick={() => create('rand')}>
+        <Button
+          component={Link}
+          to="/game"
+          onClick={() => create('rand')}
+        >
           Random
         </Button>
       </ButtonGroup>
     </div>
   );
-};
+}
