@@ -23,9 +23,9 @@ export const EmailConfirmed = ({ email }: any) => {
         Check email and input code
       </Typography>
       <TextField 
-        label="Email"
+        label="Code"
         variant="filled" 
-        value={email} 
+        value={code} 
         onChange={(e: any) => setCode(e.target.value)}
       />
       <Button variant="contained" onClick={submitCode}>Confirm</Button>

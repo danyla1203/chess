@@ -89,7 +89,7 @@ export const signUpRequest = createAsyncThunk(
         'Content-Type': 'application/json' 
       } 
     };
-    const response = await fetch(`${config.apiHost}/auth/signup`, reqBody);
+    const response = await fetch(`${config.apiHost}/user/signup`, reqBody);
     if (response.status !== 200) {
       return thunk.rejectWithValue({ code: response.status, error: response.statusText });
     }
@@ -170,7 +170,7 @@ export const confirmCode = createAsyncThunk(
     };
 
     const response = await fetch(`${config.apiHost}/auth/verify-email`, reqBody);
-    if (response.status !== 200) {
+    if (response.status !== 201) {
       return thunk.rejectWithValue({
         code: response.status,
         error: response.statusText,

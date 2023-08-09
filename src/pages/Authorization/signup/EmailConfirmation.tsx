@@ -14,7 +14,6 @@ export const EmailConfirmation = () => {
   const mailSended = useSelector((state: any) => state.user.confirmationEmailSended);
   const dispatch = useDispatch<any>();
   
-  return <EmailConfirmed email={email}/>; 
   if (mailSended) {
     return <EmailConfirmed email={email}/>; 
   }
