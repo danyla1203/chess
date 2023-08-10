@@ -10,8 +10,8 @@ import {
   setShah,
   startGame,
   updateBoard,
-  updateTimerByServerEvent,
 } from './slices/game';
+import { updateTimerByServerEvent } from './slices/timers';
 import { setGames } from './slices/gamelist';
 
 const dispatch = (action) => {

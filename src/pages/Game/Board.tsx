@@ -19,7 +19,7 @@ export function Board() {
     }
     result.push(row);
   }
-  console.log('board render');
+
   let renderedResult = result.map((row, i) => (
     <div key={`board row ${letters[i]}`} className="board__row">
       {row.map((cell) => cell)}
