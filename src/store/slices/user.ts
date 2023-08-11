@@ -48,7 +48,10 @@ export const signUpAction = createAsyncThunk(
   async (registraionData: Signup, thunk) => {
     const tokens = await signupRequest(registraionData);
     if (tokens.err) thunk.rejectWithValue(registraionData);
-    return tokens.data;
+
+    const userData = await getProfile(tokens.data.access);
+    if (userData.err) thunk.rejectWithValue(userData);
+    return { ...tokens.data, ...userData.data };
   },
 );
 export const logoutAction = createAsyncThunk(
@@ -93,6 +96,7 @@ export const googleAuthAction = createAsyncThunk(
   async (code: string, thunk) => {
     const req = await googleAuthRequest(code);
     if (req.err) thunk.rejectWithValue(req);
+    if (!req.data.access) return req.data;
 
     const userData = await getProfile(req.data.access);
     if (userData.err) thunk.rejectWithValue(userData);
@@ -195,6 +199,9 @@ export const userSlice = createSlice({
       (state, { payload }: any) => {
         state.accessToken = payload.access;
         state.authorized = true;
+        state.id = payload.id;
+        state.name = payload.name;
+        state.email = payload.email;
         localStorage.setItem('refreshToken', payload.refresh);
       },
     );
