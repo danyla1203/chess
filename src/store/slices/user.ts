@@ -20,8 +20,10 @@ export const getUserByRefreshAction = createAsyncThunk(
     if (tokens.err) thunk.rejectWithValue(tokens);
 
     const userData = await getProfile(tokens.data.access);
+    if (userData.err) thunk.rejectWithValue(userData);
+
     return {
-      ...userData,
+      ...userData.data,
       ...tokens.data,
     };
   },
@@ -32,9 +34,11 @@ export const loginAction = createAsyncThunk(
   async (loginData: Login, thunk) => {
     const tokens = await loginRequest(loginData);
     if (tokens.err) thunk.rejectWithValue(loginData);
+
     const userData = await getProfile(tokens.data.access);
+    if (userData.err) thunk.rejectWithValue(userData);
     return {
-      ...userData,
+      ...userData.data,
       ...tokens.data,
     };
   },
@@ -89,7 +93,12 @@ export const googleAuthAction = createAsyncThunk(
   async (code: string, thunk) => {
     const req = await googleAuthRequest(code);
     if (req.err) thunk.rejectWithValue(req);
-    return req.data;
+
+    let userData: any = {};
+    if (req.data.access) {
+      userData = await getProfile(req.data.access);
+    }
+    return { ...req.data, ...userData };
   },
 );
 
@@ -118,6 +127,12 @@ export const userSlice = createSlice({
     builder.addCase(
       googleAuthAction.fulfilled,
       (state, { payload }) => {
+        if (payload.access) {
+          state.authorized = true;
+          state.accessToken = payload.access;
+          state.id = payload.id;
+          localStorage.setItem('refreshToken', payload.refresh);
+        }
         state.email = payload.email;
         state.name = payload.name;
         state.emailConfirmed = true;

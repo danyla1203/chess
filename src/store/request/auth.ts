@@ -2,7 +2,6 @@ import { config } from '../../config';
 import { DeleteRequest, PostRequest, PutRequest } from '../tools';
 import { responseCheck } from '../tools/responseCheck';
 
-
 export interface Login {
   email: string;
   password: string;
@@ -51,7 +50,7 @@ export const loginRequest = async (loginData: Login) => {
 
 export const signupRequest = async (signupData: Signup) => {
   const req = await fetch(
-    `${config.apiHost}/auth/signup`,
+    `${config.apiHost}/user/signup`,
     PostRequest(signupData),
   );
   return responseCheck<Tokens>(req);
@@ -83,7 +82,7 @@ export const confirmEmailRequest = async (data: Verify) => {
 
 export const googleAuthRequest = async (code: string) => {
   const req = await fetch(
-    `${config.apiHost}/google/oauth`,
+    `${config.apiHost}/auth/google/oauth`,
     PostRequest({ code }),
   );
   return responseCheck(req);
