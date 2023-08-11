@@ -94,11 +94,9 @@ export const googleAuthAction = createAsyncThunk(
     const req = await googleAuthRequest(code);
     if (req.err) thunk.rejectWithValue(req);
 
-    let userData: any = {};
-    if (req.data.access) {
-      userData = await getProfile(req.data.access);
-    }
-    return { ...req.data, ...userData };
+    const userData = await getProfile(req.data.access);
+    if (userData.err) thunk.rejectWithValue(userData);
+    return { ...req.data, ...userData.data };
   },
 );
 
