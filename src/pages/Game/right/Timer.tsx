@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '../../../store';
 
 export function GameTimer({ side }: { side: 'w' | 'b' }) {
-  const time = useSelector((state: any) =>
+  const time = useAppSelector((state) =>
     side === 'w' ? state.gameTimers.w : state.gameTimers.b,
   );
   const minutes = Math.floor(time / (1000 * 60));

@@ -1,6 +1,4 @@
 import * as React from 'react';
-
-import { useDispatch, useSelector } from 'react-redux';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -8,27 +6,19 @@ import { Tab } from '@mui/material';
 import { GameConfiguration } from './gameConfiguration/GameConfiguration';
 import { GameList } from './GameList';
 import { Game } from '../Game/Game';
-import { sendMessage } from '../../store/slices/ws';
+import { sendMessage } from '../../store/ws';
+import { useAppDispatch, useAppSelector } from '../../store';
 
 export function MainPage() {
   const [value, setValue] = React.useState(1);
-  const isWaitingForGame = useSelector(
-    (state: any) => state.game.isWaiting,
-  );
-  const dispatch = useDispatch();
+  const isWaitingForGame = useAppSelector((state) => state.game.isWaiting);
+  const dispatch = useAppDispatch();
 
-  const handleChange = (
-    event: React.SyntheticEvent,
-    newValue: number,
-  ) => {
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
-  const createGame = (
-    side: 'w' | 'b' | 'rand',
-    minutes,
-    timeIncrement,
-  ) => {
+  const createGame = (side: 'w' | 'b' | 'rand', minutes, timeIncrement) => {
     const body = {
       side,
       time: minutes * 60 * 1000,
@@ -40,15 +30,10 @@ export function MainPage() {
   return (
     <main>
       <TabContext value={`${value}`}>
-        <TabList
-          onChange={handleChange}
-          aria-label="lab API tabs example"
-        >
+        <TabList onChange={handleChange} aria-label="lab API tabs example">
           <Tab label="Create" value="1" />
           <Tab label="Lobby" value="2" />
-          {isWaitingForGame === false && (
-            <Tab label="Game" value="3" />
-          )}
+          {isWaitingForGame === false && <Tab label="Game" value="3" />}
         </TabList>
         <TabPanel value="1">
           <GameConfiguration createGame={createGame} />

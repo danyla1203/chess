@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useDispatch } from 'react-redux';
 import './Login.scss';
 import { Button, TextField } from '@mui/material';
-import { loginAction } from '../../../store/slices/user';
+import { loginAction } from '../../../store/user';
 
 export function Login() {
   const dispatch = useDispatch<any>();
@@ -10,9 +10,7 @@ export function Login() {
   const [password, setPassword] = React.useState('');
 
   const login = () => {
-    const deviceId: string = (Math.random() + 1)
-      .toString(36)
-      .substring(7);
+    const deviceId: string = (Math.random() + 1).toString(36).substring(7);
     const payload = { email, password, deviceId };
     dispatch(loginAction(payload));
   };

@@ -23,10 +23,7 @@ export const GetRequest = (token?: string): ReqBody<'GET'> => {
 
   return reqBody;
 };
-export const PostRequest = (
-  body: any,
-  token?: string,
-): ReqBody<'POST'> => {
+export const PostRequest = (body: any, token?: string): ReqBody<'POST'> => {
   const reqBody: any = {
     method: 'POST',
     body: JSON.stringify(body),
@@ -43,10 +40,7 @@ export const PostRequest = (
 
   return reqBody;
 };
-export const PutRequest = (
-  body: any,
-  token?: string,
-): ReqBody<'PUT'> => {
+export const PutRequest = (body: any, token?: string): ReqBody<'PUT'> => {
   const reqBody: any = {
     method: 'PUT',
     body: JSON.stringify(body),
@@ -78,10 +72,7 @@ export const DeleteRequest = (token?: string): ReqBody<'DELETE'> => {
 
   return reqBody;
 };
-export const PatchRequest = (
-  body: any,
-  token?: string,
-): ReqBody<'PATCH'> => {
+export const PatchRequest = (body: any, token?: string): ReqBody<'PATCH'> => {
   const reqBody: any = {
     method: 'PATCH',
     body: JSON.stringify(body),

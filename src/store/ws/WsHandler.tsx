@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
-import { config } from '../config';
-import { store } from '.';
-import { setConnectStatus } from './slices/ws';
+import { config } from '../../config';
+import { store } from '..';
+import { setConnectStatus } from '.';
 import {
   addMessage,
   addStrikedFigure,
@@ -10,9 +10,9 @@ import {
   setShah,
   startGame,
   updateBoard,
-} from './slices/game';
-import { updateTimerByServerEvent } from './slices/timers';
-import { setGames } from './slices/gamelist';
+} from '../game';
+import { updateTimerByServerEvent } from '../slices/timers';
+import { setGames } from '../slices/gamelist';
 
 const dispatch = (action) => {
   store.dispatch(action);
@@ -29,9 +29,7 @@ export class WebsocketClient {
     this.socket.connect();
     this.socket.on('connect', () => dispatch(setConnectStatus()));
 
-    this.socket.on('lobby:update', (payload) =>
-      dispatch(setGames(payload)),
-    );
+    this.socket.on('lobby:update', (payload) => dispatch(setGames(payload)));
 
     this.socket.on('game:start', () => dispatch(startGame()));
     this.socket.on('game:init-data', (payload) =>
@@ -43,12 +41,8 @@ export class WebsocketClient {
     this.socket.on('game:strike', (payload) =>
       dispatch(addStrikedFigure(payload)),
     );
-    this.socket.on('game:shah', (payload) =>
-      dispatch(setShah(payload)),
-    );
-    this.socket.on('game:mate', (payload) =>
-      dispatch(endGame(payload)),
-    );
+    this.socket.on('game:shah', (payload) => dispatch(setShah(payload)));
+    this.socket.on('game:mate', (payload) => dispatch(endGame(payload)));
     this.socket.on('game:time', (payload) =>
       dispatch(updateTimerByServerEvent(payload)),
     );

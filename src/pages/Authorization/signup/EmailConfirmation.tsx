@@ -1,20 +1,18 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Button, Link, SvgIcon, TextField } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
-
 import { EmailConfirmed } from './CodeConfirm';
 import { getGoogleUrl } from '../../../utils/getGoogleUrl';
-import { sendVerificationEmailAction } from '../../../store/slices/user';
-
+import { sendVerificationEmailAction } from '../../../store/user';
+import { useAppDispatch, useAppSelector } from '../../../store';
 import './EmailConfirmation.scss';
 
 export function EmailConfirmation() {
   const [email, setEmail] = React.useState('');
-  const mailSended = useSelector(
-    (state: any) => state.user.confirmationEmailSended,
+  const mailSended = useAppSelector(
+    (state) => state.user.confirmationEmailSended,
   );
-  const dispatch = useDispatch<any>();
+  const dispatch = useAppDispatch();
 
   if (mailSended) {
     return <EmailConfirmed email={email} />;

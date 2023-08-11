@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Button, ButtonGroup } from '@mui/material';
-import { sendMessage } from '../../../store/slices/ws';
-
+import { sendMessage } from '../../../store/ws';
+import { useAppDispatch, useAppSelector } from '../../../store';
 import './Chat.scss';
 
 function Message({ author, text, date }: any) {
@@ -14,24 +13,18 @@ function Message({ author, text, date }: any) {
   const beautyTime = `${beautyHours}:${beautyMinutes}`;
   return (
     <div className="game__chat__messages__item" key={date}>
-      <h4 className="game__chat__messages__item-name">
-        {author.name}
-      </h4>
+      <h4 className="game__chat__messages__item-name">{author.name}</h4>
       <h3 className="game__chat__messages__item-message">{text}</h3>
-      <h2 className="game__chat__messages__item-time">
-        {beautyTime}
-      </h2>
+      <h2 className="game__chat__messages__item-time">{beautyTime}</h2>
     </div>
   );
 }
 
 export function GameChat() {
   const [inputText, setText] = React.useState();
-  const gameId = useSelector((state: any) => state.game.id);
-  const chatMessages = useSelector(
-    (state: any) => state.game.chatMessages,
-  );
-  const dispatch = useDispatch<any>();
+  const gameId = useAppSelector((state) => state.game.id);
+  const chatMessages = useAppSelector((state) => state.game.chatMessages);
+  const dispatch = useAppDispatch();
 
   const send = (text: string = inputText) => {
     dispatch(

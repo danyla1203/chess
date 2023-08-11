@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { loginAction, signUpAction } from './user';
+import { loginAction, signUpAction } from '../user';
 
 const initialState: { errors: any[] } = {
   errors: [],
@@ -11,9 +11,7 @@ export const errorsSlice = createSlice({
   reducers: {
     clearError: (state, { payload }) => {
       state.errors = state.errors.filter(
-        (error) =>
-          error.code !== payload.code &&
-          error.error !== payload.error,
+        (error) => error.code !== payload.code && error.error !== payload.error,
       );
     },
     addError: (state, { payload }) => {
@@ -21,18 +19,12 @@ export const errorsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(
-      loginAction.rejected,
-      (state, { payload }: any) => {
-        state.errors.push(payload);
-      },
-    );
-    builder.addCase(
-      signUpAction.rejected,
-      (state, { payload }: any) => {
-        state.errors.push(payload);
-      },
-    );
+    builder.addCase(loginAction.rejected, (state, { payload }: any) => {
+      state.errors.push(payload);
+    });
+    builder.addCase(signUpAction.rejected, (state, { payload }: any) => {
+      state.errors.push(payload);
+    });
   },
 });
 

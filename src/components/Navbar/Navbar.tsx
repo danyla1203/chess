@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-
+import { useAppSelector } from '../../store';
 import './Navbar.scss';
 
 export function Navbar() {
-  const userName = useSelector((state: any) =>
+  const userName = useAppSelector((state) =>
     state.user.authorized ? state.user.name : 'Anonymous',
   );
   return (

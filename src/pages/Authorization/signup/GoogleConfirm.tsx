@@ -1,15 +1,13 @@
 import queryString from 'query-string';
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
-import { googleAuthAction } from '../../../store/slices/user';
+import { googleAuthAction } from '../../../store/user';
+import { useAppDispatch, useAppSelector } from '../../../store';
 
 export function GoogleConfirm() {
-  const dispatch = useDispatch<any>();
+  const dispatch = useAppDispatch();
   const location = useLocation();
-  const isEmailConfirmed = useSelector(
-    (state: any) => state.user.emailConfirmed,
-  );
+  const isEmailConfirmed = useAppSelector((state) => state.user.emailConfirmed);
 
   const { code } = queryString.parse(location.search);
   if (!code) return <Navigate to="/" />;

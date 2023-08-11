@@ -1,20 +1,20 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-
-import './Signup.scss';
-import { signUpAction } from '../../../store/slices/user';
 import { Button, TextField, Typography } from '@mui/material';
+import { signUpAction } from '../../../store/user';
+import { useAppDispatch, useAppSelector } from '../../../store';
+import './Signup.scss';
 
-export const Signup = () => {
-  const [ password, setPassword ] = React.useState('');
-  const [ name, setName ] = React.useState(useSelector((state: any) => state.user.name));
-  const email = useSelector((state: any) => state.user.email);
-  const isLoaded = useSelector((state: any) => !!state.user.accessToken);
-  const isEmailConfirmed = useSelector((state: any) => state.user.emailConfirmed);
-  const dispatch = useDispatch<any>();
+export function Signup() {
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState(useAppSelector((state) => state.user.name));
+  const email = useAppSelector((state) => state.user.email);
+  const isLoaded = useAppSelector((state) => !!state.user.accessToken);
+  const isEmailConfirmed = useAppSelector((state) => state.user.emailConfirmed);
+  const dispatch = useAppDispatch();
 
-  if (!isEmailConfirmed) return <Navigate to='/login' />;
+  if (!isEmailConfirmed) return <Navigate to="/login" />;
 
   const signup = () => {
     const deviceId: string = (Math.random() + 1).toString(36).substring(7);
@@ -22,25 +22,27 @@ export const Signup = () => {
     dispatch(signUpAction(payload));
   };
 
-  if (isLoaded) return <Navigate to='/' />;
+  if (isLoaded) return <Navigate to="/" />;
   return (
     <div className="signup__container">
-      <Typography gutterBottom variant='h5'>
+      <Typography gutterBottom variant="h5">
         {email}
       </Typography>
-      <TextField 
-        label="Name" 
-        variant="filled" 
-        value={name} 
+      <TextField
+        label="Name"
+        variant="filled"
+        value={name}
         onChange={(e: any) => setName(e.target.value)}
       />
-      <TextField 
-        label="Password" 
-        variant="filled" 
-        value={password} 
+      <TextField
+        label="Password"
+        variant="filled"
+        value={password}
         onChange={(e: any) => setPassword(e.target.value)}
       />
-      <Button variant="contained" onClick={signup}>Create account</Button>
+      <Button variant="contained" onClick={signup}>
+        Create account
+      </Button>
     </div>
   );
-};
+}

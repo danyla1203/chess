@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { Alert } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
 import { clearError } from '../../store/slices/errors';
-// import { clearError } from '../../store/slices/errors';
-
+import { useAppDispatch, useAppSelector } from '../../store';
 import './Notifications.scss';
 
 function Notification({ code, text }: any) {
@@ -17,16 +15,12 @@ function Notification({ code, text }: any) {
 }
 
 export function Notifications(): any {
-  const errors: any[] = useSelector(
-    (state: any) => state.errors.errors,
-  );
-  const dispatch = useDispatch();
+  const errors: any[] = useAppSelector((state) => state.errors.errors);
+  const dispatch = useAppDispatch();
 
   const renderedErrors = [];
   for (const error of errors) {
-    renderedErrors.push(
-      <Notification text={error.error} code={error.code} />,
-    );
+    renderedErrors.push(<Notification text={error.error} code={error.code} />);
     setTimeout(() => {
       dispatch(clearError(error));
     }, 3500);

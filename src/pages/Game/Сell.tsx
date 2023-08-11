@@ -1,15 +1,13 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { selectFigure } from '../../store/slices/game';
-import { sendMessage } from '../../store/slices/ws';
+import { selectFigure } from '../../store/game';
+import { sendMessage } from '../../store/ws';
+import { useAppSelector, useAppDispatch } from '../../store';
 
 export function Cell({ name, color }: any) {
-  const isGameEnded = useSelector(
-    (state: any) => state.game.isGameEnded,
-  );
-  const dispatch = useDispatch();
+  const isGameEnded = useAppSelector((state) => state.game.isEnded);
+  const dispatch = useAppDispatch();
 
-  const { figure, side } = useSelector(
+  const { figure, side } = useAppSelector(
     ({
       game: {
         board: { white, black },
@@ -25,15 +23,13 @@ export function Cell({ name, color }: any) {
     },
   );
 
-  const isCellShached = useSelector(({ game: { shahData } }: any) => {
+  const isCellShached = useAppSelector(({ game: { shahData } }) => {
     if (shahData.shachedSide === side && figure === 'Kn') return true;
     return false;
   });
-  const gameId = useSelector((state: any) => state.game.id);
-  const selectedFigure = useSelector(
-    (state: any) => state.game.selectedFigure,
-  );
-  const isCellHighlithed = useSelector((state: any) =>
+  const gameId = useAppSelector((state) => state.game.id);
+  const selectedFigure = useAppSelector((state) => state.game.selectedFigure);
+  const isCellHighlithed = useAppSelector((state) =>
     state.game.highlightedCels.includes(name),
   );
   const isCellSelected = selectedFigure.cell === name;
@@ -62,9 +58,7 @@ export function Cell({ name, color }: any) {
   if (isGameEnded) cellClick = () => {};
   return (
     <div className={className} onClick={cellClick}>
-      {isCellHighlithed ? (
-        <span className="board__row__cell-dot" />
-      ) : null}
+      {isCellHighlithed ? <span className="board__row__cell-dot" /> : null}
     </div>
   );
 }

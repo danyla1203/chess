@@ -1,9 +1,10 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 
 type PlayerData = {
   id: string;
   name: string;
 };
+
 export type GameData = {
   id: string;
   spectators: number;
@@ -20,7 +21,7 @@ export const gameListSlice = createSlice({
     games: [],
   },
   reducers: {
-    setGames: (state, { payload }: any) => {
+    setGames: (state, { payload }: PayloadAction<GameData[]>) => {
       state.games = payload;
     },
   },

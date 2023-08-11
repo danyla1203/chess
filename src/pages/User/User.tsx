@@ -1,12 +1,8 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import { Button, Typography } from '@mui/material';
-import {
-  logoutAction,
-  userGameListAction,
-} from '../../store/slices/user';
-
+import { logoutAction, userGameListAction } from '../../store/user';
+import { useAppDispatch, useAppSelector } from '../../store';
 import './User.scss';
 
 function GameHistoryItem({
@@ -41,9 +37,7 @@ function GameHistoryItem({
 }
 
 function GameHistory() {
-  const gameHistory = useSelector(
-    (state: any) => state.user.gameHistory,
-  );
+  const gameHistory = useAppSelector((state) => state.user.gameHistory);
   return (
     <div className="user-page__game-history">
       <Typography variant="h5" component="h3">
@@ -68,14 +62,10 @@ function GameHistory() {
 }
 
 export function UserPage() {
-  const isAuthorized = useSelector(
-    (state: any) => state.user.authorized,
-  );
-  const accessToken = useSelector(
-    (state: any) => state.user.accessToken,
-  );
-  const userName = useSelector((state: any) => state.user.name);
-  const dispatch = useDispatch<any>();
+  const isAuthorized = useAppSelector((state) => state.user.authorized);
+  const accessToken = useAppSelector((state) => state.user.accessToken);
+  const userName = useAppSelector((state) => state.user.name);
+  const dispatch = useAppDispatch();
 
   React.useEffect(() => {
     if (isAuthorized) dispatch(userGameListAction(accessToken));

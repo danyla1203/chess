@@ -1,19 +1,17 @@
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Provider, useSelector, useDispatch } from 'react-redux';
-import { store } from './store/index';
+import { Provider } from 'react-redux';
+import { store, useAppDispatch, useAppSelector } from './store/index';
 import { Notifications } from './components/Notification/Notifications';
 import { GameWaiting } from './components/GameWaiting/GameWaiting';
 import { Router } from './Router';
-
-import { getUserByRefreshAction } from './store/slices/user';
-
 import './index.scss';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import { connect, close } from './store/slices/ws';
+import { connect, close } from './store/ws';
+import { getUserByRefreshAction } from './store/user';
 
 export enum GameTypes {
   START_NEW = 'START_NEW',
@@ -24,16 +22,12 @@ export enum GameTypes {
 }
 
 function App() {
-  const accessToken = useSelector(
-    (state: any) => state.user.accessToken,
+  const accessToken = useAppSelector((state) => state.user.accessToken);
+  const isGetTokenLoaded = useAppSelector(
+    (state) => state.user.isGetTokenLoaded,
   );
-  const isGetTokenLoaded = useSelector(
-    (state: any) => state.user.isGetTokenLoaded,
-  );
-  const isWsLoaded = useSelector(
-    (state: any) => state.ws.isConnected,
-  );
-  const dispatch = useDispatch<any>();
+  const isWsLoaded = useAppSelector((state) => state.ws.isConnected);
+  const dispatch = useAppDispatch();
 
   React.useEffect(() => {
     const refresh = localStorage.getItem('refreshToken');

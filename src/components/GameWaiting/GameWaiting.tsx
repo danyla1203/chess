@@ -1,11 +1,10 @@
 import * as React from 'react';
 import { CircularProgress, Typography } from '@mui/material';
-import { useSelector } from 'react-redux';
-
+import { useAppSelector } from '../../store';
 import './GameWaiting.scss';
 
 export function GameWaiting() {
-  const isWaiting = useSelector((state: any) => state.game.isWaiting);
+  const isWaiting = useAppSelector((state) => state.game.isWaiting);
   return (
     isWaiting && (
       <div className="game-waiting">

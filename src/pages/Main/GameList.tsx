@@ -1,15 +1,12 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
-import './GameList.scss';
 import { GameData } from '../../store/slices/gamelist';
-import { sendMessage } from '../../store/slices/ws';
+import { sendMessage } from '../../store/ws';
+import { useAppDispatch, useAppSelector } from '../../store';
+import './GameList.scss';
 
 function GameItem({ game, connectToGame }: any) {
   const beautyMaxTime = Math.floor(game.config.time / (1000 * 60));
-  const beautyTimeIncrement = Math.floor(
-    game.config.timeIncrement / 1000,
-  );
+  const beautyTimeIncrement = Math.floor(game.config.timeIncrement / 1000);
 
   const creator: any = Object.values(game.players)[0];
 
@@ -37,10 +34,8 @@ function GameItem({ game, connectToGame }: any) {
 }
 
 export function GameList() {
-  const games: GameData[] = useSelector(
-    (state: any) => state.gameList.games,
-  );
-  const dispatch = useDispatch();
+  const games: GameData[] = useAppSelector((state) => state.gameList.games);
+  const dispatch = useAppDispatch();
 
   const connectToGame = (gameId: string) => {
     dispatch(sendMessage({ event: 'join', body: { gameId } }));

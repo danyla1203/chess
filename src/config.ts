@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 export const config = {
   apiHost: process.env.API_HOST,
   apiDomain: process.env.API_DOMAIN,

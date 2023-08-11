@@ -6,10 +6,4 @@ import {
   PatchRequest,
 } from './ReqBodyGenerators';
 
-export {
-  DeleteRequest,
-  GetRequest,
-  PostRequest,
-  PutRequest,
-  PatchRequest,
-};
+export { DeleteRequest, GetRequest, PostRequest, PutRequest, PatchRequest };

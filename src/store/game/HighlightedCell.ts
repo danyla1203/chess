@@ -1,16 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { Board, Cell, Figure } from './game.types';
 
-export type Figure = string;
-export type Cell = string;
-type White = { [index: Figure]: Cell };
-type Black = White;
-
-export type Board = {
-  white: White;
-  black: Black;
-};
-
-class HighlightedCels {
+export class HighlightedCels {
   private Board: Board;
 
   private playingSide: 'w' | 'b';
@@ -110,8 +100,7 @@ class HighlightedCels {
     const nextLetters = this.findNextLetter(letter);
     const nextLetterRight = this.findNextLetter(nextLetters[1])[1];
     let nextLetterLeft = this.findNextLetter(nextLetters[0])[0];
-    nextLetterLeft =
-      nextLetterLeft === letter ? null : nextLetterLeft;
+    nextLetterLeft = nextLetterLeft === letter ? null : nextLetterLeft;
 
     const cells: Cell[] = [
       `${nextLetters[1]}${num + 2}`,
@@ -151,23 +140,19 @@ class HighlightedCels {
       else possibleMoves.push(`${letter}${i}`);
     }
 
-    const letterIndex = this.Letters.findIndex(
-      (lett) => lett === letter,
-    );
+    const letterIndex = this.Letters.findIndex((lett) => lett === letter);
     for (let i = letterIndex + 1; i < this.Letters.length; i++) {
       if (this.isEnemyInCell(`${this.Letters[i]}${num}`)) {
         possibleMoves.push(`${this.Letters[i]}${num}`);
         break;
-      } else if (!this.checkIsCellEmpty(`${this.Letters[i]}${num}`))
-        break;
+      } else if (!this.checkIsCellEmpty(`${this.Letters[i]}${num}`)) break;
       else possibleMoves.push(`${this.Letters[i]}${num}`);
     }
     for (let i = letterIndex - 1; i >= 0; i--) {
       if (this.isEnemyInCell(`${this.Letters[i]}${num}`)) {
         possibleMoves.push(`${this.Letters[i]}${num}`);
         break;
-      } else if (!this.checkIsCellEmpty(`${this.Letters[i]}${num}`))
-        break;
+      } else if (!this.checkIsCellEmpty(`${this.Letters[i]}${num}`)) break;
       else possibleMoves.push(`${this.Letters[i]}${num}`);
     }
     return possibleMoves;
@@ -176,9 +161,7 @@ class HighlightedCels {
   private bishopMove(currentCell: Cell): Cell[] {
     const [letter, number] = [currentCell[0], currentCell[1]];
     const num = parseInt(number, 10);
-    const letterIndex = this.Letters.findIndex(
-      (lett) => lett === letter,
-    );
+    const letterIndex = this.Letters.findIndex((lett) => lett === letter);
     const possibleMoves: string[] = [];
 
     for (
@@ -194,11 +177,7 @@ class HighlightedCels {
       } else if (!this.checkIsCellEmpty(cell)) break;
       else possibleMoves.push(cell);
     }
-    for (
-      let i = letterIndex - 1, nextNum = num - 1;
-      i >= 0;
-      i--, nextNum--
-    ) {
+    for (let i = letterIndex - 1, nextNum = num - 1; i >= 0; i--, nextNum--) {
       if (nextNum <= 0) break;
       const cell = `${this.Letters[i]}${nextNum}`;
       if (this.isEnemyInCell(cell)) {
@@ -220,11 +199,7 @@ class HighlightedCels {
       } else if (!this.checkIsCellEmpty(cell)) break;
       else possibleMoves.push(cell);
     }
-    for (
-      let i = letterIndex - 1, nextNum = num + 1;
-      i >= 0;
-      i--, nextNum++
-    ) {
+    for (let i = letterIndex - 1, nextNum = num + 1; i >= 0; i--, nextNum++) {
       if (nextNum <= 0) break;
       const cell = `${this.Letters[i]}${nextNum}`;
       if (this.isEnemyInCell(cell)) {
@@ -237,10 +212,7 @@ class HighlightedCels {
   }
 
   private queenMove(currentCell: Cell): Cell[] {
-    return [
-      ...this.rockMove(currentCell),
-      ...this.bishopMove(currentCell),
-    ];
+    return [...this.rockMove(currentCell), ...this.bishopMove(currentCell)];
   }
 
   private getCellsAround(cell: Cell): Cell[] {
@@ -260,11 +232,7 @@ class HighlightedCels {
     ];
     for (let i = 0; i < result.length; i++) {
       const num = result[i][1];
-      if (
-        parseInt(num) > 8 ||
-        parseInt(num) < 1 ||
-        result[i].length > 2
-      ) {
+      if (parseInt(num) > 8 || parseInt(num) < 1 || result[i].length > 2) {
         result.splice(i, 1);
       }
     }
@@ -274,10 +242,7 @@ class HighlightedCels {
   private knMove(currentCell: Cell): Cell[] {
     const cells = this.getCellsAround(currentCell);
     for (let i = 0; i < cells.length; i++) {
-      if (
-        !this.checkIsCellEmpty(cells[i]) &&
-        !this.isEnemyInCell(cells[i])
-      ) {
+      if (!this.checkIsCellEmpty(cells[i]) && !this.isEnemyInCell(cells[i])) {
         cells.splice(i, 1);
         i--;
       }
@@ -285,10 +250,7 @@ class HighlightedCels {
     return cells;
   }
 
-  public createPossibleMoves(
-    figure: Figure,
-    currentCell: Cell,
-  ): Cell[] {
+  public createPossibleMoves(figure: Figure, currentCell: Cell): Cell[] {
     if (/pawn/.test(figure)) return this.pawnMove(currentCell);
     if (/R/.test(figure)) return this.rockMove(currentCell);
     if (/Kn/.test(figure)) return this.knMove(currentCell);
@@ -299,117 +261,3 @@ class HighlightedCels {
     return [];
   }
 }
-
-const possibleMovesLogic = new HighlightedCels();
-export const gameSlice = createSlice({
-  name: 'game',
-  initialState: {
-    id: null,
-    isWaiting: null,
-    isEnded: false,
-    side: null,
-    movingSide: 'w',
-    board: null,
-    time: null,
-    timeIncrement: null,
-    highlightedCels: [],
-    selectedFigure: { figure: null, cell: null },
-    strikedFigures: { black: [], white: [] },
-    shahData: { shachedSide: null, figure: null },
-    chatMessages: [],
-    opponentOnPage: null,
-  },
-  reducers: {
-    initGameData: (state, { payload }: any) => {
-      state.chatMessages = [];
-      state.selectedFigure = { figure: null, cell: null };
-      state.strikedFigures = { black: [], white: [] };
-      state.shahData = { shachedSide: null, figure: null };
-      state.highlightedCels = [];
-      state.isEnded = false;
-      state.side = payload.side;
-
-      possibleMovesLogic.setData(payload.board, payload.side);
-      state.board = {
-        white: payload.board.white,
-        black: payload.board.black,
-      };
-      state.timeIncrement = parseInt(payload.timeIncrement, 10);
-      state.id = payload.gameId;
-    },
-
-    endGame: (state) => {
-      state.isEnded = true;
-      state.chatMessages.push({
-        id: -1,
-        text: 'Game over!',
-        date: new Date(),
-        author: { name: 'System' },
-      });
-    },
-    startGame: (state) => {
-      state.isWaiting = false;
-      state.opponentOnPage = true;
-    },
-    userLeave: (state: any) => {
-      state.opponentOnPage = false;
-    },
-    createGame: (state: any) => {
-      state.isWaiting = true;
-    },
-    selectFigure: (state, { payload }) => {
-      const { figure, cell } = payload;
-      if (!figure) return;
-
-      const possibleMoves = possibleMovesLogic.createPossibleMoves(
-        figure,
-        cell,
-      );
-      state.highlightedCels = possibleMoves;
-      if (possibleMoves.length >= 1) {
-        state.selectedFigure = { figure, cell };
-      }
-    },
-    updateBoard: (state, { payload }) => {
-      possibleMovesLogic.setUpdatedBoard(payload);
-      state.board = {
-        white: payload.white,
-        black: payload.black,
-      };
-      state.highlightedCels = [];
-      state.selectedFigure = { figure: null, cell: null };
-      state.shahData = { shachedSide: null, figure: null };
-      state.movingSide = state.movingSide === 'w' ? 'b' : 'w';
-    },
-    addStrikedFigure: (state, { payload }) => {
-      const { figure, strikedSide } = payload;
-      const strikedArr =
-        strikedSide === 'w'
-          ? state.strikedFigures.white
-          : state.strikedFigures.black;
-      strikedArr.push(figure);
-    },
-    setShah: (state, { payload }) => {
-      state.shahData.figure = payload.byFigure;
-      state.shahData.shachedSide = payload.shachedSide;
-    },
-    addMessage: (state, { payload }: any) => {
-      state.chatMessages.push(payload);
-    },
-  },
-});
-
-export const {
-  initGameData,
-  startGame,
-  selectFigure,
-  updateBoard,
-  addStrikedFigure,
-  setShah,
-  createGame,
-  endGame,
-  addMessage,
-  userLeave,
-} = gameSlice.actions;
-
-export default gameSlice.reducer;

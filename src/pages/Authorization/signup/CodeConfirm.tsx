@@ -1,17 +1,15 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
 import { Button, TextField, Typography } from '@mui/material';
-import { confirmCodeAction } from '../../../store/slices/user';
+import { confirmCodeAction } from '../../../store/user';
+import { useAppDispatch, useAppSelector } from '../../../store';
 import './CodeConfirm.scss';
 
 export function EmailConfirmed({ email }: any) {
   const [code, setCode] = React.useState('');
-  const isEmailConfirmed = useSelector(
-    (state: any) => state.user.emailConfirmed,
-  );
-  const dispatch = useDispatch<any>();
+  const isEmailConfirmed = useAppSelector((state) => state.user.emailConfirmed);
+  const dispatch = useAppDispatch();
 
   const submitCode = () => {
     dispatch(confirmCodeAction({ code, email }));

@@ -17,14 +17,8 @@ export function Router() {
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<Signup />} />
-        <Route
-          path="/email-confirmation"
-          element={<EmailConfirmation />}
-        />
-        <Route
-          path="/complete-registration"
-          element={<GoogleConfirm />}
-        />
+        <Route path="/email-confirmation" element={<EmailConfirmation />} />
+        <Route path="/complete-registration" element={<GoogleConfirm />} />
         <Route path="/user" element={<UserPage />} />
       </Routes>
     </BrowserRouter>

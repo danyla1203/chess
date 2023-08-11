@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { ws } from '../WsHandler';
+import { ws } from './WsHandler';
 
 export const wsSlice = createSlice({
   name: 'ws',
@@ -24,5 +24,4 @@ export const wsSlice = createSlice({
 
 export const { setConnectStatus, connect, sendMessage, close } =
   wsSlice.actions;
-
 export default wsSlice.reducer;

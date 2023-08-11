@@ -1,16 +1,13 @@
 import * as React from 'react';
-import { useSelector } from 'react-redux';
 import { GameTimer } from './Timer';
-
+import { useAppSelector } from '../../../store';
 import './RightMenu.scss';
 
 export function RigthMenu() {
-  const { side } = useSelector((state: any) => state.game);
+  const { side } = useAppSelector((state) => state.game);
   const opponentOnPage =
-    useSelector((state: any) => state.game.opponentOnPage) || true;
-  const strikedFigures = useSelector(
-    (state: any) => state.game.strikedFigures,
-  );
+    useAppSelector((state) => state.game.opponentOnPage) || true;
+  const strikedFigures = useAppSelector((state) => state.game.strikedFigures);
 
   const strikedBlack = strikedFigures.black.map((figure: string) => (
     <div
@@ -35,9 +32,7 @@ export function RigthMenu() {
 
   return (
     <div className="game__right-menu">
-      <span
-        className={`game__right-menu__opponent-status-${opponentOnPage}`}
-      />
+      <span className={`game__right-menu__opponent-status-${opponentOnPage}`} />
       <div className="game__right-menu__striked">
         {side === 'w' ? strikedWhite : strikedBlack}
       </div>
