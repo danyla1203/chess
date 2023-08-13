@@ -7,9 +7,11 @@ import {
   addStrikedFigure,
   endGame,
   initGameData,
+  purposeRejected,
   setShah,
   startGame,
   updateBoard,
+  drawPurposeReceived,
 } from '../game';
 import { updateTimerByServerEvent } from '../slices/timers';
 import { setGames } from '../slices/gamelist';
@@ -50,6 +52,9 @@ export class WebsocketClient {
     this.socket.on('game:chat-message', (payload) =>
       dispatch(addMessage(payload)),
     );
+    this.socket.on('game:draw_purpose', () => dispatch(drawPurposeReceived()));
+    this.socket.on('game:draw_rejected', () => dispatch(purposeRejected()));
+    this.socket.on('game:draw', () => dispatch(endGame()));
   }
 
   close() {

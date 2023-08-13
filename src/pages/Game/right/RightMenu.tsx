@@ -1,15 +1,13 @@
 import * as React from 'react';
+import { Button } from '@mui/material';
 import { GameTimer } from './Timer';
-import { useAppSelector } from '../../../store';
+import { useAppDispatch, useAppSelector } from '../../../store';
 import './RightMenu.scss';
+import { plusTime } from '../../../store/game';
+import { GameButtons } from './GameButtons';
 
-export function RigthMenu() {
-  const { side } = useAppSelector((state) => state.game);
-  const opponentOnPage =
-    useAppSelector((state) => state.game.opponentOnPage) || true;
-  const strikedFigures = useAppSelector((state) => state.game.strikedFigures);
-
-  const strikedBlack = strikedFigures.black.map((figure: string) => (
+function Striked({ figure }: { figure: string }) {
+  return (
     <div
       className={
         'game__right-menu__striked__figure' +
@@ -18,21 +16,31 @@ export function RigthMenu() {
       }
       key={`${figure}-b`}
     />
-  ));
-  const strikedWhite = strikedFigures.white.map((figure: string) => (
-    <div
-      className={
-        'game__right-menu__striked__figure' +
-        ` ${figure.replace(/\d/, '')}` +
-        ' w'
-      }
-      key={`${figure}-w`}
-    />
-  ));
+  );
+}
+
+export function RigthMenu() {
+  const { side } = useAppSelector((state) => state.game);
+  const opponentOnPage = useAppSelector((state) => state.game.opponentOnPage);
+  const { black, white } = useAppSelector((state) => state.game.strikedFigures);
+
+  const dispatch = useAppDispatch();
+
+  const addTime = () => dispatch(plusTime());
+
+  const strikedBlack = black.map((figure) => <Striked figure={figure} />);
+  const strikedWhite = white.map((figure) => <Striked figure={figure} />);
 
   return (
     <div className="game__right-menu">
-      <span className={`game__right-menu__opponent-status-${opponentOnPage}`} />
+      <div className="game__right-menu__top">
+        <span
+          className={`game__right-menu__opponent-status-${opponentOnPage}`}
+        />
+        <Button variant="contained" onClick={addTime}>
+          + Time
+        </Button>
+      </div>
       <div className="game__right-menu__striked">
         {side === 'w' ? strikedWhite : strikedBlack}
       </div>
@@ -43,6 +51,7 @@ export function RigthMenu() {
       <div className="game__right-menu__striked">
         {side === 'w' ? strikedBlack : strikedWhite}
       </div>
+      <GameButtons />
     </div>
   );
 }

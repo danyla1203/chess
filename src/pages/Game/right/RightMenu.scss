@@ -1,10 +1,16 @@
 .game__right-menu {
   margin-left: 30px;
-
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
   &__opponent-status {
     &-false {
       background-color: red;
-      height: 10px;
+      height: 20px;
+      margin-right: 10px;
       width: 10px;
       border-radius: 50%;
       display: inline-block;
@@ -13,12 +19,12 @@
     &-true {
       height: 10px;
       width: 10px;
+      margin-right: 20px;
       border-radius: 50%;
       display: inline-block;
       background-color: #bbb;
     }
   }
-
   &__striked {
     height: 2.5vw;
     display: flex;
@@ -50,7 +56,26 @@
       }
     }
   }
+
+  &__buttons {
+    display: flex;
+    margin-top: 5px;
+    &-button {
+      width: 10vw;
+      height: 10vh;
+      background-color: rgba(91, 70, 132, 0.7);
+      border: none;
+      border-radius: 5px;
+      color: rgba(200, 181, 238, 0.7);
+      font: 23px system-ui;
+      cursor: pointer;
+      &:hover {
+        background-color: rgba(91, 70, 132, 0.9);
+      }
+    }
+  }
 }
+
 .ended_true {
   background-color: rgb(165, 31, 42);
 }

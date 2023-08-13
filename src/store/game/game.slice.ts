@@ -1,26 +1,34 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { HighlightedCels } from './HighlightedCell';
+import { GameState } from './game.types';
+import { sendMessage } from '../ws';
 
 const possibleMovesLogic = new HighlightedCels();
 
+const initialState: GameState = {
+  id: null,
+  isWaiting: null,
+  isEnded: false,
+  side: null,
+  movingSide: 'w',
+  board: null,
+  time: null,
+  timeIncrement: null,
+  highlightedCels: [],
+  selectedFigure: { figure: null, cell: null },
+  strikedFigures: { black: [], white: [] },
+  shahData: { shachedSide: null, figure: null },
+  chatMessages: [],
+  opponentOnPage: null,
+  draw: {
+    purposeSent: false,
+    purposeReceived: false,
+  },
+};
+
 export const gameSlice = createSlice({
   name: 'game',
-  initialState: {
-    id: null,
-    isWaiting: null,
-    isEnded: false,
-    side: null,
-    movingSide: 'w',
-    board: null,
-    time: null,
-    timeIncrement: null,
-    highlightedCels: [],
-    selectedFigure: { figure: null, cell: null },
-    strikedFigures: { black: [], white: [] },
-    shahData: { shachedSide: null, figure: null },
-    chatMessages: [],
-    opponentOnPage: null,
-  },
+  initialState,
   reducers: {
     initGameData: (state, { payload }: any) => {
       state.chatMessages = [];
@@ -48,6 +56,10 @@ export const gameSlice = createSlice({
         date: new Date(),
         author: { name: 'System' },
       });
+      state.draw = {
+        purposeSent: false,
+        purposeReceived: false,
+      };
     },
     startGame: (state) => {
       state.isWaiting = false;
@@ -98,6 +110,16 @@ export const gameSlice = createSlice({
     addMessage: (state, { payload }: any) => {
       state.chatMessages.push(payload);
     },
+    drawPurposeReceived: (state) => {
+      state.draw.purposeReceived = true;
+    },
+    purposeSended: (state) => {
+      state.draw.purposeSent = true;
+    },
+    purposeRejected: (state) => {
+      state.draw.purposeSent = false;
+      state.draw.purposeReceived = false;
+    },
   },
 });
 
@@ -107,11 +129,46 @@ export const {
   selectFigure,
   updateBoard,
   addStrikedFigure,
+  drawPurposeReceived,
   setShah,
   createGame,
   endGame,
   addMessage,
   userLeave,
+  purposeSended,
+  purposeRejected,
 } = gameSlice.actions;
+
+export const plusTime = () => {
+  return (dispatch, getState) => {
+    const { id } = getState().game;
+    dispatch(sendMessage({ event: 'add_time', body: { gameId: id } }));
+  };
+};
+export const surrenderAction = () => {
+  return (dispatch, getState) => {
+    const { id } = getState().game;
+    dispatch(sendMessage({ event: 'surrender', body: { gameId: id } }));
+  };
+};
+export const sendDrawPurpose = () => {
+  return (dispatch, getState) => {
+    const { id } = getState().game;
+    dispatch(sendMessage({ event: 'draw_purpose', body: { gameId: id } }));
+    dispatch(purposeSended());
+  };
+};
+export const acceptDrawPurpose = () => {
+  return (dispatch, getState) => {
+    const { id } = getState().game;
+    dispatch(sendMessage({ event: 'draw_accept', body: { gameId: id } }));
+  };
+};
+export const rejectDrawPurpose = () => {
+  return (dispatch, getState) => {
+    const { id } = getState().game;
+    dispatch(sendMessage({ event: 'draw_reject', body: { gameId: id } }));
+  };
+};
 
 export default gameSlice.reducer;

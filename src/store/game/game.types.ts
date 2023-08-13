@@ -7,3 +7,24 @@ export type Board = {
   white: White;
   black: Black;
 };
+
+export type GameState = {
+  id: number;
+  isWaiting: boolean;
+  isEnded: boolean;
+  side: 'w' | 'b';
+  movingSide: string;
+  board: Board;
+  time: number;
+  timeIncrement: number;
+  highlightedCels: Cell[];
+  selectedFigure: { figure: Figure; cell: Cell };
+  strikedFigures: { black: Figure[]; white: Figure[] };
+  shahData: { shachedSide: string; figure: Figure };
+  chatMessages: any[];
+  opponentOnPage: boolean;
+  draw: {
+    purposeSent: boolean;
+    purposeReceived: boolean;
+  };
+};
