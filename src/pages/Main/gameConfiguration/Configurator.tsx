@@ -27,9 +27,15 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export interface DialogTitleProps {
   id: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
   onClose: () => void;
 }
+type CreateGame = (side: 'w' | 'b' | 'rand', minutes, timeIncrement) => void;
+type HandleClose = () => void;
+type ConfiguratorProps = {
+  createGame: CreateGame;
+  handleClose: HandleClose;
+};
 
 function BootstrapDialogTitle(props: DialogTitleProps) {
   const { children, onClose, ...other } = props;
@@ -55,44 +61,7 @@ function BootstrapDialogTitle(props: DialogTitleProps) {
   );
 }
 
-export function ConfiguratorMenu({ createGame }) {
-  const [open, setOpen] = React.useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  return (
-    <>
-      <Button variant="outlined" onClick={handleClickOpen}>
-        Configuration
-      </Button>
-      <BootstrapDialog
-        onClose={handleClose}
-        aria-labelledby="customized-dialog-title"
-        open={open}
-      >
-        <BootstrapDialogTitle
-          id="customized-dialog-title"
-          onClose={handleClose}
-        >
-          Configuration
-        </BootstrapDialogTitle>
-        <DialogContent dividers>
-          <Configurator
-            createGame={createGame}
-            handleClose={handleClose}
-          />
-        </DialogContent>
-      </BootstrapDialog>
-    </>
-  );
-}
-
-export function Configurator({ createGame, handleClose }) {
+export function Configurator({ createGame, handleClose }: ConfiguratorProps) {
   const [minutes, setMinutes] = React.useState(6);
   const [timeAdd, setTimeAdd] = React.useState(15);
 
@@ -168,28 +137,50 @@ export function Configurator({ createGame, handleClose }) {
         size="large"
         sx={{ marginTop: 5 }}
       >
-        <Button
-          component={Link}
-          to="/game"
-          onClick={() => create('w')}
-        >
+        <Button component={Link} to="/" onClick={() => create('w')}>
           White
         </Button>
-        <Button
-          component={Link}
-          to="/game"
-          onClick={() => create('b')}
-        >
+        <Button component={Link} to="/" onClick={() => create('b')}>
           Black
         </Button>
-        <Button
-          component={Link}
-          to="/game"
-          onClick={() => create('rand')}
-        >
+        <Button component={Link} to="/" onClick={() => create('rand')}>
           Random
         </Button>
       </ButtonGroup>
     </div>
+  );
+}
+
+export function ConfiguratorMenu({ createGame }: { createGame: CreateGame }) {
+  const [open, setOpen] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <Button variant="outlined" onClick={handleClickOpen}>
+        Configuration
+      </Button>
+      <BootstrapDialog
+        onClose={handleClose}
+        aria-labelledby="customized-dialog-title"
+        open={open}
+      >
+        <BootstrapDialogTitle
+          id="customized-dialog-title"
+          onClose={handleClose}
+        >
+          Configuration
+        </BootstrapDialogTitle>
+        <DialogContent dividers>
+          <Configurator createGame={createGame} handleClose={handleClose} />
+        </DialogContent>
+      </BootstrapDialog>
+    </>
   );
 }
