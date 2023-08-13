@@ -7,7 +7,6 @@ const possibleMovesLogic = new HighlightedCels();
 
 const initialState: GameState = {
   id: null,
-  isWaiting: null,
   isEnded: false,
   side: null,
   movingSide: 'w',
@@ -62,14 +61,10 @@ export const gameSlice = createSlice({
       };
     },
     startGame: (state) => {
-      state.isWaiting = false;
       state.opponentOnPage = true;
     },
     userLeave: (state: any) => {
       state.opponentOnPage = false;
-    },
-    createGame: (state: any) => {
-      state.isWaiting = true;
     },
     selectFigure: (state, { payload }) => {
       const { figure, cell } = payload;
@@ -131,7 +126,6 @@ export const {
   addStrikedFigure,
   drawPurposeReceived,
   setShah,
-  createGame,
   endGame,
   addMessage,
   userLeave,

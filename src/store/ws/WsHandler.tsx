@@ -9,12 +9,15 @@ import {
   initGameData,
   purposeRejected,
   setShah,
-  startGame,
   updateBoard,
   drawPurposeReceived,
 } from '../game';
 import { updateTimerByServerEvent } from '../slices/timers';
-import { setGames } from '../slices/gamelist';
+import {
+  setGames,
+  startGameAction,
+  waitingForPlayer,
+} from '../slices/gamelist';
 
 const dispatch = (action) => {
   store.dispatch(action);
@@ -33,7 +36,9 @@ export class WebsocketClient {
 
     this.socket.on('lobby:update', (payload) => dispatch(setGames(payload)));
 
-    this.socket.on('game:start', () => dispatch(startGame()));
+    this.socket.on('game:created', () => dispatch(waitingForPlayer()));
+
+    this.socket.on('game:start', () => dispatch(startGameAction()));
     this.socket.on('game:init-data', (payload) =>
       dispatch(initGameData(payload)),
     );

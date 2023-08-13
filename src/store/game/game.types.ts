@@ -10,7 +10,6 @@ export type Board = {
 
 export type GameState = {
   id: number;
-  isWaiting: boolean;
   isEnded: boolean;
   side: 'w' | 'b';
   movingSide: string;

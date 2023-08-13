@@ -4,7 +4,9 @@ import { useAppSelector } from '../../store';
 import './GameWaiting.scss';
 
 export function GameWaiting() {
-  const isWaiting = useAppSelector((state) => state.game.isWaiting);
+  const isWaiting = useAppSelector(
+    ({ gameList }) => gameList.isWaitingForPlayer,
+  );
   return (
     isWaiting && (
       <div className="game-waiting">

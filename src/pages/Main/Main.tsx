@@ -6,15 +6,17 @@ import { Tab } from '@mui/material';
 import { GameConfiguration } from './gameConfiguration/GameConfiguration';
 import { GameList } from './GameList';
 import { Game } from '../Game/Game';
-import { sendMessage } from '../../store/ws';
 import { useAppDispatch, useAppSelector } from '../../store';
+import { createGameAction } from '../../store/slices/gamelist';
 
 export function MainPage() {
   const [value, setValue] = React.useState(1);
-  const isWaitingForGame = useAppSelector((state) => state.game.isWaiting);
+  const isWaitingForGame = useAppSelector(
+    ({ gameList }) => gameList.isWaitingForPlayer,
+  );
   const dispatch = useAppDispatch();
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
@@ -24,7 +26,7 @@ export function MainPage() {
       time: minutes * 60 * 1000,
       timeIncrement: timeIncrement * 1000,
     };
-    dispatch(sendMessage({ event: 'create', body }));
+    dispatch(createGameAction(body));
   };
 
   return (
