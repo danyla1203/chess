@@ -16,10 +16,9 @@
     }
   }
   &__game-history {
-    border-top: 1px solid;
-    width: 40vw;
     padding: 20px;
     display: flex;
+    margin-top: 20px;
     flex-direction: column;
     & > * {
       color: rgb(159, 159, 190)
@@ -33,13 +32,24 @@
       justify-content: space-between;
       align-items: center;
       &__item {
-        font: 300 15px system-ui
+        width: 30%;
+        display: flex;
+        justify-content: center;
+        & > h4 {
+          font: 300 20px system-ui;
+        }
       }
     }
     &__item {
+      margin-top: 15px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      width: 100%;
+      &__item {
+        display: flex;
+        justify-content: center;
+        width: 30%;
+      }
     }
   }
 }

@@ -6,31 +6,37 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import './User.scss';
 
 function GameHistoryItem({
-  data: { maxTime, timeIncrement, sideSelecting, players, id },
+  data: { maxTime, timeIncrement, isDraw, sideSelecting, players, id },
 }: any) {
   const beautyMaxTime = Math.floor(maxTime / (1000 * 60));
   const beautyTimeIncrement = Math.floor(timeIncrement / 1000);
-  let winner;
-  let looser;
-  for (const player of players) {
-    if (player.isWinner) winner = player;
-    else looser = player;
-  }
+  const pl1 = players[0];
+  const pl2 = players[1];
+  let winner: any | 'draw';
+  if (pl1.isWinner) winner = pl1.user.name;
+  if (pl2.isWinner) winner = pl2.user.name;
+  if (isDraw) winner = 'Draw';
   return (
     <div className="user-page__game-history__item" key={id}>
-      <h3 className="user-page__game-history__item__timings">
-        {beautyMaxTime}-{beautyTimeIncrement}
-      </h3>
-      <span
-        className={`user-page__game-history__item__side-selecting ${sideSelecting}-circle`}
-      />
-      <div className="user-page__game-history__item__players">
-        <h3 className="user-page__game-history__item__players__item">
-          {winner.user.name}-win
+      <div className="user-page__game-history__item__item">
+        <h3 className="user-page__game-history__item__timings">
+          {beautyMaxTime}-{beautyTimeIncrement}
         </h3>
-        <h3 className="user-page__game-history__item__players__item">
-          {looser.user.name}
-        </h3>
+      </div>
+      <div className="user-page__game-history__item__item">
+        <span
+          className={`user-page__game-history__item__side-selecting ${sideSelecting}-circle`}
+        />
+      </div>
+      <div className="user-page__game-history__item__item">
+        <h3 className="user-page__game-history__item__winner">{winner}</h3>
+      </div>
+      <div className="user-page__game-history__item__item">
+        <div className="user-page__game-history__item__players">
+          <h3 className="user-page__game-history__item__players__item">
+            {pl1.user.name} - {pl2.user.name}
+          </h3>
+        </div>
       </div>
     </div>
   );
@@ -44,15 +50,26 @@ function GameHistory() {
         Games history
       </Typography>
       <div className="user-page__game-history__labels">
-        <Typography variant="h6" component="h4">
-          Timings
-        </Typography>
-        <Typography variant="h6" component="h4">
-          Side
-        </Typography>
-        <Typography variant="h6" component="h4">
-          Players
-        </Typography>
+        <div className="user-page__game-history__labels__item">
+          <Typography variant="h6" component="h4">
+            Timings
+          </Typography>
+        </div>
+        <div className="user-page__game-history__labels__item">
+          <Typography variant="h6" component="h4">
+            Side
+          </Typography>
+        </div>
+        <div className="user-page__game-history__labels__item">
+          <Typography variant="h6" component="h4">
+            Winner
+          </Typography>
+        </div>
+        <div className="user-page__game-history__labels__item">
+          <Typography variant="h6" component="h4">
+            Players
+          </Typography>
+        </div>
       </div>
       {gameHistory.map((game: any) => (
         <GameHistoryItem data={game} key={game.id} />
