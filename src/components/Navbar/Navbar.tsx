@@ -97,6 +97,7 @@ function Profile() {
 }
 
 export function Navbar() {
+  const isAuthorized = useAppSelector(({ user }) => user.authorized);
   return (
     <div className="navbar">
       <ul className="navbar__navigation">
@@ -104,9 +105,11 @@ export function Navbar() {
         <li className="navbar__navigation-item">
           <Link to="/">Home</Link>
         </li>
-        <li className="navbar__navigation-item">
-          <Link to="/login">Authorization</Link>
-        </li>
+        {!isAuthorized && (
+          <li className="navbar__navigation-item">
+            <Link to="/login">Authorization</Link>
+          </li>
+        )}
       </ul>
       <Profile />
     </div>
