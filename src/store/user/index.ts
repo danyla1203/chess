@@ -1,4 +1,9 @@
-import user, { setUserData } from './user.slice';
+import user, {
+  setUserData,
+  viewGame,
+  closeGame,
+  closeGameAction,
+} from './user.slice';
 import {
   getUserByRefreshAction,
   loginAction,
@@ -20,6 +25,9 @@ export {
   sendVerificationEmailAction,
   confirmCodeAction,
   googleAuthAction,
+  viewGame,
+  closeGame,
+  closeGameAction,
 };
 
 export default user;

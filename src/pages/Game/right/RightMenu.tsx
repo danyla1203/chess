@@ -6,7 +6,7 @@ import './RightMenu.scss';
 import { plusTime } from '../../../store/game';
 import { GameButtons } from './GameButtons';
 
-function Striked({ figure }: { figure: string }) {
+export function Striked({ figure }: { figure: string }) {
   return (
     <div
       className={

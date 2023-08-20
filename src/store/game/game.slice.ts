@@ -23,6 +23,9 @@ const initialState: GameState = {
     purposeSent: false,
     purposeReceived: false,
   },
+  frameIndex: 0,
+  movesHistory: [],
+  frame: null,
 };
 
 export const gameSlice = createSlice({
@@ -79,6 +82,46 @@ export const gameSlice = createSlice({
         state.selectedFigure = { figure, cell };
       }
     },
+    nextFrame: (state) => {
+      if (state.frameIndex >= state.movesHistory.length) return;
+
+      const move = state.movesHistory[state.frameIndex];
+
+      const side = move.side === 'w' ? 'white' : 'black';
+      state.board[side][move.figure] = move.to;
+      if (move.strike) {
+        const strikedSide = move.side === 'w' ? 'black' : 'white';
+        state.board[strikedSide][move.strike.figure] = null;
+        state.strikedFigures[strikedSide].push(move.strike.figure);
+      }
+
+      state.frameIndex += 1;
+      state.frame = state.movesHistory[state.frameIndex];
+    },
+    setMoves: (state, { payload }) => {
+      state.movesHistory = payload;
+    },
+    clearHistory: (state) => {
+      state.movesHistory = [];
+      state.frame = null;
+      state.frameIndex = 0;
+    },
+    prevFrame: (state) => {
+      if (state.frameIndex <= 0) return;
+
+      state.frameIndex -= 1;
+      state.frame = state.movesHistory[state.frameIndex];
+
+      const move = state.movesHistory[state.frameIndex];
+
+      const side = move.side === 'w' ? 'white' : 'black';
+      state.board[side][move.figure] = move.from;
+      if (move.strike) {
+        const strikedSide = move.side === 'w' ? 'black' : 'white';
+        state.board[strikedSide][move.strike.figure] = move.to;
+        state.strikedFigures[strikedSide].pop();
+      }
+    },
     updateBoard: (state, { payload }) => {
       possibleMovesLogic.setUpdatedBoard(payload);
       state.board = {
@@ -131,6 +174,10 @@ export const {
   userLeave,
   purposeSended,
   purposeRejected,
+  prevFrame,
+  nextFrame,
+  setMoves,
+  clearHistory,
 } = gameSlice.actions;
 
 export const plusTime = () => {

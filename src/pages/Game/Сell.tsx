@@ -3,7 +3,7 @@ import { selectFigure } from '../../store/game';
 import { sendMessage } from '../../store/ws';
 import { useAppSelector, useAppDispatch } from '../../store';
 
-export function Cell({ name, color }: any) {
+export function Cell({ name, color, isActive = true }: any) {
   const isGameEnded = useAppSelector((state) => state.game.isEnded);
   const dispatch = useAppDispatch();
 
@@ -35,6 +35,7 @@ export function Cell({ name, color }: any) {
   const isCellSelected = selectedFigure.cell === name;
 
   let cellClick = () => {
+    if (!isActive) return;
     if (isCellHighlithed && !isCellSelected) {
       dispatch(
         sendMessage({

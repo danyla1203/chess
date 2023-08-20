@@ -1,0 +1,57 @@
+.game-state {
+  display: flex;
+  flex-direction: column;
+  width: 15vw;
+  margin-right: 10px;
+  &__striked {
+    & > div {
+      height: 2vw;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      background-color: rgba(85, 64, 125, 0.7);
+      padding: 5px;
+    
+      &__figure {
+        width: 2vw;
+        height: 2vw;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    }
+  }
+  &__moves {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    background-color: rgba(85, 64, 125, 0.7);
+    height: 4vh;
+    padding: 5px;
+    .current {
+      border-bottom: 1px solid;
+    }
+    &__item {
+      margin-right: 10px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      .arrow {
+        margin-left: 5px;
+        margin-right: 0px;
+      }
+      &__figure {
+        width: 1.5vw;
+        height: 1.5vw;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+
+      h3 {
+        color: rgb(166, 147, 205);
+        font-size: 18px;
+      }
+    }
+  }
+}

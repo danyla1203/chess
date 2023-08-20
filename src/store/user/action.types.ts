@@ -9,6 +9,7 @@ export interface UserState {
   gameHistory: any[];
   confirmationEmailSended: boolean | null;
   emailConfirmed: boolean;
+  gameViewing: boolean;
 }
 export interface UserProfile {
   id: number;

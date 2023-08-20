@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Cell } from './Сell';
 import { useAppSelector } from '../../store';
 
-export function Board() {
+export function Board({ isActive = true }: any) {
   const { side } = useAppSelector((state) => state.game);
 
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -12,7 +12,14 @@ export function Board() {
     for (let j = 0; j < 8; j++) {
       const color = (i + j) % 2 === 0 ? 'cell-color2' : 'cell-color1';
       const name = letters[j] + (i + 1);
-      row.push(<Cell color={color} key={letters[j] + (i + 1)} name={name} />);
+      row.push(
+        <Cell
+          isActive={isActive}
+          color={color}
+          key={letters[j] + (i + 1)}
+          name={name}
+        />,
+      );
     }
     result.push(row);
   }

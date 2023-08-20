@@ -15,6 +15,10 @@ import game, {
   acceptDrawPurpose,
   rejectDrawPurpose,
   purposeRejected,
+  prevFrame,
+  nextFrame,
+  setMoves,
+  clearHistory,
 } from './game.slice';
 
 export {
@@ -33,7 +37,11 @@ export {
   sendDrawPurpose,
   acceptDrawPurpose,
   rejectDrawPurpose,
+  prevFrame,
   surrenderAction,
+  nextFrame,
+  clearHistory,
+  setMoves,
 };
 
 export default game;

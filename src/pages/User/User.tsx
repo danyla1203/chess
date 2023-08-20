@@ -4,10 +4,17 @@ import { Button, Typography } from '@mui/material';
 import { logoutAction, userGameListAction } from '../../store/user';
 import { useAppDispatch, useAppSelector } from '../../store';
 import './User.scss';
+import { viewGameAction } from '../../store/user/user.slice';
+import { GameViewer } from './gamePreview/GameViewer';
 
 function GameHistoryItem({
-  data: { maxTime, timeIncrement, isDraw, sideSelecting, players, id },
+  data: { maxTime, timeIncrement, isDraw, sideSelecting, players, id, moves },
 }: any) {
+  const dispatch = useAppDispatch();
+  const showGame = () => {
+    dispatch(viewGameAction({ side: 'w', timeIncrement, gameId: id, moves }));
+  };
+
   const beautyMaxTime = Math.floor(maxTime / (1000 * 60));
   const beautyTimeIncrement = Math.floor(timeIncrement / 1000);
   const pl1 = players[0];
@@ -17,7 +24,7 @@ function GameHistoryItem({
   if (pl2.isWinner) winner = pl2.user.name;
   if (isDraw) winner = 'Draw';
   return (
-    <div className="user-page__game-history__item" key={id}>
+    <div className="user-page__game-history__item" key={id} onClick={showGame}>
       <div className="user-page__game-history__item__item">
         <h3 className="user-page__game-history__item__timings">
           {beautyMaxTime}-{beautyTimeIncrement}
@@ -78,16 +85,9 @@ function GameHistory() {
   );
 }
 
-export function UserPage() {
-  const isAuthorized = useAppSelector((state) => state.user.authorized);
-  const accessToken = useAppSelector((state) => state.user.accessToken);
+function UserProfile() {
   const userName = useAppSelector((state) => state.user.name);
   const dispatch = useAppDispatch();
-
-  React.useEffect(() => {
-    if (isAuthorized) dispatch(userGameListAction(accessToken));
-  }, []);
-  if (!isAuthorized) return <Navigate to="/" />;
   return (
     <div className="user-page">
       <div className="user-page__personal">
@@ -105,4 +105,18 @@ export function UserPage() {
       <GameHistory />
     </div>
   );
+}
+
+export function UserPage() {
+  const isAuthorized = useAppSelector(({ user }) => user.authorized);
+  const accessToken = useAppSelector(({ user }) => user.accessToken);
+  const viewingGame = useAppSelector(({ user }) => user.gameViewing);
+  const dispatch = useAppDispatch();
+
+  React.useEffect(() => {
+    if (isAuthorized) dispatch(userGameListAction(accessToken));
+  }, []);
+  if (!isAuthorized) return <Navigate to="/" />;
+
+  return viewingGame ? <GameViewer /> : <UserProfile />;
 }

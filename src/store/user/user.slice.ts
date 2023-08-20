@@ -10,6 +10,8 @@ import {
   signUpAction,
   userGameListAction,
 } from './user.thunks';
+import { clearHistory, initGameData, setMoves } from '../game';
+import { generateBoard } from '../game/generateInitBoard';
 
 const initialState: UserState = {
   id: null,
@@ -17,6 +19,7 @@ const initialState: UserState = {
   email: null,
   authorized: false,
   isGetTokenLoaded: false,
+  gameViewing: false,
   accessToken: null,
   error: { code: null, text: null },
   gameHistory: [],
@@ -32,6 +35,12 @@ export const userSlice = createSlice({
       state.id = payload.id;
       state.name = payload.name;
       state.email = payload.email || null;
+    },
+    viewGame: (state) => {
+      state.gameViewing = true;
+    },
+    closeGame: (state) => {
+      state.gameViewing = false;
     },
   },
   extraReducers: (builder) => {
@@ -130,5 +139,21 @@ export const userSlice = createSlice({
   },
 });
 
-export const { setUserData } = userSlice.actions;
+export const { setUserData, viewGame, closeGame } = userSlice.actions;
+
+export const closeGameAction = () => {
+  return (dispatch) => {
+    dispatch(closeGame());
+    dispatch(clearHistory());
+  };
+};
+export const viewGameAction = ({ side, timeIncrement, gameId, moves }) => {
+  return (dispatch) => {
+    dispatch(viewGame());
+    const board = generateBoard();
+    dispatch(setMoves(moves));
+    dispatch(initGameData({ board, side, timeIncrement, gameId } as any));
+  };
+};
+
 export default userSlice.reducer;
