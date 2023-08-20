@@ -1,12 +1,102 @@
 import * as React from 'react';
+import { Button, Menu, MenuItem } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../store';
 import './Navbar.scss';
+import { logoutAction } from '../../store/user';
+
+function AnonymousMenu({ anchor, handleClick, handleClose }: any) {
+  return (
+    <>
+      <Button
+        aria-owns={anchor ? 'simple-menu' : undefined}
+        aria-haspopup="true"
+        onClick={handleClick}
+        onMouseOver={handleClick}
+      >
+        Anonymous
+      </Button>
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={handleClose}
+        MenuListProps={{ onMouseLeave: handleClose }}
+        id="navbar__user__dropdown"
+      >
+        <MenuItem onClick={handleClose}>
+          <Link to="/signup">Login</Link>
+        </MenuItem>
+      </Menu>
+    </>
+  );
+}
+function AuthorizedMenu({ anchor, setAnchor, handleClick, handleClose }: any) {
+  const userName = useAppSelector(({ user }) => user.name);
+  const dispatch = useAppDispatch();
+
+  const logout = () => {
+    dispatch(logoutAction());
+    setAnchor(null);
+  };
+  return (
+    <>
+      <Button
+        aria-owns={anchor ? 'simple-menu' : undefined}
+        aria-haspopup="true"
+        onClick={handleClick}
+        onMouseOver={handleClick}
+      >
+        {userName}
+      </Button>
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={handleClose}
+        MenuListProps={{ onMouseLeave: handleClose }}
+        id="navbar__user__dropdown"
+      >
+        <MenuItem onClick={handleClose}>
+          <Link to="/user">Profile</Link>
+        </MenuItem>
+        <MenuItem onClick={logout}>Logout</MenuItem>
+      </Menu>
+    </>
+  );
+}
+
+function Profile() {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const isAuthorized = useAppSelector(({ user }) => user.authorized);
+
+  const click = (event) => {
+    if (anchorEl !== event.currentTarget) {
+      setAnchorEl(event.currentTarget);
+    }
+  };
+  const close = () => setAnchorEl(null);
+
+  return (
+    <div className="navbar__user">
+      {isAuthorized ? (
+        <AuthorizedMenu
+          handleClick={click}
+          handleClose={close}
+          anchor={anchorEl}
+          setAnchor={setAnchorEl}
+        />
+      ) : (
+        <AnonymousMenu
+          handleClick={click}
+          handleClose={close}
+          anchor={anchorEl}
+          setAnchor={setAnchorEl}
+        />
+      )}
+    </div>
+  );
+}
 
 export function Navbar() {
-  const userName = useAppSelector((state) =>
-    state.user.authorized ? state.user.name : 'Anonymous',
-  );
   return (
     <div className="navbar">
       <ul className="navbar__navigation">
@@ -18,11 +108,7 @@ export function Navbar() {
           <Link to="/login">Authorization</Link>
         </li>
       </ul>
-      <div className="navbar__user">
-        <Link to="/user">
-          <h3 className="navbar__user-name">{userName}</h3>
-        </Link>
-      </div>
+      <Profile />
     </div>
   );
 }
