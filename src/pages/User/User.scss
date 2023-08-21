@@ -20,35 +20,35 @@
     display: flex;
     margin-top: 20px;
     flex-direction: column;
-    & > * {
-      color: rgb(159, 159, 190)
-    }
-    &__label {
-      font: 400 24px system-ui;
-      margin-bottom: 30px;
-    }
-    &__labels {
+    &__header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      &__item {
-        width: 30%;
-        display: flex;
-        justify-content: center;
-        & > h4 {
-          font: 300 20px system-ui;
-        }
+      h3 {
+        color: rgb(159, 159, 190)
+      }
+      button {
+        background-color: rgba(56, 56, 143, 0.918) !important;
+        width: 8vw;
       }
     }
-    &__item {
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      width: 100%;
-      &__item {
-        display: flex;
-        justify-content: center;
-        width: 30%;
+    &__table {
+      background-color: rgb(159, 159, 190) !important;
+      opacity: 0.8;
+      & > table {
+        background-color: rgb(159, 159, 190);
+        thead {
+          background-color: rgb(121, 121, 203);
+          tr th {
+            font-size: 18px;
+            font-weight: 500;
+          }
+        }
+        tbody tr {
+          cursor: pointer;
+          td {
+            font-size: 17px;
+          }
+        }
       }
     }
   }

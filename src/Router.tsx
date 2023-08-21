@@ -8,6 +8,7 @@ import { LoginPage } from './pages/Authorization/Authorization';
 import { MainPage } from './pages/Main/Main';
 import { Navbar } from './components/Navbar/Navbar';
 import { UserPage } from './pages/User/User';
+import { GameList } from './pages/User/gamelist/GameList';
 
 export function Router() {
   return (
@@ -20,6 +21,7 @@ export function Router() {
         <Route path="/email-confirmation" element={<EmailConfirmation />} />
         <Route path="/complete-registration" element={<GoogleConfirm />} />
         <Route path="/user" element={<UserPage />} />
+        <Route path="/user/games" element={<GameList />} />
       </Routes>
     </BrowserRouter>
   );

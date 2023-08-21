@@ -1,0 +1,23 @@
+.gamelist {
+  &__table {
+    background-color: rgb(159, 159, 190) !important;
+    opacity: 0.8;
+    &>table {
+      background-color: rgb(159, 159, 190);
+      thead {
+        background-color: rgb(121, 121, 203);
+        tr th {
+          font-size: 18px;
+          font-weight: 500;
+        }
+      }
+      tbody tr {
+        cursor: pointer;
+  
+        td { 
+          font-size: 17px;
+        }
+      }
+      }
+  }
+}

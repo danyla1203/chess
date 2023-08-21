@@ -1,86 +1,55 @@
 import * as React from 'react';
-import { Navigate } from 'react-router-dom';
-import { Button, Typography } from '@mui/material';
+import { Link, Navigate } from 'react-router-dom';
+import {
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import { logoutAction, userGameListAction } from '../../store/user';
 import { useAppDispatch, useAppSelector } from '../../store';
 import './User.scss';
-import { viewGameAction } from '../../store/user/user.slice';
 import { GameViewer } from './gamePreview/GameViewer';
-
-function GameHistoryItem({
-  data: { maxTime, timeIncrement, isDraw, sideSelecting, players, id, moves },
-}: any) {
-  const dispatch = useAppDispatch();
-  const showGame = () => {
-    dispatch(viewGameAction({ side: 'w', timeIncrement, gameId: id, moves }));
-  };
-
-  const beautyMaxTime = Math.floor(maxTime / (1000 * 60));
-  const beautyTimeIncrement = Math.floor(timeIncrement / 1000);
-  const pl1 = players[0];
-  const pl2 = players[1];
-  let winner: any | 'draw';
-  if (pl1.isWinner) winner = pl1.user.name;
-  if (pl2.isWinner) winner = pl2.user.name;
-  if (isDraw) winner = 'Draw';
-  return (
-    <div className="user-page__game-history__item" key={id} onClick={showGame}>
-      <div className="user-page__game-history__item__item">
-        <h3 className="user-page__game-history__item__timings">
-          {beautyMaxTime}-{beautyTimeIncrement}
-        </h3>
-      </div>
-      <div className="user-page__game-history__item__item">
-        <span
-          className={`user-page__game-history__item__side-selecting ${sideSelecting}-circle`}
-        />
-      </div>
-      <div className="user-page__game-history__item__item">
-        <h3 className="user-page__game-history__item__winner">{winner}</h3>
-      </div>
-      <div className="user-page__game-history__item__item">
-        <div className="user-page__game-history__item__players">
-          <h3 className="user-page__game-history__item__players__item">
-            {pl1.user.name} - {pl2.user.name}
-          </h3>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { GameHistoryItem } from './gamelist/GameListItem';
 
 function GameHistory() {
   const gameHistory = useAppSelector((state) => state.user.gameHistory);
+
+  const rendered = gameHistory.slice(0, 5).map((game) => {
+    return <GameHistoryItem data={game} key={game.id} />;
+  });
+
   return (
     <div className="user-page__game-history">
-      <Typography variant="h5" component="h3">
-        Games history
-      </Typography>
-      <div className="user-page__game-history__labels">
-        <div className="user-page__game-history__labels__item">
-          <Typography variant="h6" component="h4">
-            Timings
-          </Typography>
-        </div>
-        <div className="user-page__game-history__labels__item">
-          <Typography variant="h6" component="h4">
-            Side
-          </Typography>
-        </div>
-        <div className="user-page__game-history__labels__item">
-          <Typography variant="h6" component="h4">
-            Winner
-          </Typography>
-        </div>
-        <div className="user-page__game-history__labels__item">
-          <Typography variant="h6" component="h4">
-            Players
-          </Typography>
-        </div>
+      <div className="user-page__game-history__header">
+        <Typography variant="h5" component="h3">
+          Latest Games
+        </Typography>
+        <Link to="/user/games">
+          <Button>View all</Button>
+        </Link>
       </div>
-      {gameHistory.map((game: any) => (
-        <GameHistoryItem data={game} key={game.id} />
-      ))}
+      <TableContainer
+        className="user-page__game-history__table"
+        component={Paper}
+      >
+        <Table sx={{ minWidth: 600 }} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell>Timings</TableCell>
+              <TableCell>Side</TableCell>
+              <TableCell>Winner</TableCell>
+              <TableCell>Players</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>{rendered}</TableBody>
+        </Table>
+      </TableContainer>
     </div>
   );
 }
