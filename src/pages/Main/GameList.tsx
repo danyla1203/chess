@@ -4,7 +4,12 @@ import { sendMessage } from '../../store/ws';
 import { useAppDispatch, useAppSelector } from '../../store';
 import './GameList.scss';
 
-function GameItem({ game, connectToGame }: any) {
+interface GameItemProps {
+  game: any;
+  connectToGame: (gameId: string) => void;
+}
+
+function GameItem({ game, connectToGame }: GameItemProps) {
   const beautyMaxTime = Math.floor(game.config.time / (1000 * 60));
   const beautyTimeIncrement = Math.floor(game.config.timeIncrement / 1000);
 
@@ -35,11 +40,21 @@ function GameItem({ game, connectToGame }: any) {
 
 export function GameList() {
   const games: GameData[] = useAppSelector((state) => state.gameList.games);
+  const socketId = useAppSelector(({ ws }) => ws.socketId);
   const dispatch = useAppDispatch();
 
-  const connectToGame = (gameId: string) => {
+  const connect = (gameId: string) => {
     dispatch(sendMessage({ event: 'join', body: { gameId } }));
   };
+
+  const createdGame = games.find((game) => game.players[socketId]);
+  const filtered = games.filter((game) => !game.players[socketId]);
+  const rendered = filtered.map((game) => (
+    <GameItem game={game} connectToGame={connect} />
+  ));
+  if (createdGame) {
+    rendered.unshift(<GameItem game={createdGame} connectToGame={connect} />);
+  }
 
   return (
     <div className="game-list">
@@ -48,9 +63,7 @@ export function GameList() {
         <h3 className="game-list__labels__item">Side:</h3>
         <h3 className="game-list__labels__item">Time:</h3>
       </div>
-      {games.map((game) => (
-        <GameItem game={game} connectToGame={connectToGame} />
-      ))}
+      {rendered}
     </div>
   );
 }

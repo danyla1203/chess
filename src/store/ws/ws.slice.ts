@@ -4,10 +4,12 @@ import { ws } from './WsHandler';
 export const wsSlice = createSlice({
   name: 'ws',
   initialState: {
+    socketId: null,
     isConnected: false,
   },
   reducers: {
-    setConnectStatus: (state) => {
+    setConnectStatus: (state, { payload }) => {
+      state.socketId = payload;
       state.isConnected = true;
     },
     connect: (_, { payload }) => {

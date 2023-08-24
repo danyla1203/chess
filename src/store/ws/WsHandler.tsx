@@ -32,7 +32,7 @@ export class WebsocketClient {
       { transports: ['websocket'] },
     );
     this.socket.connect();
-    this.socket.on('connect', () => dispatch(setConnectStatus()));
+    this.socket.on('connect', () => dispatch(setConnectStatus(this.socket.id)));
 
     this.socket.on('lobby:update', (payload) => dispatch(setGames(payload)));
 
