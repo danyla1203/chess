@@ -33,8 +33,9 @@ export const loginAction = createAsyncThunk(
   '/login',
   async (loginData: Login, thunk) => {
     const tokens = await loginRequest(loginData);
-    if (tokens.err) thunk.rejectWithValue(loginData);
-
+    if (tokens.err) {
+      return thunk.rejectWithValue(tokens);
+    }
     const userData = await getProfile(tokens.data.access);
     if (userData.err) thunk.rejectWithValue(userData);
     return {

@@ -84,7 +84,9 @@ export function GameState() {
         <div className="state__striked__black">{strikedBlack}</div>
         <div className="state__striked__white">{strikedWhite}</div>
       </div>
-      <div className="game-state__moves">{renderedMoves}</div>
+      <div className="game-state__moves">
+        {renderedMoves} <h3>END</h3>
+      </div>
     </div>
   );
 }
