@@ -1,11 +1,11 @@
-import { WebSocketProvider } from './lib/context/SocketContext';
-import { Navbar } from "@/components/Navbar/Navbar";
+import React from 'react';
+
+import { Navbar, Notifications } from '@/ui';
+import { UserProvider } from '@/context/UserContext';
+import { WebSocketProvider } from '@/context/SocketContext';
+import { NotificationProvider } from '@/context/NotificationContext';
 
 import './globals.css';
-import React from 'react';
-import { UserProvider } from './lib/context/UserContext';
-import { NotificationProvider } from './lib/context/NotificationContext';
-import Notifications from './components/Notification/Notification';
 
 export default async function RootLayout({
   children,
@@ -17,11 +17,9 @@ export default async function RootLayout({
       <body>
         <NotificationProvider>
           <UserProvider>
-            <Navbar/>
+            <Navbar />
             <Notifications />
-            <WebSocketProvider>
-              {children}
-            </WebSocketProvider>
+            <WebSocketProvider>{children}</WebSocketProvider>
           </UserProvider>
         </NotificationProvider>
       </body>

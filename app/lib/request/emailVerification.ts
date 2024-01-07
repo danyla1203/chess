@@ -6,11 +6,11 @@ export const emailVerification = async (email: string) => {
         method: 'POST',
         body: JSON.stringify({ email }),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       })
     ).json();
   } catch (e) {
     console.error('Login failed');
   }
-}
+};

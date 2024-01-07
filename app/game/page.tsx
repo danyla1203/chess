@@ -1,9 +1,7 @@
-'use client'
-import { useWebSocket } from "../lib/context/SocketContext";
+'use client';
+import { useWebSocket } from '@/context/SocketContext';
 
 export default function Page() {
   const socket = useWebSocket();
-  return <p>
-    Game page
-  </p>;
+  return <p>Game page</p>;
 }

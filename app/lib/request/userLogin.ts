@@ -12,13 +12,15 @@ export const userLogin = async (data: LoginData) => {
     Math.random().toString(20).substring(2, 14);
   const deviceId = `${userAgent}-${platform}-${randomString}`;
   try {
-    return (await fetch(`${host}/auth/login`, {
-      method: 'POST',
-      body: JSON.stringify({ ...data, deviceId }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })).json();
+    return (
+      await fetch(`${host}/auth/login`, {
+        method: 'POST',
+        body: JSON.stringify({ ...data, deviceId }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    ).json();
   } catch (e) {
     console.error(e);
     return e;

@@ -1,7 +1,3 @@
 export default function Page() {
-  return (
-    <main>
-      Main
-    </main>
-  );
+  return <main>Main</main>;
 }
