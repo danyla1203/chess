@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createUser } from '@/requests';
 import { useUserState } from '@/context/UserContext';
 import { useNotification } from '@/context/NotificationContext';
@@ -13,6 +13,7 @@ export function SignupForm() {
   const { addNotification } = useNotification();
 
   const email = useSearchParams().get('email');
+  const router = useRouter();
 
   const signUp = async () => {
     const res = await createUser(email || '', userName, password);
@@ -23,6 +24,7 @@ export function SignupForm() {
       updateUser(profile);
       localStorage.setItem('accessToken', access);
       localStorage.setItem('refreshToken', refresh);
+      router.push('/');
     }
   };
 

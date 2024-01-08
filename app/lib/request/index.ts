@@ -4,6 +4,7 @@ import { userLogin } from './userLogin';
 import { getProfile } from './userProfile';
 import { createUser } from './createUser';
 import { userLogout } from './logout';
+import { getGooguleOauthLink } from './getGoogleOauthLink';
 
 export {
   codeConfirm,
@@ -12,4 +13,5 @@ export {
   getProfile,
   createUser,
   userLogout,
+  getGooguleOauthLink,
 };
