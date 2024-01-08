@@ -18,7 +18,7 @@ export function Notifications() {
   const { notifications } = useNotification();
 
   return (
-    <div className="absolute flex flex-col inset-y-0 right-0">
+    <div className="absolute flex flex-col inset-y-0 right-0 z-40">
       {notifications.map((n) => (
         <Item key={n.id} type={n.type} message={n.message} />
       ))}

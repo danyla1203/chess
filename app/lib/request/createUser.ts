@@ -1,3 +1,4 @@
+import { deviceId } from '../utils';
 import { getProfile } from './userProfile';
 
 export const createUser = async (
@@ -6,17 +7,16 @@ export const createUser = async (
   password: string,
 ) => {
   const host = process.env.NEXT_PUBLIC_API_HOST as string;
-  const userAgent = window.navigator.userAgent;
-  const platform = window.navigator.platform;
-  const randomString =
-    Math.random().toString(20).substring(2, 14) +
-    Math.random().toString(20).substring(2, 14);
-  const deviceId = `${userAgent}-${platform}-${randomString}`;
   try {
     const res = await (
       await fetch(`${host}/user/signup`, {
         method: 'POST',
-        body: JSON.stringify({ email, name: userName, password, deviceId }),
+        body: JSON.stringify({
+          email,
+          name: userName,
+          password,
+          deviceId: deviceId(),
+        }),
         headers: {
           'Content-Type': 'application/json',
         },

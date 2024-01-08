@@ -6,7 +6,7 @@ import { useUserState } from '@/context/UserContext';
 import { userLogin, getProfile } from '@/requests';
 import { useNotification } from '@/context/NotificationContext';
 
-export function Login() {
+export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { updateUser } = useUserState();
@@ -29,47 +29,46 @@ export function Login() {
   };
 
   return (
-    <form>
-      <div className="mb-4">
+    <form className="space-y-4">
+      <div>
         <label
-          className="block text-gray-700 text-sm font-bold mb-2"
-          htmlFor="username"
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700"
         >
           Email
         </label>
         <input
-          onChange={(e) => setEmail(e.target.value)}
-          value={email}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          id="username"
           type="text"
-          placeholder="Email"
+          id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          name="email"
+          className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
         />
       </div>
-      <div className="mb-6">
+      <div>
         <label
-          className="block text-gray-700 text-sm font-bold mb-2"
           htmlFor="password"
+          className="block text-sm font-medium text-gray-700"
         >
           Password
         </label>
         <input
-          onChange={(e) => setPassword(e.target.value)}
-          value={password}
-          className="shadow appearance-none border border-red-500 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-          id="password"
           type="password"
-          placeholder="******************"
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          name="password"
+          className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
         />
-        <p className="text-red-500 text-xs italic">Please choose a password.</p>
       </div>
-      <div className="flex items-center justify-between">
+      <div>
         <button
           onClick={login}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           type="button"
+          className="w-full bg-black text-white p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors duration-300"
         >
-          Signup
+          Sign Up
         </button>
       </div>
     </form>
