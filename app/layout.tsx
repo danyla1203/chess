@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Navbar, Notifications } from '@/ui';
+import { Navbar, Notifications } from '@/app/components';
 import { UserProvider } from '@/context/UserContext';
 import { WebSocketProvider } from '@/context/SocketContext';
 import { NotificationProvider } from '@/context/NotificationContext';
