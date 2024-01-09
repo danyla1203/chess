@@ -1,6 +1,6 @@
 'use client';
 
-import { useWebSocket } from '@/context/SocketContext';
+import { useWebSocket, Emit } from '@/context/SocketContext';
 import { useState } from 'react';
 import { GameListItem } from './GameListItem';
 import { useRouter } from 'next/navigation';
@@ -30,7 +30,7 @@ export function GameList() {
   socket.on('lobby:update', (payload: GameData[]) => setGames(payload));
 
   const connect = (gameId: string) => {
-    socket.emit('join', { gameId });
+    socket.emit(Emit.gameJoin, { gameId });
     router.push('/game');
   };
 

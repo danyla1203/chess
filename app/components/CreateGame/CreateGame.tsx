@@ -1,5 +1,5 @@
 'use client';
-import { useWebSocket } from '@/app/lib/context/SocketContext';
+import { Emit, useWebSocket } from '@/app/lib/context/SocketContext';
 import {
   Button,
   ButtonGroup,
@@ -25,7 +25,7 @@ export function CreateGame() {
       time: minutes * 60 * 1000,
       timeIncrement: timeAdd * 1000,
     };
-    socket.emit('create', { ...body });
+    socket.emit(Emit.createGame, { ...body });
     router.push('/game');
   };
 
