@@ -16,7 +16,8 @@ export function Board({
 
   const cellClick = (coordinate: Cell) => {
     if (!selectedCell || selectedCell !== coordinate) {
-      setSelectedCell(coordinate);
+      const side = initData.side === 'w' ? board.white : board.black;
+      if (side[coordinate]) setSelectedCell(coordinate);
     }
   };
 
