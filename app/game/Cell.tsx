@@ -7,14 +7,19 @@ export function CellItem({
   cellClick,
   color,
   coord,
+  side,
 }: any) {
   const socket = useWebSocket();
-  let classbase = 'size-20';
-  if (highlighted) classbase = `${classbase} bg-slate-400`;
-  else classbase = `${classbase} ${color}`;
+
+  let classbase = 'figure size-20';
+
+  if (highlighted) classbase += ` bg-slate-400`;
+  else classbase += ` ${color}`;
+
+  if (figure) classbase += ` ${figure.replace(/\d/, '')} ${side}`;
   return (
     <div onClick={() => cellClick(coord)} className={classbase}>
-      <span className="board__row__cell-dot">{figure}</span>
+      <span className="board__row__cell-dot"></span>
     </div>
   );
 }

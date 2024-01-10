@@ -34,6 +34,7 @@ export function Board({
           coord={cell}
           cellClick={cellClick}
           color={color}
+          side={board.white[cell] ? 'w' : 'b'}
           key={letters[j] + (i + 1)}
         />,
       );

@@ -6,6 +6,8 @@ import { RightMenu } from './RightMenu';
 import { InitedGameData } from './types';
 import { Board } from './Board';
 
+import './chessPieces.scss';
+
 export default function Page() {
   const [initData, setInitData] = useState<InitedGameData | null>(null);
   const socket = useWebSocket();
