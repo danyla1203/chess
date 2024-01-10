@@ -12,7 +12,7 @@ export function CellItem({
 }: any) {
   const socket = useWebSocket();
 
-  let classbase = 'figure size-20';
+  let classbase = 'figure size-20 flex justify-center items-center';
 
   if (highlighted) classbase += ` bg-slate-400`;
   else classbase += ` ${color}`;
@@ -20,7 +20,7 @@ export function CellItem({
   if (figure) classbase += ` ${figure.replace(/\d/, '')} ${side}`;
   return (
     <div onClick={() => cellClick(coord)} className={classbase}>
-      <span className="board__row__cell-dot">{dotted ? '*' : ''}</span>
+      {dotted ? <span className="w-5 h-5 rounded-full bg-slate-400" /> : null}
     </div>
   );
 }
