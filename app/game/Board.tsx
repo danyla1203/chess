@@ -20,17 +20,18 @@ export function Board({
     possibleMoves: [],
   });
 
+  const selectAction = (coordinate: Cell) => {
+    const side = initData.side === 'w' ? board.white : board.black;
+    const figure = side[coordinate];
+    if (figure) {
+      const dottedCels = possibleMoves.createPossibleMoves(figure, coordinate);
+      setSelectedCell({ cell: coordinate, possibleMoves: dottedCels });
+    }
+  };
+
   const cellClick = (coordinate: Cell) => {
     if (!selectedCell || selectedCell.cell !== coordinate) {
-      const side = initData.side === 'w' ? board.white : board.black;
-      const figure = side[coordinate];
-      if (figure) {
-        const dottedCels = possibleMoves.createPossibleMoves(
-          figure,
-          coordinate,
-        );
-        setSelectedCell({ cell: coordinate, possibleMoves: dottedCels });
-      }
+      selectAction(coordinate);
     }
   };
 
