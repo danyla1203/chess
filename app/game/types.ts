@@ -13,3 +13,8 @@ export type InitedGameData = {
   maxTime: number;
   timeIncrement: number;
 };
+
+export type SelectedCell = {
+  cell: Cell | null;
+  possibleMoves: Cell[];
+};

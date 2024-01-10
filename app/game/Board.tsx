@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CellItem } from './Cell';
-import { InitedGameData, Cell } from './types';
+import { HighlightedCels } from './SelectCellLogic';
+import { InitedGameData, Cell, SelectedCell } from './types';
 
 const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+const possibleMoves = new HighlightedCels();
 
 export function Board({
   isActive = true,
@@ -12,14 +15,28 @@ export function Board({
   initData: InitedGameData;
 }) {
   const [board, setBoard] = useState(initData.board);
-  const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
+  const [selectedCell, setSelectedCell] = useState<SelectedCell>({
+    cell: null,
+    possibleMoves: [],
+  });
 
   const cellClick = (coordinate: Cell) => {
-    if (!selectedCell || selectedCell !== coordinate) {
+    if (!selectedCell || selectedCell.cell !== coordinate) {
       const side = initData.side === 'w' ? board.white : board.black;
-      if (side[coordinate]) setSelectedCell(coordinate);
+      const figure = side[coordinate];
+      if (figure) {
+        const dottedCels = possibleMoves.createPossibleMoves(
+          figure,
+          coordinate,
+        );
+        setSelectedCell({ cell: coordinate, possibleMoves: dottedCels });
+      }
     }
   };
+
+  useEffect(() => {
+    possibleMoves.setData(initData.board, initData.side);
+  }, []);
 
   const result = [];
   for (let i = 0; i < 8; i++) {
@@ -30,7 +47,8 @@ export function Board({
       const figure = board.white[cell] || board.black[cell];
       row.push(
         <CellItem
-          highlighted={selectedCell === cell}
+          highlighted={selectedCell.cell === cell}
+          dotted={selectedCell.possibleMoves.find((c) => c === cell)}
           figure={figure}
           coord={cell}
           cellClick={cellClick}

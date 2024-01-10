@@ -8,6 +8,7 @@ export function CellItem({
   color,
   coord,
   side,
+  dotted,
 }: any) {
   const socket = useWebSocket();
 
@@ -19,7 +20,7 @@ export function CellItem({
   if (figure) classbase += ` ${figure.replace(/\d/, '')} ${side}`;
   return (
     <div onClick={() => cellClick(coord)} className={classbase}>
-      <span className="board__row__cell-dot"></span>
+      <span className="board__row__cell-dot">{dotted ? '*' : ''}</span>
     </div>
   );
 }
