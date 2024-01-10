@@ -25,13 +25,13 @@ export function Board({
     const row = [];
     for (let j = 0; j < 8; j++) {
       const color = (i + j) % 2 === 0 ? 'bg-stone-500' : 'bg-stone-200';
-      const name = letters[j] + (i + 1);
-      const figure = board.white[name] || board.black[name];
+      const cell = `${letters[j]}${i + 1}`;
+      const figure = board.white[cell] || board.black[cell];
       row.push(
         <CellItem
-          highlighted={selectedCell === name}
+          highlighted={selectedCell === cell}
           figure={figure}
-          coord={name}
+          coord={cell}
           cellClick={cellClick}
           color={color}
           key={letters[j] + (i + 1)}
@@ -40,12 +40,16 @@ export function Board({
     }
     result.push(row);
   }
-  let rendered = result.map((row, i) => (
-    <div key={`board row ${letters[i]}`} className="flex">
-      {row.map((cell) => cell)}
+
+  const rendered = result.map((row, i) => (
+    <div key={`row-${i}`} className="flex">
+      {row}
     </div>
   ));
-  if (initData.side === 'w') rendered = rendered.reverse();
 
-  return <div className="flex flex-col">{rendered}</div>;
+  return (
+    <div className="flex flex-col">
+      {initData.side === 'w' ? rendered.reverse() : rendered}
+    </div>
+  );
 }
