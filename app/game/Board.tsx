@@ -37,6 +37,7 @@ export function Board({
       delete copy[prevCell];
       setBoard({ black: copy, white: board.white });
     }
+    possibleMoves.setData(board, initData.side);
   });
 
   const selectAction = (coordinate: Cell, figure: Figure) => {
