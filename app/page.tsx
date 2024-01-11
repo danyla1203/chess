@@ -1,3 +1,10 @@
+import { GameList, CreateGame } from '@/ui';
+
 export default function Page() {
-  return <main>Main</main>;
+  return (
+    <main className="flex w-full p-10">
+      <GameList />
+      <CreateGame />
+    </main>
+  );
 }

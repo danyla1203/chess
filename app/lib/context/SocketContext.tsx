@@ -3,6 +3,36 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
+export enum Lobby {
+  update = 'lobby:update',
+}
+export enum Game {
+  created = 'game:created',
+  init = 'game:init-data',
+  start = 'game:start',
+  shah = 'game:shah',
+  mate = 'game:mate',
+  draw = 'game:draw',
+  rejectDraw = 'game:draw_rejected',
+  addTime = 'game:add-time',
+  timeTick = 'game:time',
+  end = 'game:end',
+  strike = 'game:strike',
+  boardUpdate = 'game:board-update',
+  message = 'game:chate-message',
+  surrender = 'game:surrender',
+  drawPurpose = 'game:draw_purpose',
+}
+export enum User {
+  anonymousToken = 'user:anon-token',
+}
+
+export enum Emit {
+  createGame = 'create',
+  gameJoin = 'join',
+  figureMove = 'move',
+}
+
 export const WebSocketContext = createContext<Socket | null>(null);
 
 export const useWebSocket = (): Socket => {
@@ -33,7 +63,7 @@ export const WebSocketProvider = ({
       transports: ['websocket'],
       retries: 3,
     });
-    socket.on('user:anon-token', (token: string) => {
+    socket.on(User.anonymousToken, (token: string) => {
       localStorage.setItem('anon-token', token);
     });
     return socket;
@@ -54,6 +84,11 @@ export const WebSocketProvider = ({
   if (!socket) {
     return <div>Loading...</div>;
   }
+
+  socket.io.on('error', (e) => {
+    console.log(e);
+  });
+
   return (
     <WebSocketContext.Provider value={socket}>
       {children}
