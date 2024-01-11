@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CellItem } from './Cell';
 import { HighlightedCels } from './SelectCellLogic';
-import { InitedGameData, Cell, SelectedCell } from './types';
+import { InitedGameData, Cell, SelectedCell, Figure } from './types';
 
 const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -10,9 +10,11 @@ const possibleMoves = new HighlightedCels();
 export function Board({
   isActive = true,
   initData,
+  moveFigure,
 }: {
   isActive: boolean;
   initData: InitedGameData;
+  moveFigure: (figure: Figure, cell: Cell) => void;
 }) {
   const [board, setBoard] = useState(initData.board);
   const [selectedCell, setSelectedCell] = useState<SelectedCell>({
@@ -20,18 +22,20 @@ export function Board({
     possibleMoves: [],
   });
 
-  const selectAction = (coordinate: Cell) => {
-    const side = initData.side === 'w' ? board.white : board.black;
-    const figure = side[coordinate];
-    if (figure) {
-      const dottedCels = possibleMoves.createPossibleMoves(figure, coordinate);
-      setSelectedCell({ cell: coordinate, possibleMoves: dottedCels });
-    }
+  const selectAction = (coordinate: Cell, figure: Figure) => {
+    const dottedCels = possibleMoves.createPossibleMoves(figure, coordinate);
+    setSelectedCell({ cell: coordinate, possibleMoves: dottedCels });
   };
 
   const cellClick = (coordinate: Cell) => {
-    if (!selectedCell || selectedCell.cell !== coordinate) {
-      selectAction(coordinate);
+    const { cell, possibleMoves } = selectedCell;
+    if (cell && possibleMoves.includes(coordinate)) {
+      const figure = board.white[cell] || board.white[cell];
+      moveFigure(figure, coordinate);
+    } else {
+      const side = initData.side === 'w' ? board.white : board.black;
+      const figure = side[coordinate];
+      if (figure) selectAction(coordinate, figure);
     }
   };
 
