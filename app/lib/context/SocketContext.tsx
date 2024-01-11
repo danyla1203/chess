@@ -30,6 +30,7 @@ export enum User {
 export enum Emit {
   createGame = 'create',
   gameJoin = 'join',
+  figureMove = 'move',
 }
 
 export const WebSocketContext = createContext<Socket | null>(null);
@@ -83,6 +84,11 @@ export const WebSocketProvider = ({
   if (!socket) {
     return <div>Loading...</div>;
   }
+
+  socket.io.on('error', (e) => {
+    console.log(e);
+  });
+
   return (
     <WebSocketContext.Provider value={socket}>
       {children}
