@@ -37,7 +37,6 @@ export function Board({
       delete copy[prevCell];
       setBoard({ black: copy, white: board.white });
     }
-    possibleMoves.setData(board, initData.side);
   });
 
   const selectAction = (coordinate: Cell, figure: Figure) => {
@@ -57,6 +56,10 @@ export function Board({
       if (figure) selectAction(coordinate, figure);
     }
   };
+
+  useEffect(() => {
+    possibleMoves.setUpdatedBoard(board);
+  }, [board]);
 
   useEffect(() => {
     possibleMoves.setData(initData.board, initData.side);
