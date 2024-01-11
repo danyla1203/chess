@@ -7,7 +7,6 @@ export function GameListItem({
   game: GameData;
   joinGame: (gameId: string) => void;
 }) {
-  console.log(game);
   const playerName = game.players[0].name;
   const beautyMaxTime = Math.floor(game.config.time / (1000 * 60));
   const beautyTimeIncrement = Math.floor(game.config.timeIncrement / 1000);

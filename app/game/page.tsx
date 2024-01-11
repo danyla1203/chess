@@ -1,16 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Game, Emit, useWebSocket } from '@/context/SocketContext';
 import { RightMenu } from './RightMenu';
 import { Figure, Cell, InitedGameData } from './types';
 import { Board } from './Board';
 
 import './chessPieces.scss';
+import { useSearchParams } from 'next/navigation';
 
 export default function Page() {
   const [initData, setInitData] = useState<InitedGameData | null>(null);
+  const params = useSearchParams();
   const socket = useWebSocket();
+
+  useEffect(() => {
+    if (params.get('action') === 'join') {
+      const gameId = parseInt(params.get('id') as string);
+      socket.volatile.emit(Emit.gameJoin, { gameId });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   socket.on(Game.init, (payload: InitedGameData) => {
     setInitData(payload);

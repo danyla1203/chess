@@ -30,8 +30,7 @@ export function GameList() {
   socket.on('lobby:update', (payload: GameData[]) => setGames(payload));
 
   const connect = (gameId: string) => {
-    socket.emit(Emit.gameJoin, { gameId });
-    router.push('/game');
+    router.push(`/game?action=join&id=${gameId}`);
   };
 
   return (
