@@ -1,6 +1,6 @@
 'use client';
 
-import { useWebSocket, Emit } from '@/context/SocketContext';
+import { useWebSocket } from '@/context/SocketContext';
 import { useState } from 'react';
 import { GameListItem } from './GameListItem';
 import { useRouter } from 'next/navigation';
