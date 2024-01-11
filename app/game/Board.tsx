@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CellItem } from './Cell';
 import { HighlightedCels } from './SelectCellLogic';
 import { InitedGameData, Cell, SelectedCell, Figure } from './types';
+import { Game, useWebSocket } from '@/context/SocketContext';
 
 const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -16,10 +17,26 @@ export function Board({
   initData: InitedGameData;
   moveFigure: (figure: Figure, cell: Cell) => void;
 }) {
+  const socket = useWebSocket();
   const [board, setBoard] = useState(initData.board);
   const [selectedCell, setSelectedCell] = useState<SelectedCell>({
     cell: null,
     possibleMoves: [],
+  });
+
+  socket.on(Game.boardUpdate, (payload) => {
+    const { figure, cell, prevCell, side } = payload;
+    if (side === 'w') {
+      const copy = { ...board.white };
+      copy[cell] = figure;
+      delete copy[prevCell];
+      setBoard({ black: board.black, white: copy });
+    } else {
+      const copy = { ...board.black };
+      copy[cell] = figure;
+      delete copy[prevCell];
+      setBoard({ black: copy, white: board.white });
+    }
   });
 
   const selectAction = (coordinate: Cell, figure: Figure) => {
@@ -30,8 +47,9 @@ export function Board({
   const cellClick = (coordinate: Cell) => {
     const { cell, possibleMoves } = selectedCell;
     if (cell && possibleMoves.includes(coordinate)) {
-      const figure = board.white[cell] || board.white[cell];
+      const figure = board.white[cell] || board.black[cell];
       moveFigure(figure, coordinate);
+      setSelectedCell({ cell: null, possibleMoves: [] });
     } else {
       const side = initData.side === 'w' ? board.white : board.black;
       const figure = side[coordinate];

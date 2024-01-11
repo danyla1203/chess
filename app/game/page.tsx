@@ -30,7 +30,11 @@ export default function Page() {
   if (!initData) return <div>Loading...</div>;
 
   const moveFigure = (figure: Figure, cell: Cell) => {
-    socket.emit(Emit.figureMove, { gameId: initData.gameId, figure, cell });
+    socket.volatile.emit(Emit.figureMove, {
+      gameId: initData.gameId,
+      figure,
+      cell,
+    });
   };
 
   return (
