@@ -1,10 +1,10 @@
 import { InitedGameData } from '../types';
-import { Timers } from './Timers';
+import { TimersController } from './Timers.controller';
 
 export function RightMenu({ initData }: { initData: InitedGameData }) {
   return (
     <div>
-      <Timers initData={initData} />
+      <TimersController maxTime={initData.maxTime} plaingSide={initData.side} />
     </div>
   );
 }
