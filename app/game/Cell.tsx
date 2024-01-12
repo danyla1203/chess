@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useWebSocket } from '../lib/context/SocketContext';
 
 export function CellItem({
   highlighted,
@@ -10,8 +9,6 @@ export function CellItem({
   side,
   dotted,
 }: any) {
-  const socket = useWebSocket();
-
   let classbase = 'figure size-20 flex justify-center items-center';
 
   if (highlighted) classbase += ` bg-slate-400`;

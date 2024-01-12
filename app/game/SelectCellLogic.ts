@@ -22,13 +22,13 @@ export class HighlightedCels {
 
   private checkIsCellEmpty(cell: string): boolean {
     if (parseInt(cell[1], 10) > 8) return false;
-    return !(this.Board.white[cell] || this.Board.black[cell]);
+    return !(this.Board.w[cell] || this.Board.b[cell]);
   }
 
   private isEnemyInCell(cell: Cell): boolean {
     return this.playingSide === 'w'
-      ? !!this.Board.black[cell]
-      : !!this.Board.white[cell];
+      ? !!this.Board.b[cell]
+      : !!this.Board.w[cell];
   }
 
   private findNextLetter(letter: string): string[] {
@@ -73,9 +73,11 @@ export class HighlightedCels {
       possibleMoves.push(nextLetters[1]);
     }
     if (this.playingSide === 'w' && num === 2) {
-      possibleMoves.push(`${letter}${num + 2}`);
+      const cell = `${letter}${num + 2}`;
+      if (this.checkIsCellEmpty(cell)) possibleMoves.push(cell);
     } else if (this.playingSide === 'b' && num === 7) {
-      possibleMoves.push(`${letter}${num - 2}`);
+      const cell = `${letter}${num - 2}`;
+      if (this.checkIsCellEmpty(cell)) possibleMoves.push(cell);
     }
     return possibleMoves;
   }

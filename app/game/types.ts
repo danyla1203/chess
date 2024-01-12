@@ -2,8 +2,8 @@ export type Cell = string;
 export type Figure = string;
 
 export type PlainBoardState = {
-  black: { [key: Cell]: Figure };
-  white: { [key: Cell]: Figure };
+  b: { [key: Cell]: Figure };
+  w: { [key: Cell]: Figure };
 };
 
 export type InitedGameData = {
