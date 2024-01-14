@@ -19,7 +19,7 @@ export enum Game {
   end = 'game:end',
   strike = 'game:strike',
   boardUpdate = 'game:board-update',
-  message = 'game:chate-message',
+  message = 'game:chat-message',
   surrender = 'game:surrender',
   drawPurpose = 'game:draw_purpose',
 }
@@ -31,6 +31,7 @@ export enum Emit {
   createGame = 'create',
   gameJoin = 'join',
   figureMove = 'move',
+  pushMessage = 'chat-message',
 }
 
 export const WebSocketContext = createContext<Socket | null>(null);

@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { TimerProvider } from './Timer';
 import { BoardProvider } from './Board';
 import { StrikedProvider } from './Striked';
+import { ChatProvider } from './Chat';
 
 const GameContext = createContext<InitedGameData>({
   board: { w: {}, b: {} },
@@ -45,7 +46,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     <GameContext.Provider value={initData}>
       <BoardProvider initBoard={initData.board}>
         <StrikedProvider>
-          <TimerProvider maxTime={initData.maxTime}>{children}</TimerProvider>
+          <TimerProvider maxTime={initData.maxTime}>
+            <ChatProvider>{children}</ChatProvider>
+          </TimerProvider>
         </StrikedProvider>
       </BoardProvider>
     </GameContext.Provider>

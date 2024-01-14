@@ -11,6 +11,16 @@ export type Move = {
   prevCell: Cell;
   side: 'w' | 'b';
 };
+export type Message = {
+  id: number;
+  text: string;
+  author: Author;
+  date: string;
+};
+export type Author = {
+  id: number;
+  name: string;
+};
 export type StrikeData = {
   figure: Figure;
   strikedSide: 'w' | 'b';
