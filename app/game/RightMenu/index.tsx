@@ -23,7 +23,7 @@ export function RightMenu() {
   ));
 
   return (
-    <div>
+    <div className="w-40 flex flex-col">
       {side === 'w' ? (
         <div className="flex">{strikedW}</div>
       ) : (
