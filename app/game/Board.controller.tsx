@@ -1,50 +1,53 @@
-import { useState, useEffect } from 'react';
-import { InitedGameData, Cell, Figure } from './types';
-import { Emit, Game, useWebSocket } from '@/context/SocketContext';
+'use client';
+
+import { Cell, Figure, SelectedCell } from './types';
 import { Board } from './Board';
+import { useBoard } from './context/Board';
+import { useConfigContext } from './context';
+import { HighlightedCels } from './SelectCellLogic';
+import { useEffect, useState } from 'react';
 
-export function BoardController({ initData }: { initData: InitedGameData }) {
-  const socket = useWebSocket();
-  const [board, setBoard] = useState(initData.board);
+const possibleMoves = new HighlightedCels();
 
-  const moveFigure = (figure: Figure, cell: Cell) => {
-    socket.volatile.emit(Emit.figureMove, {
-      gameId: initData.gameId,
-      figure,
-      cell,
-    });
+export function BoardController() {
+  const { boardState, moveFigure } = useBoard();
+  const cnf = useConfigContext();
+
+  const [selectedCell, setSelectedCell] = useState<SelectedCell>({
+    cell: null,
+    possibleMoves: [],
+  });
+
+  const selectAction = (coordinate: Cell, figure: Figure) => {
+    const dottedCels = possibleMoves.createPossibleMoves(figure, coordinate);
+    setSelectedCell({ cell: coordinate, possibleMoves: dottedCels });
+  };
+  const cellClick = (coordinate: Cell) => {
+    const { cell, possibleMoves } = selectedCell;
+    if (cell && possibleMoves.includes(coordinate)) {
+      const figure = boardState.w[cell] || boardState.b[cell];
+      moveFigure(figure, coordinate);
+      setSelectedCell({ cell: null, possibleMoves: [] });
+    } else {
+      const side = cnf.side === 'w' ? boardState.w : boardState.b;
+      const figure = side[coordinate];
+      if (figure) selectAction(coordinate, figure);
+    }
   };
 
   useEffect(() => {
-    socket.removeAllListeners(Game.boardUpdate);
-    socket.removeAllListeners(Game.strike);
-    socket.on(
-      Game.boardUpdate,
-      (payload: {
-        side: 'w' | 'b';
-        figure: Figure;
-        cell: Cell;
-        prevCell: Cell;
-      }) => {
-        const { side, figure, cell, prevCell } = payload;
-        const copy = { ...board[side] };
-        delete copy[prevCell];
-        copy[cell] = figure;
-        const copyBoard = { ...board };
-        copyBoard[side] = copy;
-        setBoard(copyBoard);
-      },
-    );
-    socket.on(
-      Game.strike,
-      ({ strikedSide, cell }: { strikedSide: 'w' | 'b'; cell: Cell }) => {
-        delete board[strikedSide][cell];
-        setBoard(board);
-      },
-    );
-  }, [board]);
+    possibleMoves.setData(boardState, cnf.side);
+  }, []);
+  useEffect(() => {
+    possibleMoves.setUpdatedBoard(boardState);
+  }, [boardState]);
 
   return (
-    <Board board={board} playingSide={initData.side} moveFigure={moveFigure} />
+    <Board
+      playingSide={cnf.side}
+      cellClick={cellClick}
+      board={boardState}
+      selectedCell={selectedCell}
+    />
   );
 }

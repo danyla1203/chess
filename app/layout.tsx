@@ -14,6 +14,7 @@ export default async function RootLayout({
 }) {
   return (
     <html>
+      <script async src="http://localhost:8097"></script>
       <body>
         <NotificationProvider>
           <UserProvider>
