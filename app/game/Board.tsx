@@ -1,50 +1,19 @@
-import { useState, useEffect } from 'react';
 import { CellItem } from './Cell';
-import { HighlightedCels } from './SelectCellLogic';
-import { PlainBoardState, Cell, SelectedCell, Figure } from './types';
+import { PlainBoardState, Cell, SelectedCell } from './types';
 
 const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
-const possibleMoves = new HighlightedCels();
-
 export function Board({
   board,
+  selectedCell,
+  cellClick,
   playingSide,
-  moveFigure,
 }: {
   board: PlainBoardState;
+  selectedCell: SelectedCell;
+  cellClick: (coordinate: Cell) => void;
   playingSide: 'w' | 'b';
-  moveFigure: (figure: Figure, cell: Cell) => void;
 }) {
-  const [selectedCell, setSelectedCell] = useState<SelectedCell>({
-    cell: null,
-    possibleMoves: [],
-  });
-
-  const selectAction = (coordinate: Cell, figure: Figure) => {
-    const dottedCels = possibleMoves.createPossibleMoves(figure, coordinate);
-    setSelectedCell({ cell: coordinate, possibleMoves: dottedCels });
-  };
-  const cellClick = (coordinate: Cell) => {
-    const { cell, possibleMoves } = selectedCell;
-    if (cell && possibleMoves.includes(coordinate)) {
-      const figure = board.w[cell] || board.b[cell];
-      moveFigure(figure, coordinate);
-      setSelectedCell({ cell: null, possibleMoves: [] });
-    } else {
-      const side = playingSide === 'w' ? board.w : board.b;
-      const figure = side[coordinate];
-      if (figure) selectAction(coordinate, figure);
-    }
-  };
-
-  useEffect(() => {
-    possibleMoves.setData(board, playingSide);
-  }, []);
-  useEffect(() => {
-    possibleMoves.setUpdatedBoard(board);
-  }, [board]);
-
   const result = [];
   for (let i = 0; i < 8; i++) {
     const row = [];

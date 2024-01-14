@@ -1,33 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useWebSocket, Game } from '@/context/SocketContext';
 import { Timer } from './Timers';
+import { useConfigContext } from '../context';
+import { useTimers } from '../context/Timer';
 
-export function TimersController({
-  maxTime,
-  plaingSide,
-}: {
-  maxTime: number;
-  plaingSide: 'w' | 'b';
-}) {
-  const socket = useWebSocket();
-  const [wTime, setWTime] = useState(maxTime);
-  const [bTime, setBTime] = useState(maxTime);
-
-  useEffect(() => {
-    socket.on(Game.timeTick, ({ w, b }) => {
-      setWTime(w);
-      setBTime(b);
-    });
-    socket.on(Game.addTime, ({ w, b }) => {
-      setWTime(w);
-      setBTime(b);
-    });
-  }, []);
+export function TimersController() {
+  const { w, b } = useTimers();
+  const { side } = useConfigContext();
 
   return (
     <div>
-      {plaingSide === 'b' ? <Timer time={wTime} /> : <Timer time={bTime} />}
-      {plaingSide === 'b' ? <Timer time={bTime} /> : <Timer time={wTime} />}
+      {side === 'b' ? <Timer time={w} /> : <Timer time={b} />}
+      {side === 'b' ? <Timer time={b} /> : <Timer time={w} />}
     </div>
   );
 }
