@@ -1,7 +1,7 @@
 'use client';
 
-import { useWebSocket } from '@/context/SocketContext';
-import { useState } from 'react';
+import { Lobby, useWebSocket } from '@/context/SocketContext';
+import { useState, useEffect } from 'react';
 import { GameListItem } from './GameListItem';
 import { useRouter } from 'next/navigation';
 
@@ -27,11 +27,16 @@ export function GameList() {
   const router = useRouter();
   const [games, setGames] = useState<GameData[]>([]);
 
-  socket.on('lobby:update', (payload: GameData[]) => setGames(payload));
-
   const connect = (gameId: string) => {
     router.push(`/game?action=join&id=${gameId}`);
   };
+
+  useEffect(() => {
+    socket.on(Lobby.update, (payload: GameData[]) => setGames(payload));
+    return () => {
+      socket.off(Lobby.update);
+    };
+  }, []);
 
   return (
     <div className="block overflow-x-auto basis-3/4">
