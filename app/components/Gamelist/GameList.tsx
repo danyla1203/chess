@@ -1,42 +1,10 @@
 'use client';
 
-import { Lobby, useWebSocket } from '@/context/SocketContext';
-import { useState, useEffect } from 'react';
+import { useGameList } from '@/context/GameListContext';
 import { GameListItem } from './GameListItem';
-import { useRouter } from 'next/navigation';
-
-type PlayerData = {
-  id: string;
-  name: string;
-};
-
-export type GameData = {
-  id: string;
-  spectators: number;
-  players: PlayerData[];
-  isActive: boolean;
-  config: {
-    time: number;
-    timeIncrement: number;
-    side: 'w' | 'b' | 'rand';
-  };
-};
 
 export function GameList() {
-  const socket = useWebSocket();
-  const router = useRouter();
-  const [games, setGames] = useState<GameData[]>([]);
-
-  const connect = (gameId: string) => {
-    router.push(`/game?action=join&id=${gameId}`);
-  };
-
-  useEffect(() => {
-    socket.on(Lobby.update, (payload: GameData[]) => setGames(payload));
-    return () => {
-      socket.off(Lobby.update);
-    };
-  }, []);
+  const { connect, games } = useGameList();
 
   return (
     <div className="block overflow-x-auto basis-3/4">

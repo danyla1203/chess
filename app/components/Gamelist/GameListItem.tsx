@@ -1,4 +1,4 @@
-import { GameData } from './GameList';
+import { GameData } from '@/context/GameListContext';
 
 export function GameListItem({
   game,
