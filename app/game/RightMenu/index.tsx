@@ -5,7 +5,10 @@ import { TimersController } from './Timers.controller';
 function Striked({ figure, side }: { figure: string; side: 'w' | 'b' }) {
   return (
     <div
-      className={`striked__figure ${figure.replace(/\d/, '')} ${side}`}
+      className={`w-7 h-7 bg-center bg-cover ${figure.replace(
+        /\d/,
+        '',
+      )} ${side}`}
       key={`${figure}-b`}
     />
   );
@@ -23,7 +26,7 @@ export function RightMenu() {
   ));
 
   return (
-    <div className="w-40 flex flex-col">
+    <div className="w-40 flex flex-col ml-3">
       {side === 'w' ? (
         <div className="flex">{strikedW}</div>
       ) : (

@@ -46,7 +46,7 @@ export function Chat() {
   const { messages, addMessage } = useChat();
 
   return (
-    <div className="flex flex-col h-full w-76 min-w-52 ml-5 mr-7 bg-white shadow-md p-3">
+    <div className="flex flex-col h-full w-76 min-w-52 mr-7 bg-white shadow-md p-3">
       <div className="flex flex-col h-[calc(100%-3.5rem)] w-full">
         {messages.map((m) => (
           <MessageItem key={m.id} message={m} />
