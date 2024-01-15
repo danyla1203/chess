@@ -7,6 +7,7 @@ import { TimerProvider } from './Timer';
 import { BoardProvider } from './Board';
 import { StrikedProvider } from './Striked';
 import { ChatProvider } from './Chat';
+import { PlayerConnectionProvider } from './PlayerConnection';
 
 const GameContext = createContext<InitedGameData>({
   board: { w: {}, b: {} },
@@ -30,13 +31,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const params = useSearchParams();
 
   useEffect(() => {
-    if (params.get('action') === 'join') {
-      const gameId = parseInt(params.get('id') as string);
+    const param = params.get('action');
+    const id = params.get('id');
+    if (param === 'join') {
+      const gameId = parseInt(id as string);
       socket.volatile.emit(Emit.gameJoin, { gameId });
+    } else if (param === 'rejoin') {
+      const gameId = parseInt(params.get('id') as string);
+      socket.volatile.emit(Emit.gameRejoin, { gameId });
     }
     socket.on(Game.init, (payload: InitedGameData) => {
       setInitData(payload);
-      socket.removeAllListeners(Game.init);
     });
   }, []);
 
@@ -47,7 +52,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       <BoardProvider initBoard={initData.board}>
         <StrikedProvider>
           <TimerProvider maxTime={initData.maxTime}>
-            <ChatProvider>{children}</ChatProvider>
+            <ChatProvider>
+              <PlayerConnectionProvider>{children}</PlayerConnectionProvider>
+            </ChatProvider>
           </TimerProvider>
         </StrikedProvider>
       </BoardProvider>
