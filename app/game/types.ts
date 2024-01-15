@@ -5,6 +5,12 @@ export type PlainBoardState = {
   b: { [key: Cell]: Figure };
   w: { [key: Cell]: Figure };
 };
+
+export type OpponentLeavePayload = {
+  id: number;
+  side: 'w' | 'b';
+  name: string;
+};
 export type Move = {
   figure: Figure;
   cell: Cell;

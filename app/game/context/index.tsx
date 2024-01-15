@@ -7,6 +7,7 @@ import { TimerProvider } from './Timer';
 import { BoardProvider } from './Board';
 import { StrikedProvider } from './Striked';
 import { ChatProvider } from './Chat';
+import { PlayerConnectionProvider } from './PlayerConnection';
 
 const GameContext = createContext<InitedGameData>({
   board: { w: {}, b: {} },
@@ -47,7 +48,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       <BoardProvider initBoard={initData.board}>
         <StrikedProvider>
           <TimerProvider maxTime={initData.maxTime}>
-            <ChatProvider>{children}</ChatProvider>
+            <ChatProvider>
+              <PlayerConnectionProvider>{children}</PlayerConnectionProvider>
+            </ChatProvider>
           </TimerProvider>
         </StrikedProvider>
       </BoardProvider>

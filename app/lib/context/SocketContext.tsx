@@ -22,6 +22,7 @@ export enum Game {
   message = 'game:chat-message',
   surrender = 'game:surrender',
   drawPurpose = 'game:draw_purpose',
+  playerLeave = 'game:opponent-leave',
 }
 export enum User {
   anonymousToken = 'user:anon-token',

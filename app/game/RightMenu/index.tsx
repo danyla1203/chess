@@ -1,4 +1,5 @@
 import { useConfigContext } from '../context';
+import { usePlayerConnection } from '../context/PlayerConnection';
 import { useStrikedFigures } from '../context/Striked';
 import { TimersController } from './Timers.controller';
 
@@ -17,6 +18,7 @@ function Striked({ figure, side }: { figure: string; side: 'w' | 'b' }) {
 export function RightMenu() {
   const strikedFigures = useStrikedFigures();
   const { side } = useConfigContext();
+  const online = usePlayerConnection()[side];
 
   const strikedW = strikedFigures.w.map((f) => (
     <Striked side="w" key={f} figure={f} />
@@ -27,6 +29,14 @@ export function RightMenu() {
 
   return (
     <div className="w-40 flex flex-col ml-3">
+      <div className="flex items-center">
+        <div
+          className={`mr-1 w-4 h-4 ${
+            online ? 'bg-blue-500' : 'bg-red-500'
+          } rounded-full`}
+        ></div>
+        {online ? 'Online' : 'User offline'}
+      </div>
       {side === 'w' ? (
         <div className="flex">{strikedW}</div>
       ) : (
