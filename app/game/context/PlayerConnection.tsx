@@ -32,6 +32,14 @@ export const PlayerConnectionProvider = ({
         setConnectionStatus(copy);
       },
     );
+    socket.on(
+      Game.playerReconected,
+      ({ opponent }: { opponent: OpponentLeavePayload }) => {
+        const copy = { ...playersInGame };
+        copy[opponent.side] = true;
+        setConnectionStatus(copy);
+      },
+    );
     return () => {
       socket.off(Game.playerLeave);
     };

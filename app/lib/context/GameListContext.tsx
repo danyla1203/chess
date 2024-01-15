@@ -2,11 +2,11 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lobby, useWebSocket } from './SocketContext';
+import { Lobby, Game, useWebSocket } from './SocketContext';
 
 type PlayerData = {
-  id: string;
   name: string;
+  userId: number;
 };
 
 export type GameData = {
@@ -23,7 +23,9 @@ export type GameData = {
 
 export type GameList = {
   games: GameData[];
+  pendingGame: number | null;
   connect: (gameId: string) => void;
+  rejoin: (gameId: number) => void;
 };
 
 export const GameListContext = createContext<GameList>({
@@ -31,6 +33,10 @@ export const GameListContext = createContext<GameList>({
   connect: () => {
     throw new Error('Game list context is not set');
   },
+  rejoin: () => {
+    throw new Error('Game list context is not set');
+  },
+  pendingGame: null,
 });
 
 export const useGameList = () => {
@@ -47,16 +53,26 @@ export const GameListProvider = ({
   children: React.ReactNode;
 }) => {
   const [games, setGames] = useState<GameData[]>([]);
+  const [pendingGame, setPendingGame] = useState<number | null>(null);
   const socket = useWebSocket();
   const router = useRouter();
 
   const connect = (gameId: string) => {
     router.push(`/game?action=join&id=${gameId}`);
   };
+  const rejoin = (gameId: number) => {
+    router.push(`/game?action=rejoin&id=${gameId}`);
+  };
 
   useEffect(() => {
     socket.on(Lobby.update, (payload: GameData[]) => {
       setGames(payload);
+    });
+    socket.on(Game.pendingGame, ({ gameId }: { gameId: number }) => {
+      setPendingGame(gameId);
+    });
+    socket.on(Game.playerReconected, () => {
+      setPendingGame(null);
     });
     return () => {
       socket.off(Lobby.update);
@@ -64,7 +80,7 @@ export const GameListProvider = ({
   }, []);
 
   return (
-    <GameListContext.Provider value={{ games, connect }}>
+    <GameListContext.Provider value={{ games, pendingGame, connect, rejoin }}>
       {children}
     </GameListContext.Provider>
   );

@@ -31,13 +31,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const params = useSearchParams();
 
   useEffect(() => {
-    if (params.get('action') === 'join') {
-      const gameId = parseInt(params.get('id') as string);
+    const param = params.get('action');
+    const id = params.get('id');
+    if (param === 'join') {
+      const gameId = parseInt(id as string);
       socket.volatile.emit(Emit.gameJoin, { gameId });
+    } else if (param === 'rejoin') {
+      const gameId = parseInt(params.get('id') as string);
+      socket.volatile.emit(Emit.gameRejoin, { gameId });
     }
     socket.on(Game.init, (payload: InitedGameData) => {
       setInitData(payload);
-      socket.removeAllListeners(Game.init);
     });
   }, []);
 
