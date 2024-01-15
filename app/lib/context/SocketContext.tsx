@@ -14,10 +14,12 @@ export enum Game {
   mate = 'game:mate',
   draw = 'game:draw',
   rejectDraw = 'game:draw_rejected',
-  addTime = 'game:time',
+  addTime = 'game:add-time',
+  timeTick = 'game:time',
+  end = 'game:end',
   strike = 'game:strike',
   boardUpdate = 'game:board-update',
-  message = 'game:chate-message',
+  message = 'game:chat-message',
   surrender = 'game:surrender',
   drawPurpose = 'game:draw_purpose',
 }
@@ -28,6 +30,8 @@ export enum User {
 export enum Emit {
   createGame = 'create',
   gameJoin = 'join',
+  figureMove = 'move',
+  pushMessage = 'chat-message',
 }
 
 export const WebSocketContext = createContext<Socket | null>(null);
@@ -81,6 +85,11 @@ export const WebSocketProvider = ({
   if (!socket) {
     return <div>Loading...</div>;
   }
+
+  socket.io.on('error', (e) => {
+    console.log(e);
+  });
+
   return (
     <WebSocketContext.Provider value={socket}>
       {children}

@@ -25,7 +25,7 @@ export function CreateGame() {
       time: minutes * 60 * 1000,
       timeIncrement: timeAdd * 1000,
     };
-    socket.emit(Emit.createGame, { ...body });
+    socket.volatile.emit(Emit.createGame, { ...body });
     router.push('/game');
   };
 
