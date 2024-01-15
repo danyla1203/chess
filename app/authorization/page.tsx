@@ -6,7 +6,7 @@ import { OauthButtons } from './OauthButtons';
 
 export default function LoginPage() {
   return (
-    <div className="flex h-screen">
+    <div className="flex h-[calc(100vh-50px)]">
       <div className="hidden lg:flex items-center justify-center flex-1 bg-white text-black">
         <div className="max-w-md text-center">
           <svg

@@ -1,4 +1,4 @@
-import { GameList, CreateGame } from '@/ui';
+import { GameList, CreateGame } from '@/components';
 
 export default function Page() {
   return (
