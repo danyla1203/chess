@@ -40,10 +40,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     copy.push(message);
     setMessages(copy);
   };
-  console.log(messages);
+
   useEffect(() => {
     socket.on(Game.message, (newState: Message) => {
-      console.log(socket);
       setUpdateMessages(newState);
     });
     return () => {
