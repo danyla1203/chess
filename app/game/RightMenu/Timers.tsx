@@ -8,7 +8,7 @@ export function Timer({ time }: { time: number }) {
 
   const beautyMinutes = minutes < 10 ? `0${minutes}` : minutes;
   return (
-    <div>
+    <div className="text-4xl flex items-center justify-center">
       {beautyMinutes}:{beautySeconds}
     </div>
   );
