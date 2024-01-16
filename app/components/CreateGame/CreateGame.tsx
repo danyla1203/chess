@@ -1,14 +1,5 @@
 'use client';
-import { Emit, useWebSocket } from '@/app/lib/context/SocketContext';
-import {
-  Button,
-  ButtonGroup,
-  Slider,
-  Typography,
-  Input,
-  Box,
-  Grid,
-} from '@mui/material';
+import { Emit, useWebSocket } from '@/context/SocketContext';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -29,77 +20,5 @@ export function CreateGame() {
     router.push('/game');
   };
 
-  return (
-    <div className="basis-2/5">
-      <Box sx={{ width: 400 }}>
-        <Typography gutterBottom variant="h6">
-          Minutes per side
-        </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs>
-            <Slider
-              defaultValue={10}
-              max={180}
-              min={1}
-              onChange={(e: any) => setMinutes(e.target.value)}
-              value={minutes}
-            />
-          </Grid>
-          <Grid item>
-            <Input
-              value={minutes}
-              size="medium"
-              onChange={(e: any) => setMinutes(e.target.value)}
-              inputProps={{
-                step: 1,
-                min: 1,
-                max: 38,
-                type: 'number',
-                'aria-labelledby': 'input-slider',
-              }}
-            />
-          </Grid>
-        </Grid>
-
-        <Typography gutterBottom variant="h6">
-          Increment in seconds
-        </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs>
-            <Slider
-              defaultValue={10}
-              max={180}
-              min={0}
-              onChange={(e: any) => setTimeAdd(e.target.value)}
-              value={timeAdd}
-            />
-          </Grid>
-          <Grid item>
-            <Input
-              value={timeAdd}
-              size="medium"
-              onChange={(e: any) => setTimeAdd(e.target.value)}
-              inputProps={{
-                step: 1,
-                min: 1,
-                max: 38,
-                type: 'number',
-                'aria-labelledby': 'input-slider',
-              }}
-            />
-          </Grid>
-        </Grid>
-      </Box>
-      <ButtonGroup
-        variant="outlined"
-        aria-label="outlined primary button group"
-        size="large"
-        sx={{ marginTop: 5 }}
-      >
-        <Button onClick={() => create('w')}>White</Button>
-        <Button onClick={() => create('b')}>Black</Button>
-        <Button onClick={() => create('rand')}>Random</Button>
-      </ButtonGroup>
-    </div>
-  );
+  return <div className="basis-2/5"></div>;
 }

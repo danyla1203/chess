@@ -1,12 +1,13 @@
 import React from 'react';
 
-import { Navbar, Notifications, PendingGame } from '@/components';
+import { NavbarMenu, Notifications, PendingGame } from '@/components';
 import { UserProvider } from '@/context/UserContext';
 import { WebSocketProvider } from '@/context/SocketContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { GameListProvider } from '@/context/GameListContext';
 
 import './globals.css';
+import { NextuiProviders } from './nextui.provider';
 
 export default async function RootLayout({
   children,
@@ -17,18 +18,20 @@ export default async function RootLayout({
     <html>
       <script async src="http://localhost:8097"></script>
       <body>
-        <NotificationProvider>
-          <UserProvider>
-            <Navbar />
-            <Notifications />
-            <WebSocketProvider>
-              <GameListProvider>
-                <PendingGame />
-                {children}
-              </GameListProvider>
-            </WebSocketProvider>
-          </UserProvider>
-        </NotificationProvider>
+        <NextuiProviders>
+          <NotificationProvider>
+            <UserProvider>
+              <NavbarMenu />
+              <Notifications />
+              <WebSocketProvider>
+                <GameListProvider>
+                  <PendingGame />
+                  {children}
+                </GameListProvider>
+              </WebSocketProvider>
+            </UserProvider>
+          </NotificationProvider>
+        </NextuiProviders>
       </body>
     </html>
   );
