@@ -9,7 +9,7 @@ type PlayerData = {
   userId: number;
 };
 
-export type GameData = {
+export type GameDataPayload = {
   id: string;
   spectators: number;
   players: PlayerData[];
@@ -19,6 +19,14 @@ export type GameData = {
     timeIncrement: number;
     side: 'w' | 'b' | 'rand';
   };
+};
+export type GameData = {
+  id: string;
+  key: string;
+  time: number;
+  inc: number;
+  opponent: string;
+  sidepick: 'w' | 'b' | 'rand';
 };
 
 export type GameList = {
@@ -65,10 +73,23 @@ export const GameListProvider = ({
   };
 
   useEffect(() => {
-    socket.on(Lobby.update, (payload: GameData[]) => {
-      setGames(payload);
+    socket.on(Lobby.update, (payload: GameDataPayload[]) => {
+      const data = payload.map((g) => {
+        const beautyMaxTime = Math.floor(g.config.time / (1000 * 60));
+        const beautyTimeIncrement = Math.floor(g.config.timeIncrement / 1000);
+        return {
+          id: g.id,
+          key: g.id,
+          opponent: g.players[0].name,
+          inc: beautyTimeIncrement,
+          time: beautyMaxTime,
+          sidepick: g.config.side,
+        };
+      });
+      setGames(data);
     });
     socket.on(Game.pendingGame, ({ gameId }: { gameId: number }) => {
+      console.log(gameId);
       setPendingGame(gameId);
     });
     socket.on(Game.playerReconected, () => {
