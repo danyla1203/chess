@@ -4,7 +4,6 @@ import {
   NavbarContent,
   NavbarItem,
   Link,
-  Button,
 } from '@nextui-org/react';
 
 import { Profile } from './Profile';
@@ -13,32 +12,26 @@ export function NavbarMenu() {
   return (
     <Navbar position="static">
       <NavbarBrand>
-        <p className="font-bold text-inherit">ACME</p>
+        <h1 className="text-4xl">👾</h1>
+        <p className="font-bold text-inherit">Chesser</p>
       </NavbarBrand>
       <NavbarContent className="sm:flex gap-4" justify="center">
         <NavbarItem>
           <Link color="foreground" href="#">
-            Features
+            Game List
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link href="#">Customers</Link>
+          <Link href="/">Home</Link>
         </NavbarItem>
         <NavbarItem>
           <Link color="foreground" href="#">
-            Integrations
+            About
           </Link>
         </NavbarItem>
       </NavbarContent>
       <NavbarContent justify="end">
-        <NavbarItem className="hidden lg:flex">
-          <Link href="#">Login</Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Button as={Link} color="primary" href="#" variant="flat">
-            Sign Up
-          </Button>
-        </NavbarItem>
+        <Profile />
       </NavbarContent>
     </Navbar>
   );
