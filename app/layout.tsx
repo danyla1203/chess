@@ -20,11 +20,10 @@ export default async function RootLayout({
         <NextuiProviders>
           <NotificationProvider>
             <UserProvider>
-              <NavbarMenu />
               <Notifications />
               <WebSocketProvider>
                 <GameListProvider>
-                  <PendingGame />
+                  <NavbarMenu />
                   {children}
                 </GameListProvider>
               </WebSocketProvider>

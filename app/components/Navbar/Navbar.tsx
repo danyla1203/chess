@@ -7,6 +7,7 @@ import {
 } from '@nextui-org/react';
 
 import { Profile } from './Profile';
+import { PendingGame } from '..';
 
 export function NavbarMenu() {
   return (
@@ -28,6 +29,9 @@ export function NavbarMenu() {
           <Link color="foreground" href="#">
             About
           </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <PendingGame />
         </NavbarItem>
       </NavbarContent>
       <NavbarContent justify="end">
