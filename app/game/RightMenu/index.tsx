@@ -1,3 +1,4 @@
+import { Card, CardBody, CardHeader, Chip } from '@nextui-org/react';
 import { useConfigContext } from '../context';
 import { usePlayerConnection } from '../context/PlayerConnection';
 import { useStrikedFigures } from '../context/Striked';
@@ -27,27 +28,39 @@ export function RightMenu() {
     <Striked side="b" key={f} figure={f} />
   ));
 
+  const onlineSymb = (
+    <div
+      className={`mr-1 w-4 h-4 ${
+        online ? 'bg-blue-500' : 'bg-red-500'
+      } rounded-full`}
+    ></div>
+  );
+
   return (
-    <div className="w-40 flex flex-col ml-3">
-      <div className="flex items-center">
-        <div
-          className={`mr-1 w-4 h-4 ${
-            online ? 'bg-blue-500' : 'bg-red-500'
-          } rounded-full`}
-        ></div>
-        {online ? 'Online' : 'User offline'}
-      </div>
-      {side === 'w' ? (
-        <div className="flex">{strikedW}</div>
-      ) : (
-        <div className="flex">{strikeB}</div>
-      )}
-      <TimersController />
-      {side === 'w' ? (
-        <div className="flex">{strikeB}</div>
-      ) : (
-        <div className="flex">{strikedW}</div>
-      )}
+    <div className="ml-3 flex flex-col h-full">
+      <Card className="mb-3">
+        <CardHeader className="flex justify-center">
+          <h5 className="mr-2">Anonymous</h5>
+          <Chip startContent={onlineSymb}>
+            {online ? 'Online' : 'User offline'}
+          </Chip>
+        </CardHeader>
+      </Card>
+      <Card className="mb-3">
+        <CardBody className={side === 'b' ? `bg-slate-100` : ''}>
+          {side === 'w' ? <div>{strikedW}</div> : <div>{strikeB}</div>}
+        </CardBody>
+      </Card>
+      <Card className="flex flex-col mb-3">
+        <CardBody>
+          <TimersController />
+        </CardBody>
+      </Card>
+      <Card>
+        <CardBody className={side === 'w' ? `bg-slate-100` : ''}>
+          {side === 'w' ? <div>{strikeB}</div> : <div>{strikedW}</div>}
+        </CardBody>
+      </Card>
     </div>
   );
 }

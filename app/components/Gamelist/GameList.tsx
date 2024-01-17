@@ -1,33 +1,43 @@
 'use client';
 
+import {
+  Divider,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  getKeyValue,
+  TableRow,
+  TableCell,
+} from '@nextui-org/react';
 import { useGameList } from '@/context/GameListContext';
-import { GameListItem } from './GameListItem';
 
 export function GameList() {
   const { connect, games } = useGameList();
 
-  return (
-    <div className="block overflow-x-auto basis-3/4">
-      <table className="w-full items-center bg-transparent border-collapse ">
-        <thead>
-          <tr>
-            <th className="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-              Player name
-            </th>
-            <th className="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-              Max time - Time increment
-            </th>
-            <th className="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-              Side picking
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {games.map((g) => (
-            <GameListItem key={g.id} game={g} joinGame={connect} />
-          ))}
-        </tbody>
-      </table>
+  const topContent = (
+    <div>
+      <h1 className="mb-2">Lobby</h1>
+      <Divider />
     </div>
+  );
+  return (
+    <Table topContent={topContent} isStriped>
+      <TableHeader className="border-0">
+        <TableColumn key="opponent">Player name</TableColumn>
+        <TableColumn key="time">Max time - minutes</TableColumn>
+        <TableColumn key="inc">Time increment - seconds</TableColumn>
+        <TableColumn key="sidepick">Side picking</TableColumn>
+      </TableHeader>
+      <TableBody items={games} emptyContent={'No games in lobby.'}>
+        {(item) => (
+          <TableRow onClick={() => connect(item.id)} key={item.key}>
+            {(columnKey) => (
+              <TableCell>{getKeyValue(item, columnKey)}</TableCell>
+            )}
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   );
 }

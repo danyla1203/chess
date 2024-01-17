@@ -1,7 +1,6 @@
-import Link from 'next/link';
 import { useUserState } from '@/context/UserContext';
 import { userLogout } from '@/app/lib/request';
-import { Dropdown } from '@/ui/Dropdown';
+import { DropdownUi } from '@/ui/Dropdown';
 
 export function AuthorizedMenu() {
   const { profile, removeUser } = useUserState();
@@ -14,20 +13,9 @@ export function AuthorizedMenu() {
     localStorage.removeItem('refreshToken');
     removeUser();
   };
-  return (
-    <Dropdown label={profile.name}>
-      <Link
-        className="block text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-        href="/user"
-      >
-        Profile
-      </Link>
-      <button
-        onClick={logout}
-        className="block text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-      >
-        Logout
-      </button>
-    </Dropdown>
-  );
+  const contents = [
+    { href: '/user', name: 'Profile' },
+    { href: 'logout', name: 'Logout', onclick: logout },
+  ];
+  return <DropdownUi label={profile.name} contents={contents} />;
 }

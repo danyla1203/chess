@@ -1,18 +1,42 @@
-import Link from 'next/link';
+import {
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  Link,
+} from '@nextui-org/react';
 
 import { Profile } from './Profile';
-import './Navbar.scss';
+import { PendingGame } from '..';
 
-export function Navbar() {
+export function NavbarMenu() {
   return (
-    <div className="navbar">
-      <ul className="navbar__navigation">
-        <li className="navbar__navigation-item">👾</li>
-        <li className="navbar__navigation-item">
+    <Navbar position="static">
+      <NavbarBrand>
+        <h1 className="text-4xl">👾</h1>
+        <p className="font-bold text-inherit">Chesser</p>
+      </NavbarBrand>
+      <NavbarContent className="sm:flex gap-4" justify="center">
+        <NavbarItem>
+          <Link color="foreground" href="#">
+            Game List
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
           <Link href="/">Home</Link>
-        </li>
-      </ul>
-      <Profile />
-    </div>
+        </NavbarItem>
+        <NavbarItem>
+          <Link color="foreground" href="#">
+            About
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <PendingGame />
+        </NavbarItem>
+      </NavbarContent>
+      <NavbarContent justify="end">
+        <Profile />
+      </NavbarContent>
+    </Navbar>
   );
 }

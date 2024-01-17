@@ -1,14 +1,15 @@
 'use client';
-import { Emit, useWebSocket } from '@/app/lib/context/SocketContext';
 import {
-  Button,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Divider,
   ButtonGroup,
-  Slider,
-  Typography,
-  Input,
-  Box,
-  Grid,
-} from '@mui/material';
+  Button,
+} from '@nextui-org/react';
+import { Emit, useWebSocket } from '@/context/SocketContext';
+import { Slider } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -30,76 +31,47 @@ export function CreateGame() {
   };
 
   return (
-    <div className="basis-2/5">
-      <Box sx={{ width: 400 }}>
-        <Typography gutterBottom variant="h6">
-          Minutes per side
-        </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs>
-            <Slider
-              defaultValue={10}
-              max={180}
-              min={1}
-              onChange={(e: any) => setMinutes(e.target.value)}
-              value={minutes}
-            />
-          </Grid>
-          <Grid item>
-            <Input
-              value={minutes}
-              size="medium"
-              onChange={(e: any) => setMinutes(e.target.value)}
-              inputProps={{
-                step: 1,
-                min: 1,
-                max: 38,
-                type: 'number',
-                'aria-labelledby': 'input-slider',
-              }}
-            />
-          </Grid>
-        </Grid>
-
-        <Typography gutterBottom variant="h6">
-          Increment in seconds
-        </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs>
-            <Slider
-              defaultValue={10}
-              max={180}
-              min={0}
-              onChange={(e: any) => setTimeAdd(e.target.value)}
-              value={timeAdd}
-            />
-          </Grid>
-          <Grid item>
-            <Input
-              value={timeAdd}
-              size="medium"
-              onChange={(e: any) => setTimeAdd(e.target.value)}
-              inputProps={{
-                step: 1,
-                min: 1,
-                max: 38,
-                type: 'number',
-                'aria-labelledby': 'input-slider',
-              }}
-            />
-          </Grid>
-        </Grid>
-      </Box>
-      <ButtonGroup
-        variant="outlined"
-        aria-label="outlined primary button group"
-        size="large"
-        sx={{ marginTop: 5 }}
-      >
-        <Button onClick={() => create('w')}>White</Button>
-        <Button onClick={() => create('b')}>Black</Button>
-        <Button onClick={() => create('rand')}>Random</Button>
-      </ButtonGroup>
+    <div className="basis-2/5 ml-2">
+      <Card>
+        <CardHeader>
+          <h1>Create game</h1>
+        </CardHeader>
+        <Divider />
+        <CardBody className="mt-2">
+          <Slider
+            label="Max Time - minutes"
+            size="md"
+            color="warning"
+            step={0.5}
+            maxValue={15}
+            minValue={0.5}
+            aria-label="Max time"
+            className="max-w-md"
+            value={minutes}
+            onChange={setMinutes}
+          />
+          <Slider
+            label="Time increment - seconds"
+            size="md"
+            color="warning"
+            step={1}
+            maxValue={60}
+            minValue={0}
+            aria-label="Time increment"
+            className="max-w-md mt-5"
+            value={timeAdd}
+            onChange={setTimeAdd}
+          />
+        </CardBody>
+        <Divider />
+        <CardFooter>
+          <ButtonGroup fullWidth={true} variant="bordered" className="mt-0.5">
+            <Button onPress={() => create('w')}>W</Button>
+            <Button onPress={() => create('b')}>B</Button>
+            <Button onPress={() => create('rand')}>Rand</Button>
+          </ButtonGroup>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
