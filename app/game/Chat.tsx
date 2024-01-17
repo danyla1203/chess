@@ -54,7 +54,7 @@ export function Chat() {
   return (
     <Card className="h-full max-w-80 w-80 min-w-5 rounded-r-none">
       <CardBody>
-        <div className="flex flex-col h-[calc(100%-3.5rem)] w-full">
+        <div className="flex flex-col w-full">
           {messages.map((m) => (
             <MessageItem key={m.id} message={m} />
           ))}
