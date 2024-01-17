@@ -25,8 +25,8 @@ export function GameList() {
     <Table topContent={topContent} isStriped>
       <TableHeader className="border-0">
         <TableColumn key="opponent">Player name</TableColumn>
-        <TableColumn key="time">Max time</TableColumn>
-        <TableColumn key="inc">Time increment</TableColumn>
+        <TableColumn key="time">Max time - minutes</TableColumn>
+        <TableColumn key="inc">Time increment - seconds</TableColumn>
         <TableColumn key="sidepick">Side picking</TableColumn>
       </TableHeader>
       <TableBody items={games} emptyContent={'No games in lobby.'}>
