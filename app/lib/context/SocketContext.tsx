@@ -36,6 +36,7 @@ export enum Emit {
   gameRejoin = 'rejoin',
   figureMove = 'move',
   pushMessage = 'chat-message',
+  addTime = 'add_time',
 }
 
 export const WebSocketContext = createContext<Socket | null>(null);
