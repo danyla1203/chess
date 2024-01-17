@@ -9,7 +9,7 @@ import { Chat } from './Chat';
 
 export default function Page() {
   return (
-    <div className="h-[calc(100vh-50px)] flex flex-col justify-center">
+    <div className="h-[calc(100vh-70px)] flex flex-col justify-center">
       <div className="flex items-center justify-center w-full mb-20">
         <GameProvider>
           <Chat />
