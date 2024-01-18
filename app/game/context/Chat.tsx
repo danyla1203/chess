@@ -45,6 +45,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     socket.on(Game.message, (newState: Message) => {
       setUpdateMessages(newState);
     });
+    socket.on(Game.end, () => {
+      setUpdateMessages({
+        id: -1,
+        text: 'Game is over',
+        author: { id: -1, name: 'System' },
+        date: new Date() + '',
+      });
+    });
     return () => {
       socket.off(Game.message);
     };
