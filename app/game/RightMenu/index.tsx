@@ -1,4 +1,11 @@
-import { Card, CardBody, CardHeader, Chip } from '@nextui-org/react';
+import {
+  Button,
+  ButtonGroup,
+  Card,
+  CardBody,
+  CardHeader,
+  Chip,
+} from '@nextui-org/react';
 import { useConfigContext } from '../context';
 import { usePlayerConnection } from '../context/PlayerConnection';
 import { useStrikedFigures } from '../context/Striked';
@@ -51,9 +58,18 @@ export function RightMenu() {
           {side === 'w' ? <div>{strikedW}</div> : <div>{strikeB}</div>}
         </CardBody>
       </Card>
-      <Card className="flex flex-col mb-3">
+      <Card className="flex flex-col rounded-b-none border-b-0">
         <CardBody>
           <TimersController />
+        </CardBody>
+      </Card>
+      <Card className="rounded-t-none border-0 mb-3">
+        <CardBody className="border-t-0">
+          <ButtonGroup>
+            <Button size="sm">Surrender</Button>
+            <Button size="sm">Draw</Button>
+            <Button size="sm">Revert</Button>
+          </ButtonGroup>
         </CardBody>
       </Card>
       <Card>

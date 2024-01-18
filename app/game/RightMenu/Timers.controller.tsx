@@ -7,7 +7,7 @@ export function TimersController() {
   const { side } = useConfigContext();
 
   return (
-    <div className="h-32 w-full flex pl-9 items-center">
+    <div className="h-32 w-full flex pl-9 items-center justify-center">
       <div className="flex flex-col items-end h-full justify-around">
         {side === 'b' ? <Timer time={w} /> : <Timer time={b} />}
         {side === 'b' ? <Timer time={b} /> : <Timer time={w} />}
