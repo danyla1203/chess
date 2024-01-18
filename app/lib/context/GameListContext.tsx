@@ -89,8 +89,10 @@ export const GameListProvider = ({
       setGames(data);
     });
     socket.on(Game.pendingGame, ({ gameId }: { gameId: number }) => {
-      console.log(gameId);
       setPendingGame(gameId);
+    });
+    socket.on(Game.end, () => {
+      setPendingGame(null);
     });
     socket.on(Game.playerReconected, () => {
       setPendingGame(null);
