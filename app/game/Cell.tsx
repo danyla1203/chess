@@ -8,10 +8,13 @@ export function CellItem({
   coord,
   side,
   dotted,
+  shached,
 }: any) {
   let classbase = 'figure size-20 flex justify-center items-center';
 
   if (highlighted) classbase += ` bg-slate-400`;
+  else if (shached)
+    classbase += ' bg-red-500 shadow-lg shadow-inner shadow-red-950';
   else classbase += ` ${color}`;
 
   if (figure) classbase += ` ${figure.replace(/\d/, '')} ${side}`;

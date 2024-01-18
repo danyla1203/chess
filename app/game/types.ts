@@ -17,6 +17,14 @@ export type Move = {
   prevCell: Cell;
   side: 'w' | 'b';
 };
+export type MateData = {
+  matedSide: 'w' | 'b';
+  byFigure: string;
+};
+export type ShahData = {
+  shachedSide: 'w' | 'b';
+  byFigure: string;
+};
 export type Message = {
   id: number;
   text: string;
