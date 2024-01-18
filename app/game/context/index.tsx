@@ -43,6 +43,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     socket.on(Game.init, (payload: InitedGameData) => {
       setInitData(payload);
     });
+    return () => {
+      socket.off(Game.init);
+    };
   }, []);
 
   if (!initData) return <div>Loading...</div>;

@@ -42,6 +42,7 @@ export const PlayerConnectionProvider = ({
     );
     return () => {
       socket.off(Game.playerLeave);
+      socket.off(Game.playerReconected);
     };
   }, []);
 
