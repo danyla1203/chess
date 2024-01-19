@@ -1,11 +1,4 @@
-import {
-  Button,
-  ButtonGroup,
-  Card,
-  CardBody,
-  CardHeader,
-  Chip,
-} from '@nextui-org/react';
+import { Card, CardBody, CardHeader, Chip } from '@nextui-org/react';
 import { useConfigContext } from '../context';
 import { usePlayerConnection } from '../context/PlayerConnection';
 import { useStrikedFigures } from '../context/Striked';

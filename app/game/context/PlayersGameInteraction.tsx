@@ -70,14 +70,18 @@ export const PlayersGameInteractionProvider = ({
 
   useEffect(() => {
     socket.on(Game.drawPurpose, () => {
-      console.log('purpose');
       setDrawState('incoming');
     });
     socket.on(Game.rejectDraw, () => {
       setDrawState(null);
     });
+    socket.on(Game.draw, () => {
+      setDrawState('accepted');
+    });
     return () => {
       socket.off(Game.drawPurpose);
+      socket.off(Game.rejectDraw);
+      socket.off(Game.draw);
     };
   }, []);
   return (
