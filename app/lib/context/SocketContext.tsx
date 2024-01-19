@@ -37,6 +37,10 @@ export enum Emit {
   figureMove = 'move',
   pushMessage = 'chat-message',
   addTime = 'add_time',
+  surrender = 'surrender',
+  drawPurpose = 'draw_purpose',
+  drawReject = 'draw_reject',
+  drawAccept = 'draw_accept',
 }
 
 export const WebSocketContext = createContext<Socket | null>(null);

@@ -8,6 +8,7 @@ import { BoardProvider } from './Board';
 import { StrikedProvider } from './Striked';
 import { ChatProvider } from './Chat';
 import { PlayerConnectionProvider } from './PlayerConnection';
+import { PlayersGameInteractionProvider } from './PlayersGameInteraction';
 
 const GameContext = createContext<InitedGameData>({
   board: { w: {}, b: {} },
@@ -52,15 +53,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <GameContext.Provider value={initData}>
-      <BoardProvider initBoard={initData.board}>
-        <StrikedProvider>
-          <TimerProvider maxTime={initData.maxTime}>
-            <ChatProvider>
-              <PlayerConnectionProvider>{children}</PlayerConnectionProvider>
-            </ChatProvider>
-          </TimerProvider>
-        </StrikedProvider>
-      </BoardProvider>
+      <PlayersGameInteractionProvider>
+        <BoardProvider initBoard={initData.board}>
+          <StrikedProvider>
+            <TimerProvider maxTime={initData.maxTime}>
+              <ChatProvider>
+                <PlayerConnectionProvider>{children}</PlayerConnectionProvider>
+              </ChatProvider>
+            </TimerProvider>
+          </StrikedProvider>
+        </BoardProvider>
+      </PlayersGameInteractionProvider>
     </GameContext.Provider>
   );
 }

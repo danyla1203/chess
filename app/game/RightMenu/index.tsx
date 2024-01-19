@@ -10,6 +10,7 @@ import { useConfigContext } from '../context';
 import { usePlayerConnection } from '../context/PlayerConnection';
 import { useStrikedFigures } from '../context/Striked';
 import { TimersController } from './Timers.controller';
+import { Controllers } from './Controllers';
 
 function Striked({ figure, side }: { figure: string; side: 'w' | 'b' }) {
   return (
@@ -65,11 +66,7 @@ export function RightMenu() {
       </Card>
       <Card className="rounded-t-none border-0 mb-3">
         <CardBody className="border-t-0">
-          <ButtonGroup>
-            <Button size="sm">Surrender</Button>
-            <Button size="sm">Draw</Button>
-            <Button size="sm">Revert</Button>
-          </ButtonGroup>
+          <Controllers />
         </CardBody>
       </Card>
       <Card>
