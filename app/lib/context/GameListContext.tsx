@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lobby, Game, useWebSocket } from './SocketContext';
+import { Lobby, Game, useWebSocket, Emit } from './SocketContext';
 
 type PlayerData = {
   name: string;
@@ -34,6 +34,7 @@ export type GameList = {
   pendingGame: number | null;
   connect: (gameId: string) => void;
   rejoin: (gameId: number) => void;
+  leave: (gameId: number) => void;
 };
 
 export const GameListContext = createContext<GameList>({
@@ -42,6 +43,9 @@ export const GameListContext = createContext<GameList>({
     throw new Error('Game list context is not set');
   },
   rejoin: () => {
+    throw new Error('Game list context is not set');
+  },
+  leave: () => {
     throw new Error('Game list context is not set');
   },
   pendingGame: null,
@@ -70,6 +74,9 @@ export const GameListProvider = ({
   };
   const rejoin = (gameId: number) => {
     router.push(`/game?action=rejoin&id=${gameId}`);
+  };
+  const leave = (gameId: number) => {
+    socket.volatile.emit(Emit.leave, { gameId });
   };
 
   useEffect(() => {
@@ -103,7 +110,9 @@ export const GameListProvider = ({
   }, []);
 
   return (
-    <GameListContext.Provider value={{ games, pendingGame, connect, rejoin }}>
+    <GameListContext.Provider
+      value={{ leave, games, pendingGame, connect, rejoin }}
+    >
       {children}
     </GameListContext.Provider>
   );

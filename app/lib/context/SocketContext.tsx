@@ -23,7 +23,7 @@ export enum Game {
   message = 'game:chat-message',
   surrender = 'game:surrender',
   drawPurpose = 'game:draw_purpose',
-  playerLeave = 'game:opponent-leave',
+  playerDiconnected = 'game:opponent-disconnected',
   playerReconected = 'game:player-reconnected',
 }
 export enum User {
@@ -41,6 +41,7 @@ export enum Emit {
   drawPurpose = 'draw_purpose',
   drawReject = 'draw_reject',
   drawAccept = 'draw_accept',
+  leave = 'leave',
 }
 
 export const WebSocketContext = createContext<Socket | null>(null);
