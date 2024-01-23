@@ -74,8 +74,8 @@ export const WebSocketProvider = ({
       transports: ['websocket'],
       retries: 3,
     });
-    socket.on(User.anonymousToken, (token: string) => {
-      localStorage.setItem('anon-token', token);
+    socket.on(User.anonymousToken, ({ tempToken }) => {
+      localStorage.setItem('anon-token', tempToken);
     });
     return socket;
   };

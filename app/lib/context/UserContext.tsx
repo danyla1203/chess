@@ -2,11 +2,15 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getProfile } from '@/requests';
+import { User, useWebSocket } from './SocketContext';
+import { GameData } from './GameListContext';
+import { getAnonymousGames } from '../utils';
 
 type Profile = {
   id: number;
   name: string;
   isAuthorized: boolean;
+  games: GameData[];
 };
 
 export type UserState = {
@@ -34,6 +38,7 @@ export const useUserState = () => {
 };
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+  const socket = useWebSocket();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoaded, setStatus] = useState(false);
 
@@ -50,6 +55,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         })
         .catch(() => setStatus(true));
     } else setStatus(true);
+
+    socket.on(User.anonymousToken, ({ id }) => {
+      const games = getAnonymousGames();
+      setProfile({ id, name: 'Anonymous', isAuthorized: false, games });
+    });
   }, []);
   const stateUser: UserState = {
     profile,
