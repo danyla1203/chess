@@ -8,6 +8,7 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
+  Chip,
   Table,
   TableBody,
   TableCell,
@@ -32,6 +33,11 @@ export default function UserProfile() {
         </CardHeader>
         <CardBody>
           <h3>Authorize first to see Rating</h3>
+          <div className="flex justify-between mt-3">
+            <Chip>Wins: 0</Chip>
+            <Chip>Looses: 0</Chip>
+            <Chip>Draws: 0</Chip>
+          </div>
         </CardBody>
         <CardFooter>
           <ButtonGroup fullWidth>
