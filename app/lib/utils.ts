@@ -22,21 +22,27 @@ export const restructGameResult = (g: any) => {
   const base = {
     id: g.id,
     key: g.id,
-    inc: beautyTimeIncrement,
-    time: beautyMaxTime,
+    cnf: {
+      inc: beautyTimeIncrement,
+      time: beautyMaxTime,
+    },
     sidepick: g.config.side,
   };
   if (g.winner) {
     return {
       ...base,
-      winner: g.winner,
-      looser: g.looser,
+      result: {
+        winner: g.winner,
+        looser: g.looser,
+      },
     };
   } else {
     return {
       ...base,
-      pl1: g.pl1,
-      pl2: g.pl2,
+      result: {
+        pl1: g.pl1,
+        pl2: g.pl2,
+      },
     };
   }
 };
