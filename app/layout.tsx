@@ -18,17 +18,17 @@ export default async function RootLayout({
     <html>
       <body>
         <NextuiProviders>
-          <NotificationProvider>
-            <UserProvider>
-              <Notifications />
-              <WebSocketProvider>
+          <WebSocketProvider>
+            <NotificationProvider>
+              <UserProvider>
+                <Notifications />
                 <GameListProvider>
                   <NavbarMenu />
                   {children}
                 </GameListProvider>
-              </WebSocketProvider>
-            </UserProvider>
-          </NotificationProvider>
+              </UserProvider>
+            </NotificationProvider>
+          </WebSocketProvider>
         </NextuiProviders>
       </body>
     </html>
