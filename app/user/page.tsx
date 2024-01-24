@@ -32,13 +32,27 @@ export default function UserProfile() {
       case 'result':
         if (cellValue.winner) {
           return (
-            <div>
+            <div className="gap-5 flex items-center justify-center">
               <User
                 description={cellValue.winner.name}
                 name={cellValue.winner.name}
               >
                 {cellValue.winner.name}
               </User>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7"></path>
+              </svg>
+
               <User
                 description={cellValue.looser.name}
                 name={cellValue.looser.name}
@@ -48,7 +62,7 @@ export default function UserProfile() {
             </div>
           );
         }
-        return <div>-</div>;
+        return <div className="flex justify-center">Draw</div>;
       case 'cnf':
         return (
           <Chip>
@@ -85,7 +99,12 @@ export default function UserProfile() {
           <TableColumn key="id">ID</TableColumn>
           <TableColumn key="cnf">Max time - Time increment</TableColumn>
           <TableColumn key="sidepick">Side picking</TableColumn>
-          <TableColumn key="result">Winner - Looser</TableColumn>
+          <TableColumn
+            className="flex justify-center items-center"
+            key="result"
+          >
+            Winner - Looser
+          </TableColumn>
         </TableHeader>
         <TableBody items={profile.games} emptyContent={'No games played.'}>
           {(item) => (
