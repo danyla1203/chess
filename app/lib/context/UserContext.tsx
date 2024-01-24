@@ -7,10 +7,13 @@ import { GameData } from './GameListContext';
 import { getAnonymousGames } from '../utils';
 
 type Profile = {
-  id: number;
+  userId: number;
   name: string;
   isAuthorized: boolean;
   games: GameData[];
+  wins: number;
+  draws: number;
+  looses: number;
 };
 
 export type UserState = {
@@ -56,9 +59,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         .catch(() => setStatus(true));
     } else setStatus(true);
 
-    socket.on(User.anonymousToken, ({ id }) => {
-      const games = getAnonymousGames();
-      setProfile({ id, name: 'Anonymous', isAuthorized: false, games });
+    socket.on(User.anonymousToken, ({ userId }) => {
+      const gamesStats = getAnonymousGames(userId);
+      setProfile({
+        userId,
+        name: 'Anonymous',
+        isAuthorized: false,
+        ...gamesStats,
+      });
     });
   }, []);
   const stateUser: UserState = {

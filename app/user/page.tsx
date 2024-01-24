@@ -34,10 +34,16 @@ export default function UserProfile() {
           return (
             <div className="gap-5 flex items-center justify-center">
               <User
+                name={
+                  cellValue.winner.userId === profile.userId
+                    ? 'You'
+                    : cellValue.winner.name
+                }
                 description={cellValue.winner.name}
-                name={cellValue.winner.name}
               >
-                {cellValue.winner.name}
+                {cellValue.winner.userId === profile.userId
+                  ? 'You'
+                  : cellValue.winner.name}
               </User>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -46,19 +52,21 @@ export default function UserProfile() {
                 height="24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
               </svg>
 
               <User
+                name={
+                  cellValue.looser.userId === profile.userId
+                    ? 'You'
+                    : cellValue.looser.name
+                }
                 description={cellValue.looser.name}
-                name={cellValue.looser.name}
-              >
-                {cellValue.looser.name}
-              </User>
+              ></User>
             </div>
           );
         }
@@ -82,9 +90,9 @@ export default function UserProfile() {
         <CardBody>
           <h3>Authorize first to see Rating</h3>
           <div className="flex justify-between mt-3">
-            <Chip>Wins: 0</Chip>
-            <Chip>Looses: 0</Chip>
-            <Chip>Draws: 0</Chip>
+            <Chip>Wins: {profile.wins}</Chip>
+            <Chip>Looses: {profile.looses}</Chip>
+            <Chip>Draws: {profile.draws}</Chip>
           </div>
         </CardBody>
         <CardFooter>

@@ -9,10 +9,24 @@ export const deviceId = () => {
   return `${userAgent}-${platform}-${randomString}`;
 };
 
-export const getAnonymousGames = (): GameData[] => {
+export const getAnonymousGames = (
+  id: number,
+): { games: GameData[]; wins: number; looses: number; draws: number } => {
   const games = localStorage.getItem('anon-games');
-  if (!games) return [];
-  return JSON.parse(games);
+  let wins = 0;
+  let looses = 0;
+  let draws = 0;
+  if (!games) return { games: [], wins, looses, draws };
+  const parsed = JSON.parse(games);
+
+  for (const game of parsed) {
+    const r = game.result;
+    if (r.winner) {
+      if (r.winner.userId === id) wins++;
+      else looses++;
+    } else draws++;
+  }
+  return { games: parsed, wins, looses, draws };
 };
 
 export const restructGameResult = (g: any) => {
