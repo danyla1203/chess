@@ -23,7 +23,7 @@ export enum Game {
   message = 'game:chat-message',
   surrender = 'game:surrender',
   drawPurpose = 'game:draw_purpose',
-  playerLeave = 'game:opponent-leave',
+  playerDiconnected = 'game:opponent-disconnected',
   playerReconected = 'game:player-reconnected',
 }
 export enum User {
@@ -36,6 +36,12 @@ export enum Emit {
   gameRejoin = 'rejoin',
   figureMove = 'move',
   pushMessage = 'chat-message',
+  addTime = 'add_time',
+  surrender = 'surrender',
+  drawPurpose = 'draw_purpose',
+  drawReject = 'draw_reject',
+  drawAccept = 'draw_accept',
+  leave = 'leave',
 }
 
 export const WebSocketContext = createContext<Socket | null>(null);
@@ -68,8 +74,8 @@ export const WebSocketProvider = ({
       transports: ['websocket'],
       retries: 3,
     });
-    socket.on(User.anonymousToken, (token: string) => {
-      localStorage.setItem('anon-token', token);
+    socket.on(User.anonymousToken, ({ tempToken }) => {
+      localStorage.setItem('anon-token', tempToken);
     });
     return socket;
   };

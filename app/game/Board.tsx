@@ -1,5 +1,5 @@
 import { CellItem } from './Cell';
-import { PlainBoardState, Cell, SelectedCell } from './types';
+import { PlainBoardState, Cell, SelectedCell, ShahData } from './types';
 
 const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -8,11 +8,13 @@ export function Board({
   selectedCell,
   cellClick,
   playingSide,
+  shah,
 }: {
   board: PlainBoardState;
   selectedCell: SelectedCell;
   cellClick: (coordinate: Cell) => void;
   playingSide: 'w' | 'b';
+  shah: ShahData | null;
 }) {
   const result = [];
   for (let i = 0; i < 8; i++) {
@@ -25,6 +27,7 @@ export function Board({
       row.push(
         <CellItem
           highlighted={selectedCell.cell === cell}
+          shached={side === shah?.shachedSide && figure === 'Kn'}
           dotted={selectedCell.possibleMoves.find((c) => c === cell)}
           figure={figure}
           coord={cell}

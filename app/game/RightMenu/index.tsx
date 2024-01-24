@@ -3,6 +3,7 @@ import { useConfigContext } from '../context';
 import { usePlayerConnection } from '../context/PlayerConnection';
 import { useStrikedFigures } from '../context/Striked';
 import { TimersController } from './Timers.controller';
+import { Controllers } from './Controllers';
 
 function Striked({ figure, side }: { figure: string; side: 'w' | 'b' }) {
   return (
@@ -51,9 +52,14 @@ export function RightMenu() {
           {side === 'w' ? <div>{strikedW}</div> : <div>{strikeB}</div>}
         </CardBody>
       </Card>
-      <Card className="flex flex-col mb-3">
+      <Card className="flex flex-col rounded-b-none border-b-0">
         <CardBody>
           <TimersController />
+        </CardBody>
+      </Card>
+      <Card className="rounded-t-none border-0 mb-3">
+        <CardBody className="border-t-0">
+          <Controllers />
         </CardBody>
       </Card>
       <Card>

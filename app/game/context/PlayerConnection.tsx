@@ -25,7 +25,7 @@ export const PlayerConnectionProvider = ({
 
   useEffect(() => {
     socket.on(
-      Game.playerLeave,
+      Game.playerDiconnected,
       ({ opponent }: { opponent: OpponentLeavePayload }) => {
         const copy = { ...playersInGame };
         copy[opponent.side] = false;
@@ -41,7 +41,8 @@ export const PlayerConnectionProvider = ({
       },
     );
     return () => {
-      socket.off(Game.playerLeave);
+      socket.off(Game.playerDiconnected);
+      socket.off(Game.playerReconected);
     };
   }, []);
 

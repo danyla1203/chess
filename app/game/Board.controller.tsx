@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 const possibleMoves = new HighlightedCels();
 
 export function BoardController() {
-  const { boardState, moveFigure } = useBoard();
+  const { boardState, moveFigure, shahData } = useBoard();
   const cnf = useConfigContext();
 
   const [selectedCell, setSelectedCell] = useState<SelectedCell>({
@@ -48,6 +48,7 @@ export function BoardController() {
       cellClick={cellClick}
       board={boardState}
       selectedCell={selectedCell}
+      shah={shahData}
     />
   );
 }

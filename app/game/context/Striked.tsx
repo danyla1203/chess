@@ -39,12 +39,9 @@ export const StrikedProvider = ({
   };
 
   useEffect(() => {
-    socket.on(Game.strike, (newState) => {
-      updateStrikedFigures(newState);
+    socket.on(Game.boardUpdate, ({ effect }) => {
+      if (effect.strike) updateStrikedFigures(effect.strike);
     });
-    return () => {
-      socket.off(Game.strike);
-    };
   }, []);
 
   return (

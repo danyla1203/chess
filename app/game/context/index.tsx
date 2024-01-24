@@ -8,6 +8,20 @@ import { BoardProvider } from './Board';
 import { StrikedProvider } from './Striked';
 import { ChatProvider } from './Chat';
 import { PlayerConnectionProvider } from './PlayerConnection';
+import { PlayersGameInteractionProvider } from './PlayersGameInteraction';
+import { useUserState } from '@/app/lib/context/UserContext';
+import { restructGameResult } from '@/app/lib/utils';
+
+export type GameResult = {
+  id: string;
+  key: string;
+  time: number;
+  inc: number;
+  opponent: string;
+  sidepick: 'w' | 'b' | 'rand';
+  winner: string;
+  looser: string;
+};
 
 const GameContext = createContext<InitedGameData>({
   board: { w: {}, b: {} },
@@ -27,6 +41,7 @@ export const useConfigContext = () => {
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [initData, setInitData] = useState<InitedGameData | null>(null);
+  const { profile } = useUserState();
   const socket = useWebSocket();
   const params = useSearchParams();
 
@@ -43,21 +58,42 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     socket.on(Game.init, (payload: InitedGameData) => {
       setInitData(payload);
     });
+    socket.on(Game.end, ({ game }) => {
+      if (!profile?.isAuthorized) {
+        const gms = localStorage.getItem('anon-games');
+        if (gms) {
+          const parsed = JSON.parse(gms);
+          parsed.push(restructGameResult(game));
+          localStorage.removeItem('anon-games');
+          localStorage.setItem('anon-games', JSON.stringify(parsed));
+        } else {
+          localStorage.setItem(
+            'anon-games',
+            JSON.stringify([restructGameResult(game)]),
+          );
+        }
+      }
+    });
+    return () => {
+      socket.off(Game.init);
+    };
   }, []);
 
   if (!initData) return <div>Loading...</div>;
 
   return (
     <GameContext.Provider value={initData}>
-      <BoardProvider initBoard={initData.board}>
-        <StrikedProvider>
-          <TimerProvider maxTime={initData.maxTime}>
-            <ChatProvider>
-              <PlayerConnectionProvider>{children}</PlayerConnectionProvider>
-            </ChatProvider>
-          </TimerProvider>
-        </StrikedProvider>
-      </BoardProvider>
+      <PlayersGameInteractionProvider>
+        <BoardProvider initBoard={initData.board}>
+          <StrikedProvider>
+            <TimerProvider maxTime={initData.maxTime}>
+              <ChatProvider>
+                <PlayerConnectionProvider>{children}</PlayerConnectionProvider>
+              </ChatProvider>
+            </TimerProvider>
+          </StrikedProvider>
+        </BoardProvider>
+      </PlayersGameInteractionProvider>
     </GameContext.Provider>
   );
 }
