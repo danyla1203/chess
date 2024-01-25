@@ -53,3 +53,50 @@ export type SelectedCell = {
   cell: Cell | null;
   possibleMoves: Cell[];
 };
+export type Config = {
+  side: 'w' | 'b' | 'rand';
+  time: number;
+  timeIncrement: number;
+};
+export type Player = {
+  side: 'w' | 'b';
+  time: number;
+  turningPlayer: boolean;
+  id: string;
+  name: string;
+  authorized: boolean;
+  userId: number;
+};
+
+export type GameResult = {
+  id: number;
+  config: Config;
+  moves: Move[];
+};
+export type GameWithWinner = GameResult & {
+  winner: Player;
+  looser: Player;
+};
+export type DrawGame = GameResult & {
+  pl1: Player;
+  pl2: Player;
+};
+
+type WinnerLooser = {
+  winner: Player;
+  looser: Player;
+};
+type Draw = {
+  pl1: Player;
+  pl2: Player;
+};
+
+export type RestructedGameResult = {
+  id: number;
+  key: number;
+  cnf: {
+    inc: number;
+    time: number;
+  };
+  result: Draw | WinnerLooser;
+};

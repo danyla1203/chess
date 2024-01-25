@@ -3,14 +3,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getProfile } from '@/requests';
 import { User, useWebSocket } from './SocketContext';
-import { GameData } from './GameListContext';
 import { getAnonymousGames } from '../utils';
+import { RestructedGameResult } from '@/app/game/types';
 
-type Profile = {
+export type Profile = {
   userId: number;
   name: string;
   isAuthorized: boolean;
-  games: GameData[];
+  games: RestructedGameResult[];
   wins: number;
   draws: number;
   looses: number;

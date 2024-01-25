@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 
 import { useWebSocket, Game, Emit } from '@/context/SocketContext';
-import { InitedGameData } from '../types';
+import { DrawGame, GameWithWinner, InitedGameData } from '../types';
 import { useSearchParams } from 'next/navigation';
 import { TimerProvider } from './Timer';
 import { BoardProvider } from './Board';
@@ -12,15 +12,10 @@ import { PlayersGameInteractionProvider } from './PlayersGameInteraction';
 import { useUserState } from '@/app/lib/context/UserContext';
 import { restructGameResult } from '@/app/lib/utils';
 
-export type GameResult = {
-  id: string;
-  key: string;
-  time: number;
-  inc: number;
-  opponent: string;
-  sidepick: 'w' | 'b' | 'rand';
-  winner: string;
-  looser: string;
+type GameEnd = {
+  reason: string;
+  winner: boolean;
+  game: DrawGame | GameWithWinner;
 };
 
 const GameContext = createContext<InitedGameData>({
@@ -58,7 +53,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     socket.on(Game.init, (payload: InitedGameData) => {
       setInitData(payload);
     });
-    socket.on(Game.end, ({ game }) => {
+    socket.on(Game.end, ({ game }: GameEnd) => {
       if (!profile?.isAuthorized) {
         const gms = localStorage.getItem('anon-games');
         if (gms) {
