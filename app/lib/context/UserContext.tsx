@@ -52,6 +52,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       getProfile(accessToken)
         .then((profile) => {
           if (!profile.error) {
+            localStorage.removeItem('anon-token');
+            localStorage.removeItem('anon-games');
             setProfile(profile);
           }
           setStatus(true);
