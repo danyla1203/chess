@@ -75,6 +75,9 @@ export const WebSocketProvider = ({
       retries: 3,
     });
     socket.on(User.anonymousToken, ({ tempToken }) => {
+      if (tempToken !== anonToken) {
+        localStorage.removeItem('anon-games');
+      }
       localStorage.setItem('anon-token', tempToken);
     });
     return socket;
