@@ -2,8 +2,6 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getProfile } from '@/requests';
-import { User, useWebSocket } from './SocketContext';
-import { getAnonymousGames } from '../utils';
 import { RestructedGameResult } from '@/app/game/types';
 
 export type Profile = {
@@ -41,7 +39,6 @@ export const useUserState = () => {
 };
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const socket = useWebSocket();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoaded, setStatus] = useState(false);
 
@@ -52,7 +49,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       getProfile(accessToken)
         .then((profile) => {
           if (!profile.error) {
-            localStorage.removeItem('anon-token');
             localStorage.removeItem('anon-games');
             setProfile(profile);
           }
@@ -60,16 +56,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         })
         .catch(() => setStatus(true));
     } else setStatus(true);
-
-    socket.on(User.anonymousToken, ({ userId }) => {
-      const gamesStats = getAnonymousGames(userId);
-      setProfile({
-        userId,
-        name: 'Anonymous',
-        isAuthorized: false,
-        ...gamesStats,
-      });
-    });
   }, []);
   const stateUser: UserState = {
     profile,
@@ -84,7 +70,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
-
+  console.log('loaded', profile);
   return (
     <UserContext.Provider value={stateUser}>{children}</UserContext.Provider>
   );

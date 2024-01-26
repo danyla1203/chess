@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { getAnonymousGames } from '../utils';
+import { useUserState } from './UserContext';
 
 export enum Lobby {
   update = 'lobby:update',
@@ -60,6 +62,7 @@ export const WebSocketProvider = ({
   children: React.ReactNode;
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
+  const { updateUser } = useUserState();
 
   const authConnection = (accessToken: string) => {
     return io(`ws://localhost:8080/game?Authorization=${accessToken}`, {
@@ -74,10 +77,17 @@ export const WebSocketProvider = ({
       transports: ['websocket'],
       retries: 3,
     });
-    socket.on(User.anonymousToken, ({ tempToken }) => {
+    socket.on(User.anonymousToken, ({ tempToken, userId }) => {
       if (tempToken !== anonToken) {
         localStorage.removeItem('anon-games');
       }
+      const gamesStats = getAnonymousGames(userId);
+      updateUser({
+        userId,
+        name: 'Anonymous',
+        isAuthorized: false,
+        ...gamesStats,
+      });
       localStorage.setItem('anon-token', tempToken);
     });
     return socket;
