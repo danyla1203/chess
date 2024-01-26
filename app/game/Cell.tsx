@@ -1,4 +1,16 @@
 import * as React from 'react';
+import { Cell, Figure } from './types';
+
+interface CellProps {
+  highlighted: boolean;
+  figure: null | Figure;
+  cellClick: (coord: string) => void;
+  color: string;
+  coord: Cell;
+  side: 'w' | 'b' | null;
+  dotted: boolean;
+  shached: boolean;
+}
 
 export function CellItem({
   highlighted,
@@ -9,7 +21,7 @@ export function CellItem({
   side,
   dotted,
   shached,
-}: any) {
+}: CellProps) {
   let classbase = 'figure size-20 flex justify-center items-center';
 
   if (highlighted) classbase += ` bg-slate-400`;

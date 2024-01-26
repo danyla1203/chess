@@ -16,7 +16,7 @@ export type Profile = {
 
 export type UserState = {
   profile: Profile | null;
-  updateUser: (data: any) => void;
+  updateUser: (data: Profile) => void;
   removeUser: () => void;
 };
 
@@ -70,7 +70,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
-  console.log('loaded', profile);
+
   return (
     <UserContext.Provider value={stateUser}>{children}</UserContext.Provider>
   );
