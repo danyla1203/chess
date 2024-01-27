@@ -1,6 +1,5 @@
 'use client';
 import * as React from 'react';
-import Link from 'next/link';
 import { LoginForm } from './LoginForm';
 import { OauthButtons } from './OauthButtons';
 import {
@@ -9,6 +8,7 @@ import {
   CardFooter,
   CardHeader,
   Divider,
+  Link,
 } from '@nextui-org/react';
 
 export default function LoginPage() {
@@ -262,7 +262,9 @@ export default function LoginPage() {
             <div className="mt-4 text-sm text-gray-600 text-center">
               <p>
                 Don&apos;t have an account?{' '}
-                <Link href="/authorization/signup">Create it here</Link>
+                <Link size="sm" href="/authorization/signup">
+                  Create it here
+                </Link>
               </p>
             </div>
           </CardFooter>
