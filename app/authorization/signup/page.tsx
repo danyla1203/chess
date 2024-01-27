@@ -1,18 +1,21 @@
 'use client';
 
+import { Card, CardBody, CardHeader } from '@nextui-org/react';
 import { EmailInput } from './EmailInput';
 
 export default function Signup() {
   return (
-    <div className="mt-40 flex flex-1 flex-col items-center justify-center px-10 relative">
-      <div className="flex flex-1 flex-col  justify-center space-y-5 max-w-md">
-        <div className="flex flex-col space-y-2 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold">
+    <div className="flex justify-center mt-10">
+      <Card className="p-5">
+        <CardHeader>
+          <h2 className="mb-5 text-2xl md:text-4xl font-bold">
             Send confirmation link
           </h2>
-        </div>
-        <EmailInput />
-      </div>
+        </CardHeader>
+        <CardBody>
+          <EmailInput />
+        </CardBody>
+      </Card>
     </div>
   );
 }
