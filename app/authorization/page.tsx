@@ -3,11 +3,18 @@ import * as React from 'react';
 import Link from 'next/link';
 import { LoginForm } from './LoginForm';
 import { OauthButtons } from './OauthButtons';
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  Divider,
+} from '@nextui-org/react';
 
 export default function LoginPage() {
   return (
-    <div className="flex h-[calc(100vh-50px)]">
-      <div className="hidden lg:flex items-center justify-center flex-1 bg-white text-black">
+    <div className="flex h-[calc(100vh-69px)]">
+      <div className="bg-gray-950 hidden lg:flex items-center justify-center flex-1 text-black">
         <div className="max-w-md text-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -235,26 +242,31 @@ export default function LoginPage() {
           </svg>
         </div>
       </div>
-      <div className="w-full bg-gray-100 lg:w-1/2 flex items-center justify-center">
-        <div className="max-w-md w-full p-6">
-          <h1 className="text-3xl font-semibold mb-6 text-black text-center">
-            Login
-          </h1>
-          <h1 className="text-sm font-semibold mb-6 text-gray-500 text-center">
-            Join to Our Community with all time access and free{' '}
-          </h1>
-          <OauthButtons />
-          <div className="mt-4 text-sm text-gray-600 text-center">
-            <p>or with email</p>
-          </div>
-          <LoginForm />
-          <div className="mt-4 text-sm text-gray-600 text-center">
-            <p>
-              Don&apos;t have an account?{' '}
-              <Link href="/authorization/signup">Create it here</Link>
-            </p>
-          </div>
-        </div>
+      <div className="w-full lg:w-1/2 flex items-center justify-center">
+        <Card shadow="lg">
+          <CardHeader className="justify-center flex-col pb-0">
+            <h1 className="text-2xl font-semibold text-center mb-2">Login</h1>
+            <h1 className="text-sm font-semibold mb-2 text-gray-500 text-center">
+              Join to Our Community with all time access and free{' '}
+            </h1>
+          </CardHeader>
+          <CardBody className="pt-1 pb-1">
+            <OauthButtons />
+            <Divider />
+            <div className="mt-3 text-sm text-gray-600 text-center">
+              <p>or with email</p>
+            </div>
+            <LoginForm />
+          </CardBody>
+          <CardFooter>
+            <div className="mt-4 text-sm text-gray-600 text-center">
+              <p>
+                Don&apos;t have an account?{' '}
+                <Link href="/authorization/signup">Create it here</Link>
+              </p>
+            </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

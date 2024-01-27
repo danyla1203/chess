@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUserState } from '@/context/UserContext';
 import { userLogin, getProfile } from '@/requests';
 import { useNotification } from '@/context/NotificationContext';
+import { Button, Input, Spacer } from '@nextui-org/react';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -31,45 +32,26 @@ export function LoginForm() {
   return (
     <form className="space-y-4">
       <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Email
-        </label>
-        <input
-          type="text"
-          id="email"
+        <Input
+          label="Email"
           value={email}
+          labelPlacement="outside"
+          placeholder="Email"
           onChange={(e) => setEmail(e.target.value)}
-          name="email"
-          className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
         />
-      </div>
-      <div>
-        <label
-          htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Password
-        </label>
-        <input
-          type="password"
-          id="password"
+        <Spacer y={2} />
+        <Input
+          label="Password"
+          labelPlacement="outside"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          name="password"
-          className="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-300"
         />
       </div>
       <div>
-        <button
-          onClick={login}
-          type="button"
-          className="w-full bg-black text-white p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors duration-300"
-        >
+        <Button fullWidth onClick={login}>
           Sign Up
-        </button>
+        </Button>
       </div>
     </form>
   );
