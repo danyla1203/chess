@@ -1,7 +1,6 @@
 import { getGooguleOauthLink } from '@/requests';
 import { Button, ButtonGroup } from '@nextui-org/react';
-import { GoogleIcon } from '../components/icons/Google';
-import { GithubIcon } from '../components/icons/Github';
+import { GoogleIcon, GithubIcon } from '@/components';
 
 export function OauthButtons() {
   const signWithGoogle = async () => {
