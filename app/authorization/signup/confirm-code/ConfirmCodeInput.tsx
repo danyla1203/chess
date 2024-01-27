@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { codeConfirm } from '@/requests';
 import { useNotification } from '@/context/NotificationContext';
+import { Button, Input } from '@nextui-org/react';
 
 export function ConfirmCodeInput() {
   const [code, setCode] = useState('');
@@ -20,20 +21,16 @@ export function ConfirmCodeInput() {
   };
   return (
     <div className="flex flex-col max-w-md space-y-5">
-      <input
+      <Input
         type="text"
         placeholder="Code"
-        className="flex px-3 py-2 md:px-4 md:py-3 border-2 border-black rounded-lg font-medium placeholder:font-normal"
         value={code}
+        size="sm"
         onChange={(e) => setCode(e.target.value)}
       />
-      <button
-        onClick={verifyCode}
-        type="button"
-        className="flex items-center justify-center flex-none px-3 py-2 md:px-4 md:py-3 border-2 rounded-lg font-medium border-black bg-black text-white"
-      >
+      <Button onClick={verifyCode} variant="ghost" color="primary">
         Confirm email address
-      </button>
+      </Button>
       <div className="flex justify-center items-center">
         <span className="w-full border border-black"></span>
       </div>
