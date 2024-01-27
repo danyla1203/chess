@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getProfile } from '@/requests';
 import { RestructedGameResult } from '@/app/game/types';
+import { Loader } from '@/app/components';
 
 export type Profile = {
   userId: number;
@@ -68,7 +69,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   return (

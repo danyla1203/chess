@@ -11,6 +11,7 @@ import { PlayerConnectionProvider } from './PlayerConnection';
 import { PlayersGameInteractionProvider } from './PlayersGameInteraction';
 import { useUserState } from '@/app/lib/context/UserContext';
 import { restructGameResult } from '@/app/lib/utils';
+import { Loader } from '@/app/components';
 
 type GameEnd = {
   reason: string;
@@ -74,7 +75,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  if (!initData) return <div>Loading...</div>;
+  if (!initData) return <Loader />
 
   return (
     <GameContext.Provider value={initData}>

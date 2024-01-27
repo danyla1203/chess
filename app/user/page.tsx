@@ -11,12 +11,13 @@ import {
   Chip,
 } from '@nextui-org/react';
 import { GamesTable } from './GamesTable';
+import { Loader } from '@/components';
 
 export default function UserProfile() {
   const { profile } = useUserState();
 
   if (!profile) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   const authorized = profile.isAuthorized;

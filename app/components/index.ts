@@ -5,6 +5,7 @@ import { CreateGame } from './CreateGame/CreateGame';
 import { PendingGame } from './PendingGame/PendingGame';
 import { GithubIcon } from './icons/Github';
 import { GoogleIcon } from './icons/Google';
+import { Loader } from './Loader';
 
 export {
   NavbarMenu,
@@ -14,4 +15,5 @@ export {
   PendingGame,
   GithubIcon,
   GoogleIcon,
+  Loader,
 };

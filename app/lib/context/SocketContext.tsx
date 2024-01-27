@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { getAnonymousGames } from '../utils';
 import { useUserState } from './UserContext';
+import { Loader } from '@/components';
 
 export enum Lobby {
   update = 'lobby:update',
@@ -106,7 +107,7 @@ export const WebSocketProvider = ({
     };
   }, []);
   if (!socket) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   socket.io.on('error', (e) => {
