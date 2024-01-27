@@ -49,7 +49,7 @@ export const restructGameResult = (
     },
     sidepick: g.config.side,
   };
-  if (g.winner) {
+  if ('winner' in g) {
     return {
       ...base,
       result: {
