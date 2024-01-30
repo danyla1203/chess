@@ -4,7 +4,7 @@ import { useChat } from './context/Chat';
 import { Message } from './types';
 
 function InputBox({ addMessage }: { addMessage: (text: string) => void }) {
-  const [val, setVal] = useState('');
+  const [val, setVal] = useState<string>('');
 
   const overridedClick = () => {
     addMessage(val);

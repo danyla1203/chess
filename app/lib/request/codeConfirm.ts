@@ -1,15 +1,9 @@
-export const codeConfirm = async (code: string, email: string) => {
+import { req } from './utis';
+
+export const codeConfirm = (code: string, email: string) => {
   const host = process.env.NEXT_PUBLIC_API_HOST as string;
   try {
-    return (
-      await fetch(`${host}/auth/verify-email`, {
-        method: 'PATCH',
-        body: JSON.stringify({ code, email }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-    ).json();
+    return req(`${host}/auth/verify-email`, 'PATCH', { code, email });
   } catch (e) {
     console.error('Verification failed');
   }

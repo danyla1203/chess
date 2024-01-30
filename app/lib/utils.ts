@@ -1,4 +1,4 @@
-import { GameData } from './context/GameListContext';
+import { DrawGame, GameWithWinner, RestructedGameResult } from '../game/types';
 
 export const deviceId = () => {
   const userAgent = window.navigator.userAgent;
@@ -11,7 +11,12 @@ export const deviceId = () => {
 
 export const getAnonymousGames = (
   id: number,
-): { games: GameData[]; wins: number; looses: number; draws: number } => {
+): {
+  games: RestructedGameResult[];
+  wins: number;
+  looses: number;
+  draws: number;
+} => {
   const games = localStorage.getItem('anon-games');
   let wins = 0;
   let looses = 0;
@@ -29,7 +34,9 @@ export const getAnonymousGames = (
   return { games: parsed, wins, looses, draws };
 };
 
-export const restructGameResult = (g: any) => {
+export const restructGameResult = (
+  g: DrawGame | GameWithWinner,
+): RestructedGameResult => {
   const beautyMaxTime = Math.floor(g.config.time / (1000 * 60));
   const beautyTimeIncrement = Math.floor(g.config.timeIncrement / 1000);
 
@@ -42,7 +49,7 @@ export const restructGameResult = (g: any) => {
     },
     sidepick: g.config.side,
   };
-  if (g.winner) {
+  if ('winner' in g) {
     return {
       ...base,
       result: {

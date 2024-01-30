@@ -7,5 +7,5 @@ import { useUserState } from '@/context/UserContext';
 export function Profile() {
   const { profile } = useUserState();
 
-  return profile ? <AuthorizedMenu /> : <AnonymousMenu />;
+  return profile?.isAuthorized ? <AuthorizedMenu /> : <AnonymousMenu />;
 }

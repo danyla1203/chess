@@ -7,23 +7,24 @@ import {
   Button,
 } from '@nextui-org/react';
 
+type Content = { href: string; name: string; onclick?: () => void };
 interface DropdownProps {
   label: string;
-  contents: any;
+  contents: Content[];
 }
 
-export const DropdownUi: React.FC<DropdownProps> = ({ label, contents }) => {
+export function DropdownUi({ label, contents }: DropdownProps) {
   return (
     <Dropdown>
       <DropdownTrigger>
         <Button variant="bordered">{label}</Button>
       </DropdownTrigger>
       <DropdownMenu aria-label="Static Actions">
-        {contents.map((content: any) => (
+        {contents.map((content: Content) => (
           <DropdownItem
             key={content.href}
             href={content.href}
-            onClick={content.onclick ? content.onclick : null}
+            onClick={content.onclick}
           >
             {content.name}
           </DropdownItem>
@@ -31,4 +32,4 @@ export const DropdownUi: React.FC<DropdownProps> = ({ label, contents }) => {
       </DropdownMenu>
     </Dropdown>
   );
-};
+}
