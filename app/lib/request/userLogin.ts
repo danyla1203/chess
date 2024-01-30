@@ -8,10 +8,5 @@ type LoginData = {
 
 export const userLogin = (data: LoginData) => {
   const host = process.env.NEXT_PUBLIC_API_HOST as string;
-  try {
-    return req(`${host}/auth/login`, 'POST', { ...data, deviceId: deviceId() });
-  } catch (e) {
-    console.error(e);
-    return e;
-  }
+  return req(`${host}/auth/login`, 'POST', { ...data, deviceId: deviceId() });
 };
