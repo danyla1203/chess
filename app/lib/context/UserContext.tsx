@@ -51,7 +51,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setProfile(profile);
         setStatus(true);
       })
-      .catch(() => setStatus(true));
+      .catch(() => {
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('accessToken');
+        setStatus(true);
+      });
   }, []);
   const stateUser: UserState = {
     profile,

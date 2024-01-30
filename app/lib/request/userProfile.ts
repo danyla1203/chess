@@ -6,9 +6,12 @@ export const getProfile = async (accessToken: string | null) => {
   let user = await req(`${host}/user`, 'GET', accessToken);
   if (user.error) {
     const refreshStored = localStorage.getItem('refreshToken');
-    const { access, refresh } = await req(`${host}/auth/use-refresh`, 'PUT', {
+    const tokens = await req(`${host}/auth/use-refresh`, 'PUT', {
       refreshToken: refreshStored,
     });
+    if (!tokens.access) throw Error('Get profile failed');
+
+    const { access, refresh } = tokens;
     localStorage.setItem('accessToken', access);
     localStorage.setItem('refreshToken', refresh);
     user = await req(`${host}/user`, 'GET', access);
