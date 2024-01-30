@@ -1,9 +1,9 @@
 import { PlainBoardState, Cell, Figure } from './types';
 
 export class HighlightedCels {
-  private Board: PlainBoardState;
+  private Board!: PlainBoardState;
 
-  private playingSide: 'w' | 'b';
+  private playingSide!: 'w' | 'b';
 
   private Letters: string[];
 
@@ -31,7 +31,7 @@ export class HighlightedCels {
       : !!this.Board.w[cell];
   }
 
-  private findNextLetter(letter: string): string[] {
+  private findNextLetter(letter: string): (string | null)[] {
     const result = [];
     for (let i = 0; i < this.Letters.length; i++) {
       if (this.Letters[i] === letter) {
@@ -83,13 +83,15 @@ export class HighlightedCels {
   }
 
   private knighMove(currentCell: Cell): Cell[] {
-    const [letter, number] = [currentCell[0], currentCell[1]];
-    const num = parseInt(number, 10);
+    const [letter, num] = [currentCell[0], parseInt(currentCell[1])];
     const possibleMoves: string[] = [];
     const nextLetters = this.findNextLetter(letter);
-    const nextLetterRight = this.findNextLetter(nextLetters[1])[1];
-    let nextLetterLeft: string | null = this.findNextLetter(nextLetters[0])[0];
-    nextLetterLeft = nextLetterLeft === letter ? null : nextLetterLeft;
+    const nextLetterRight = nextLetters[1]
+      ? this.findNextLetter(nextLetters[1])[1]
+      : null;
+    const nextLetterLeft = nextLetters[0]
+      ? this.findNextLetter(nextLetters[0])[0]
+      : null;
 
     const cells: Cell[] = [
       `${nextLetters[1]}${num + 2}`,
@@ -101,13 +103,13 @@ export class HighlightedCels {
       `${nextLetterLeft}${num + 1}`,
       `${nextLetters[0]}${num + 2}`,
     ];
-    console.log(cells);
+
     for (const cell of cells) {
       if (cell.length !== 2 || cell[1] === '0') continue;
       if (this.isEnemyInCell(cell)) possibleMoves.push(cell);
       else if (this.checkIsCellEmpty(cell)) possibleMoves.push(cell);
     }
-    console.log(possibleMoves);
+
     return possibleMoves;
   }
 

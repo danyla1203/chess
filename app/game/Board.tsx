@@ -28,7 +28,7 @@ export function Board({
         <CellItem
           highlighted={selectedCell.cell === cell}
           shached={side === shah?.shachedSide && figure === 'Kn'}
-          dotted={selectedCell.possibleMoves.find((c) => c === cell)}
+          dotted={!!selectedCell.possibleMoves.find((c) => c === cell)}
           figure={figure}
           coord={cell}
           cellClick={cellClick}
