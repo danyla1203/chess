@@ -20,7 +20,6 @@ export type UserState = {
   updateUser: (data: Profile) => void;
   removeUser: () => void;
 };
-
 export const UserContext = createContext<UserState>({
   profile: null,
   updateUser: () => {
@@ -30,7 +29,6 @@ export const UserContext = createContext<UserState>({
     throw new Error('User context is not set');
   },
 });
-
 export const useUserState = () => {
   const context = useContext(UserContext);
   if (!context) {
@@ -46,17 +44,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // TODO: Potential XSS vulnerability, change it in future
     const accessToken = localStorage.getItem('accessToken');
-    if (accessToken) {
-      getProfile(accessToken)
-        .then((profile) => {
-          if (!profile.error) {
-            localStorage.removeItem('anon-games');
-            setProfile(profile);
-          }
-          setStatus(true);
-        })
-        .catch(() => setStatus(true));
-    } else setStatus(true);
+    getProfile(accessToken)
+      .then((profile) => {
+        localStorage.removeItem('anon-games');
+        localStorage.removeItem('anon-token');
+        setProfile(profile);
+        setStatus(true);
+      })
+      .catch(() => setStatus(true));
   }, []);
   const stateUser: UserState = {
     profile,
@@ -71,7 +66,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   if (!isLoaded) {
     return <Loader />;
   }
-
   return (
     <UserContext.Provider value={stateUser}>{children}</UserContext.Provider>
   );
