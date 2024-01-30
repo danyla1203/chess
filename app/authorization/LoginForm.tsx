@@ -22,7 +22,7 @@ export function LoginForm() {
     };
     const { access, refresh } = await userLogin(data);
     if (access) {
-      await updateUser(await getProfile(access));
+      updateUser(await getProfile(access));
       localStorage.setItem('accessToken', access);
       localStorage.setItem('refreshToken', refresh);
       router.push('/');

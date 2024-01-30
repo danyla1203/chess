@@ -1,15 +1,9 @@
-export const getGoogleProfile = async (code: string) => {
+import { req } from './utis';
+
+export const getGoogleProfile = (code: string) => {
   const host = process.env.NEXT_PUBLIC_API_HOST as string;
   try {
-    return (
-      await fetch(`${host}/auth/google/oauth`, {
-        method: 'POST',
-        body: JSON.stringify({ code }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-    ).json();
+    return req(`${host}/auth/google/oauth`, 'POST', { code });
   } catch (e) {
     console.error('Login failed');
   }

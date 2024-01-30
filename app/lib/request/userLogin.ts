@@ -1,22 +1,15 @@
 import { deviceId } from '../utils';
+import { req } from './utis';
 
 type LoginData = {
   email: string;
   password: string;
 };
 
-export const userLogin = async (data: LoginData) => {
+export const userLogin = (data: LoginData) => {
   const host = process.env.NEXT_PUBLIC_API_HOST as string;
   try {
-    return (
-      await fetch(`${host}/auth/login`, {
-        method: 'POST',
-        body: JSON.stringify({ ...data, deviceId: deviceId() }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-    ).json();
+    return req(`${host}/auth/login`, 'POST', { ...data, deviceId: deviceId() });
   } catch (e) {
     console.error(e);
     return e;

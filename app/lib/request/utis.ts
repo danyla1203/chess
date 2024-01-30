@@ -1,3 +1,4 @@
+async function req(url: string, method: string): Promise<any>;
 async function req(url: string, method: string, token: string): Promise<any>;
 async function req(url: string, method: string, body: any): Promise<any>;
 async function req(
@@ -12,7 +13,7 @@ async function req(
   };
   if (typeof tokenOrBody === 'string') {
     base.headers.Authorization = 'Bearer ' + tokenOrBody;
-  } else {
+  } else if (!!tokenOrBody) {
     base.body = JSON.stringify({ ...tokenOrBody });
   }
 
