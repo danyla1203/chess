@@ -3,7 +3,6 @@
 import { useUserState } from '@/context/UserContext';
 import {
   Button,
-  ButtonGroup,
   Card,
   CardBody,
   CardFooter,
@@ -25,22 +24,28 @@ export default function UserProfile() {
   return (
     <div className="flex container mx-auto mt-8">
       <Card className="mr-4 w-1/4">
-        <CardHeader>
+        <CardHeader className="pb-1">
           <h1>{profile.name}</h1>
         </CardHeader>
-        <CardBody>
-          <h3>Authorize first to see Rating</h3>
-          <div className="flex justify-between mt-3">
+        <CardBody className="pb-0 pt-2">
+          <h3 className="text-xs font-semibold">
+            Authorize first to see Rating
+          </h3>
+          <div className="flex flex-col xl:flex-row space-y-2 xl:space-y-0 mt-3 h-full">
             <Chip>Wins: {profile.wins}</Chip>
             <Chip>Looses: {profile.looses}</Chip>
             <Chip>Draws: {profile.draws}</Chip>
           </div>
         </CardBody>
-        <CardFooter>
-          <ButtonGroup fullWidth>
-            <Button disabled={!authorized}>Change name</Button>
-            <Button disabled={!authorized}>Logout</Button>
-          </ButtonGroup>
+        <CardFooter className="pt-1">
+          <div className="w-full flex flex-col place-items-stretch justify-between">
+            <Button size="sm" disabled={!authorized}>
+              Change name
+            </Button>
+            <Button className="mt-1" size="sm" disabled={!authorized}>
+              Logout
+            </Button>
+          </div>
         </CardFooter>
       </Card>
       <GamesTable profile={profile} />
