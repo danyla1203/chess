@@ -98,18 +98,16 @@ describe('GameGateway (unit)', () => {
       expect(gateway.server.emit).toBeCalledWith(Lobby.update, []);
     });
     it('rejoin', () => {
-      jest
-        .spyOn(service, 'findPendingGameThrowable')
-        .mockImplementationOnce(() => {
-          return {
-            id: 12345,
-            getInitedGameData: jest.fn(() => {
-              return {
-                id: 12345,
-              };
-            }),
-          } as any;
-        });
+      jest.spyOn(service, 'findPendingGame').mockImplementationOnce(() => {
+        return {
+          id: 12345,
+          getInitedGameData: jest.fn(() => {
+            return {
+              id: 12345,
+            };
+          }),
+        } as any;
+      });
       gateway.rejoinGame(player);
       expect(player.join).toBeCalledWith(room(12345));
       expect(player.emit).toBeCalledWith(Game.init, { id: 12345 });

@@ -5,6 +5,7 @@ import { AuthService, TokenService } from '../../auth';
 import { Game, Lobby, User } from '../EmitTypes';
 import { LoggerService } from '../../tools/logger';
 import { AppModule } from '../../app.module';
+import { NotFoundException } from '@nestjs/common';
 
 jest.mock('../game.service');
 jest.mock('axios', () => null);
@@ -44,9 +45,9 @@ describe('Socket connection (integration)', () => {
       };
     });
     it('anonymous connection without temp token', async () => {
-      jest
-        .spyOn(gmService, 'findPendingGame')
-        .mockImplementationOnce(() => null);
+      jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
+        throw new NotFoundException('Game not found');
+      });
       await gateway.handleConnection(client);
       expect(client.name).toEqual('Anonymous');
       expect(client).toHaveProperty('token');
@@ -76,9 +77,9 @@ describe('Socket connection (integration)', () => {
       expect(client.emit).toHaveBeenNthCalledWith(3, Lobby.update, []);
     });
     it('anonymous connection with temp token', async () => {
-      jest
-        .spyOn(gmService, 'findPendingGame')
-        .mockImplementationOnce(() => null);
+      jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
+        throw new NotFoundException('Game not found');
+      });
       client.handshake = {
         query: {
           Authorization: 'Bearer tempToken',
@@ -116,9 +117,9 @@ describe('Socket connection (integration)', () => {
       jest.spyOn(gmService, 'getLobby').mockImplementationOnce(() => []);
     });
     it('authorized conn', async () => {
-      jest
-        .spyOn(gmService, 'findPendingGame')
-        .mockImplementationOnce(() => null);
+      jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
+        throw new NotFoundException('Game not found');
+      });
       await gateway.handleConnection(client);
       expect(client.name).toEqual('Danek');
       expect(client.userId).toEqual(12345);

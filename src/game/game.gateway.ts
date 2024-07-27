@@ -18,8 +18,9 @@ import { GameService } from './game.service';
 import { ConnectToGameDto, CreateGameDto, TurnBody, ChatMessage } from './dto';
 import { Client, ClientSocket } from './entities';
 import { IsPlayer } from './guards/isplayer.guard';
-import { Game, GameEnd, Lobby, room } from './EmitTypes';
+import { Game, GameEnd, Lobby, User, room } from './EmitTypes';
 import { ConnectionProvider } from './connection.provider';
+import { LoggerService } from '../tools/logger';
 
 @WebSocketGateway({ namespace: 'game', cors: true, transports: ['websocket'] })
 @UsePipes(new ValidationPipe())
@@ -28,6 +29,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly service: GameService,
     private readonly connService: ConnectionProvider,
+    private readonly loggingService: LoggerService,
   ) {}
 
   @WebSocketServer()
@@ -46,14 +48,29 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleConnection(client) {
-    await this.connService.processClient(client);
-    const game = this.service.findPendingGame(client);
-    if (game) {
-      client.emit(Game.pendingGame, { gameId: game.id });
-      this.service.updateSocket(client, game);
+    const { patch, state } = await this.connService.processClient(client);
+    if (state === 'anon') {
+      patch.emit(User.anonymousToken, {
+        tempToken: client.token,
+        userId: client.userId,
+      });
+      this.loggingService.log(
+        `Anonymous. userId = ${client.userId}`,
+        'Ws Connection',
+      );
+    } else {
+      this.loggingService.log(
+        `Authorized. userId = ${client.userId}, name=${client.name}`,
+        'Ws Connection',
+      );
     }
+    try {
+      const game = this.service.findPendingGame(client);
+      patch.emit(Game.pendingGame, { gameId: game.id });
+      this.service.updateSocket(client, game);
+    } catch (e) {}
 
-    client.emit(Lobby.update, this.service.getLobby());
+    patch.emit(Lobby.update, this.service.getLobby());
   }
 
   @SubscribeMessage('create')
@@ -71,7 +88,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('rejoin')
   rejoinGame(@ClientSocket() client: Client) {
-    const game = this.service.findPendingGameThrowable(client);
+    const game = this.service.findPendingGame(client);
     client.join(room(game.id));
     client.emit(Game.init, game.getInitedGameData(client.userId));
     this.server.to(room(game.id)).emit(Game.playerReconected, {
