@@ -1,47 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { AuthService, TokenService } from '../auth';
 import { Anonymous } from './entities/Anonymous';
+import { UserFields } from 'src/user/entities';
 
 @Injectable()
-export class ConnectionProvider {
+export class ConnectionPatchProvider {
   constructor(
     private readonly authService: AuthService,
     private readonly tokensService: TokenService,
   ) {}
 
-  private async authorized(payload, client) {
-    const { name, id } = await this.authService.validateCreds(
-      payload.userId,
-      payload.deviceId,
-    );
+  private async authorizedPatch({ name, id }: UserFields, client) {
     client.name = name;
     client.authorized = true;
     client.userId = id;
   }
-  private anonymousSession(payload, client) {
+  private anonymousPatch(payload, client) {
     client.name = payload.name;
     client.userId = payload.userId;
     client.token = client.handshake.query['Authorization'];
   }
   private async withToken(payload, client) {
     try {
-      await this.authorized(payload, client);
+      const authorizedUserData = await this.authService.validateCreds(
+        payload.userId,
+        payload.deviceId,
+      );
+      await this.authorizedPatch(authorizedUserData, client);
     } catch (e) {
-      this.anonymousSession(payload, client);
+      this.anonymousPatch(payload, client);
     }
   }
-
-  private anonymousUser() {
+  private withoutToken(client) {
     const userId = Math.floor(Math.random() * 100000);
     const { token, exp } = this.tokensService.anonymousToken(userId);
-    return new Anonymous(userId, token, exp);
-  }
-  private anonymous(client) {
-    const user: Anonymous = this.anonymousUser();
+    const user: Anonymous = new Anonymous(userId, token, exp);
     client.userId = user.userId;
     client.name = user.name;
     client.token = user.tempToken;
   }
+
   public async processClient(client) {
     const authToken = client.handshake.query['Authorization'];
     client.authorized = false;
@@ -49,10 +47,8 @@ export class ConnectionProvider {
       const payload = await this.tokensService.parseToken(authToken);
       await this.withToken(payload, client);
     } catch (e) {
-      this.anonymous(client);
+      this.withoutToken(client);
     }
-    return client.authorized
-      ? { patch: client, state: 'auth' }
-      : { patch: client, state: 'anon' };
+    return client;
   }
 }

@@ -4,7 +4,7 @@ import { GameList } from './game.list';
 import { GameService } from './game.service';
 import { GameModel } from './model';
 import { PrismaService } from '../prisma.service';
-import { ConnectionProvider } from './connection.provider';
+import { ConnectionPatchProvider } from './connection.provider';
 
 @Module({
   imports: [],
@@ -14,7 +14,7 @@ import { ConnectionProvider } from './connection.provider';
     GameService,
     PrismaService,
     GameModel,
-    ConnectionProvider,
+    ConnectionPatchProvider,
   ],
 })
 export class GameModule {}

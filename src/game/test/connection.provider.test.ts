@@ -2,34 +2,27 @@ import { Test } from '@nestjs/testing';
 import { AuthService, TokenService } from '../../auth';
 import { LoggerService } from '../../tools/logger';
 import { Anonymous } from '../entities/Anonymous';
-import { ConnectionProvider } from '../connection.provider';
+import { ConnectionPatchProvider } from '../connection.provider';
+import { UserFields } from 'src/user/entities';
 
 jest.mock('../../auth');
 
 describe('Connection provider (unit)', () => {
   let tokenService: TokenService;
   let authService: AuthService;
-  let provider: ConnectionProvider;
+  let provider: ConnectionPatchProvider;
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [AuthService, TokenService, LoggerService, ConnectionProvider],
+      providers: [
+        AuthService,
+        TokenService,
+        LoggerService,
+        ConnectionPatchProvider,
+      ],
     }).compile();
     authService = moduleRef.get(AuthService);
     tokenService = moduleRef.get(TokenService);
-    provider = moduleRef.get(ConnectionProvider);
-  });
-  it('anonymousUser', () => {
-    jest.spyOn(tokenService, 'anonymousToken').mockImplementationOnce(() => {
-      return {
-        token: 'string',
-        exp: 'exp',
-      };
-    });
-    jest.spyOn(Math, 'random').mockImplementationOnce(() => {
-      return 0.12345;
-    });
-    const expected = new Anonymous(12345, 'string', 'exp');
-    expect(provider['anonymousUser']()).toEqual(expected);
+    provider = moduleRef.get(ConnectionPatchProvider);
   });
   describe('process client connection', () => {
     let client: any;
@@ -45,11 +38,10 @@ describe('Connection provider (unit)', () => {
       jest.spyOn(authService, 'validateCreds').mockImplementationOnce(() => {
         throw new Error();
       });
-      jest.spyOn(provider as any, 'anonymous').mockImplementation();
+      jest.spyOn(provider as any, 'withoutToken').mockImplementation();
       const res = await provider.processClient(client);
-      expect(res.state).toBe('anon');
-      expect(res.patch).toBeDefined();
-      expect(provider['anonymous']).toBeCalledWith(client);
+      expect(res).toBeDefined();
+      expect(provider['withoutToken']).toBeCalledWith(client);
     });
     it('connection with correct token', async () => {
       jest
@@ -72,50 +64,35 @@ describe('Connection provider (unit)', () => {
         client.authorized = true;
       });
       const res = await provider.processClient(client);
-      expect(res.state).toBe('auth');
-      expect(res.patch).toBeDefined();
+      expect(res.authorized).toBeTruthy();
+      expect(res).toBeDefined();
       expect(provider['withToken']).toBeCalledWith(tokenPayload, client);
     });
     it('anonymous method', () => {
+      jest.spyOn(Math, 'random').mockReturnValueOnce(1);
       jest
-        .spyOn(provider as any, 'anonymousUser')
-        .mockImplementationOnce(() => {
-          return {
-            userId: 1,
-            name: 'Anonymous',
-            tempToken: 'string',
-            exp: 'exp',
-          };
-        });
-      provider['anonymous'](client);
-      expect(client.userId).toEqual(1);
+        .spyOn(tokenService, 'anonymousToken')
+        .mockReturnValueOnce({ token: 'tkn', exp: '1' });
+      provider['withoutToken'](client);
+      expect(client.userId).toEqual(100000);
       expect(client.name).toEqual('Anonymous');
-      expect(client.token).toEqual('string');
+      expect(client.token).toEqual('tkn');
     });
     it('anonymousSession', () => {
       const payload = {
         name: 'Anonymous',
         userId: -1,
       };
-      provider['anonymousSession'](payload, client);
+      provider['anonymousPatch'](payload, client);
       expect(client.name).toEqual(payload.name);
       expect(client.userId).toEqual(payload.userId);
     });
     it('authorized', async () => {
       const payload = {
         id: -1,
-        deviceId: 'string',
-      };
-      jest
-        .spyOn(authService, 'validateCreds')
-        .mockImplementationOnce(async () => {
-          return {
-            name: 'Danek',
-            id: -1,
-            email: 'email@gmail.com',
-          };
-        });
-      await provider['authorized'](payload, client);
+        name: 'Danek',
+      } as UserFields;
+      await provider['authorizedPatch'](payload, client);
       expect(client.name).toEqual('Danek');
       expect(client.authorized).toBeTruthy();
       expect(client.userId).toEqual(-1);

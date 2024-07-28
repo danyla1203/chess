@@ -19,7 +19,7 @@ import { ConnectToGameDto, CreateGameDto, TurnBody, ChatMessage } from './dto';
 import { Client, ClientSocket } from './entities';
 import { IsPlayer } from './guards/isplayer.guard';
 import { Game, GameEnd, Lobby, User, room } from './EmitTypes';
-import { ConnectionProvider } from './connection.provider';
+import { ConnectionPatchProvider } from './connection.provider';
 import { LoggerService } from '../tools/logger';
 
 @WebSocketGateway({ namespace: 'game', cors: true, transports: ['websocket'] })
@@ -28,7 +28,7 @@ import { LoggerService } from '../tools/logger';
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly service: GameService,
-    private readonly connService: ConnectionProvider,
+    private readonly connService: ConnectionPatchProvider,
     private readonly loggingService: LoggerService,
   ) {}
 
@@ -48,9 +48,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleConnection(client) {
-    const { patch, state } = await this.connService.processClient(client);
-    if (state === 'anon') {
-      patch.emit(User.anonymousToken, {
+    const patchedClient = await this.connService.processClient(client);
+    if (!patchedClient.authorized) {
+      patchedClient.emit(User.anonymousToken, {
         tempToken: client.token,
         userId: client.userId,
       });
@@ -66,11 +66,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     try {
       const game = this.service.findPendingGame(client);
-      patch.emit(Game.pendingGame, { gameId: game.id });
+      patchedClient.emit(Game.pendingGame, { gameId: game.id });
       this.service.updateSocket(client, game);
     } catch (e) {}
 
-    patch.emit(Lobby.update, this.service.getLobby());
+    patchedClient.emit(Lobby.update, this.service.getLobby());
   }
 
   @SubscribeMessage('create')

@@ -7,7 +7,7 @@ import { faker } from '@faker-js/faker';
 import { generateConfig } from './generators';
 import { LoggerService } from '../../tools/logger';
 import { Client } from '../entities';
-import { ConnectionProvider } from '../connection.provider';
+import { ConnectionPatchProvider } from '../connection.provider';
 
 jest.mock('../game.service');
 jest.mock('../../auth');
@@ -24,7 +24,7 @@ describe('GameGateway (unit)', () => {
         AuthService,
         TokenService,
         LoggerService,
-        ConnectionProvider,
+        ConnectionPatchProvider,
       ],
     })
       .overrideProvider(LoggerService)

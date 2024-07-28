@@ -15,7 +15,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
 import { Client, Player } from '../entities';
 import { TokenService } from '../../auth';
-import { ConnectionProvider } from '../connection.provider';
+import { ConnectionPatchProvider } from '../connection.provider';
 
 jest.mock('../../auth');
 jest.mock('../connection.provider');
@@ -38,7 +38,7 @@ describe('GameService (unit)', () => {
         GameModel,
         PrismaService,
         TokenService,
-        ConnectionProvider,
+        ConnectionPatchProvider,
       ],
     })
       .overrideProvider(PrismaService)
