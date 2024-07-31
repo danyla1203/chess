@@ -8,6 +8,7 @@ import { Loader } from '@/app/components';
 export type Profile = {
   userId: number;
   name: string;
+  balance: number;
   isAuthorized: boolean;
   games: RestructedGameResult[];
   wins: number;

@@ -66,7 +66,7 @@ export const WebSocketProvider = ({
   const { updateUser } = useUserState();
 
   const authConnection = (accessToken: string) => {
-    return io(`ws://localhost:8080/game?Authorization=${accessToken}`, {
+    return io(`ws://localhost:9200/game?Authorization=${accessToken}`, {
       transports: ['websocket'],
       retries: 3,
     });
@@ -74,7 +74,7 @@ export const WebSocketProvider = ({
 
   const anonConnection = () => {
     const anonToken = localStorage.getItem('anon-token');
-    const socket = io(`ws://localhost:8080/game?Authorization=${anonToken}`, {
+    const socket = io(`ws://localhost:9200/game?Authorization=${anonToken}`, {
       transports: ['websocket'],
       retries: 3,
     });
@@ -86,6 +86,7 @@ export const WebSocketProvider = ({
       updateUser({
         userId,
         name: 'Anonymous',
+        balance: 0,
         isAuthorized: false,
         ...gamesStats,
       });
