@@ -20,7 +20,7 @@ export function Success() {
           Thank you for completing your secure online payment.
         </p>
         <Button
-          href="http://localhost:3000/user"
+          href={`${process.env.NEXT_PUBLIC_HOST}/user`}
           as={Link}
           color="primary"
           size="lg"

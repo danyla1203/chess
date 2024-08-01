@@ -39,7 +39,7 @@ export function Failed() {
           Try to contact with the moderators
         </p>
         <Button
-          href="http://localhost:3000/user"
+          href={`${process.env.NEXT_PUBLIC_HOST}/user`}
           as={Link}
           color="primary"
           size="lg"
