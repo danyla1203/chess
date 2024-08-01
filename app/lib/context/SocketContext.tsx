@@ -66,18 +66,24 @@ export const WebSocketProvider = ({
   const { updateUser } = useUserState();
 
   const authConnection = (accessToken: string) => {
-    return io(`ws://localhost:9200/game?Authorization=${accessToken}`, {
-      transports: ['websocket'],
-      retries: 3,
-    });
+    return io(
+      `${process.env.NEXT_PUBLIC_WS_HOST}/game?Authorization=${accessToken}`,
+      {
+        transports: ['websocket'],
+        retries: 3,
+      },
+    );
   };
 
   const anonConnection = () => {
     const anonToken = localStorage.getItem('anon-token');
-    const socket = io(`ws://localhost:9200/game?Authorization=${anonToken}`, {
-      transports: ['websocket'],
-      retries: 3,
-    });
+    const socket = io(
+      `${process.env.NEXT_PUBLIC_WS_HOST}/game?Authorization=${anonToken}`,
+      {
+        transports: ['websocket'],
+        retries: 3,
+      },
+    );
     socket.on(User.anonymousToken, ({ tempToken, userId }) => {
       if (tempToken !== anonToken) {
         localStorage.removeItem('anon-games');
