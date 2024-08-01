@@ -11,6 +11,7 @@ import {
 } from '@nextui-org/react';
 import { GamesTable } from './GamesTable';
 import { Loader } from '@/components';
+import { UserBalance } from './UserBalance';
 
 export default function UserProfile() {
   const { profile } = useUserState();
@@ -36,6 +37,7 @@ export default function UserProfile() {
             <Chip>Looses: {profile.looses}</Chip>
             <Chip>Draws: {profile.draws}</Chip>
           </div>
+          {profile.isAuthorized ? <UserBalance profile={profile} /> : null}
         </CardBody>
         <CardFooter className="pt-1">
           <div className="w-full flex flex-col place-items-stretch justify-between">
