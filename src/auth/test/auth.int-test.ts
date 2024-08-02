@@ -247,7 +247,7 @@ describe('Auth module (integration)', () => {
           },
         },
       });
-      const expected = { id: user.id, email: user.email, name: user.name };
+      const expected = { id: user.id, name: user.name };
       expect(service.validateCreds(user.id, deviceId)).resolves.toStrictEqual(
         expected,
       );

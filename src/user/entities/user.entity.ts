@@ -2,16 +2,22 @@ import { Prisma } from '@prisma/client';
 
 export class User {}
 
-export const userFields = {
+export const prismaSelectUserProfile = {
   id: true,
   name: true,
   email: true,
+  balance: true,
 };
 
-export class UserFields {
+export class UserProfile {
   id: number;
   name: string;
   email: string;
+  balance: number;
+}
+export class PublicUserFields {
+  id: number;
+  name: string;
 }
 
 export class UserGames {

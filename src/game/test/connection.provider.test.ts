@@ -1,9 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { AuthService, TokenService } from '../../auth';
 import { LoggerService } from '../../tools/logger';
-import { Anonymous } from '../entities/Anonymous';
 import { ConnectionPatchProvider } from '../connection.provider';
-import { UserFields } from 'src/user/entities';
+import { PublicUserFields } from 'src/user/entities';
 
 jest.mock('../../auth');
 
@@ -50,6 +49,7 @@ describe('Connection provider (unit)', () => {
           return {
             name: 'Name',
             id: 5,
+            balance: 0,
             email: 'email@gmail.com',
           };
         });
@@ -91,7 +91,7 @@ describe('Connection provider (unit)', () => {
       const payload = {
         id: -1,
         name: 'Danek',
-      } as UserFields;
+      } as PublicUserFields;
       await provider['authorizedPatch'](payload, client);
       expect(client.name).toEqual('Danek');
       expect(client.authorized).toBeTruthy();

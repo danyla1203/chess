@@ -120,7 +120,12 @@ describe('User e2e', () => {
       await req(server)
         .get('/user')
         .set('Authorization', `Bearer ${access}`)
-        .expect(200, { id: user.id, name: user.name, email: user.email });
+        .expect(200, {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          balance: user.balance,
+        });
     });
   });
   describe('get games', () => {
@@ -228,7 +233,12 @@ describe('User e2e', () => {
         .send({
           name: 'NewName',
         })
-        .expect(200, { id: user.id, name: 'NewName', email: user.email });
+        .expect(200, {
+          id: user.id,
+          name: 'NewName',
+          email: user.email,
+          balance: user.balance,
+        });
     });
   });
 });

@@ -39,7 +39,7 @@ describe('AuthGuard', () => {
       .mockReturnValue({ id: 'userId', deviceId: '123' });
     jest
       .spyOn(guard['authService'], 'validateCreds')
-      .mockResolvedValue({ id: 123, name: 'Test', email: 'no@gmail.com' });
+      .mockResolvedValue({ id: 123, name: 'Test' });
 
     const mockContext = {
       switchToHttp: jest.fn().mockReturnValue({

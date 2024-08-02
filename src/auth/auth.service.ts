@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto';
 import { AuthModel } from './model';
 import { TokenService } from './tokens/token.service';
-import { UserFields } from 'src/user/entities/user.entity';
+import { PublicUserFields } from 'src/user/entities/user.entity';
 import { Tokens } from './tokens/token.entities';
 import { ConfigService } from '@nestjs/config';
 
@@ -82,7 +82,7 @@ export class AuthService {
   public async validateCreds(
     id: number,
     deviceId: string,
-  ): Promise<UserFields> {
+  ): Promise<PublicUserFields> {
     const auth = await this.model.findSessionByUserId(id, deviceId);
     if (!auth) throw new UnauthorizedException();
     if (auth.expiresIn < new Date()) {

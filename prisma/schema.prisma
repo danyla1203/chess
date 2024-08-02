@@ -50,6 +50,7 @@ model User {
   name           String         @db.VarChar
   email          String         @unique() @db.VarChar
   password       String         @db.VarChar
+  balance        Int            @default(0)
   auth           Auth[]
   players        UserInGame[]
   messages       LobbyMessage[]

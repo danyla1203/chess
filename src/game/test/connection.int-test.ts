@@ -111,6 +111,7 @@ describe('Socket connection (integration)', () => {
           return {
             name: 'Danek',
             id: 12345,
+            balance: 0,
             email: 'email@gmail.com',
           };
         });

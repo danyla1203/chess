@@ -1,3 +1,8 @@
-import { UserFields, UserGames, userFields } from './user.entity';
+import {
+  PublicUserFields,
+  UserProfile,
+  UserGames,
+  prismaSelectUserProfile,
+} from './user.entity';
 
-export { UserFields, UserGames, userFields };
+export { PublicUserFields, UserProfile, UserGames, prismaSelectUserProfile };

@@ -85,11 +85,12 @@ describe('UserService', () => {
   });
   describe('profile', () => {
     it('should return user profile', async () => {
-      const { id, name, email } = await prisma.user.findFirst();
+      const { id, name, email, balance } = await prisma.user.findFirst();
       expect(service.profile(id)).resolves.toStrictEqual({
         id,
         name,
         email,
+        balance,
       });
     });
   });
@@ -103,6 +104,7 @@ describe('UserService', () => {
         name: newData.name,
         email: user.email,
         id: user.id,
+        balance: user.balance,
       };
       expect(service.update(user.id, newData)).resolves.toStrictEqual(expected);
     });

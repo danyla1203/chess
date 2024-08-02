@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateUserDto } from './dto';
 import { Confirmation } from '@prisma/client';
-import { UserFields, UserGames, userFields } from './entities';
+import { prismaSelectUserProfile, UserGames, UserProfile } from './entities';
 
 @Injectable()
 export class UserModel {
@@ -11,9 +11,9 @@ export class UserModel {
   public createUser(
     confirmationId: number,
     user: CreateUserDto,
-  ): Promise<UserFields> {
+  ): Promise<UserProfile> {
     return this.prisma.user.create({
-      select: userFields,
+      select: prismaSelectUserProfile,
       data: {
         name: user.name,
         email: user.email,
@@ -27,24 +27,35 @@ export class UserModel {
     return this.prisma.confirmation.findUnique({ where: { email } });
   }
 
-  public findProfile(id: number): Promise<UserFields> {
+  public findProfile(id: number): Promise<UserProfile> {
     return this.prisma.user.findUnique({
-      select: userFields,
+      select: prismaSelectUserProfile,
       where: { id },
     });
   }
-  public findProfileByEmail(email: string): Promise<UserFields> {
+  public findProfileByEmail(email: string): Promise<UserProfile> {
     return this.prisma.user.findUnique({
-      select: userFields,
+      select: prismaSelectUserProfile,
       where: { email },
     });
   }
 
-  public updateUser(id: number, name: string): Promise<UserFields> {
+  public updateUser(id: number, name: string): Promise<UserProfile> {
     return this.prisma.user.update({
-      select: userFields,
+      select: prismaSelectUserProfile,
       where: { id },
       data: { name },
+    });
+  }
+  public updateUserBalance(id: number, increment: number) {
+    return this.prisma.user.update({
+      select: prismaSelectUserProfile,
+      where: { id },
+      data: {
+        balance: {
+          increment,
+        },
+      },
     });
   }
 

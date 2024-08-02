@@ -84,4 +84,8 @@ export class UserService {
   public update(id: number, updateUserDto: UpdateUserDto) {
     return this.model.updateUser(id, updateUserDto.name);
   }
+
+  public topUpBalance(id: number, amount: number) {
+    return this.model.updateUserBalance(id, amount);
+  }
 }

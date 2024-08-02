@@ -68,7 +68,6 @@ export class AuthModel {
         user: {
           select: {
             id: true,
-            email: true,
             name: true,
           },
         },
