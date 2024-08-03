@@ -241,4 +241,44 @@ describe('User e2e', () => {
         });
     });
   });
+  describe('user payments history', () => {
+    let access: string;
+    let user: any;
+    beforeAll(async () => {
+      user = await prisma.user.findFirst({
+        include: {
+          auth: true,
+          payment: {
+            orderBy: {
+              date: 'desc',
+            },
+          },
+        },
+        where: {
+          auth: {
+            some: {
+              expiresIn: { gte: new Date() },
+            },
+          },
+        },
+      });
+      access = jwt.sign(
+        { id: user.id, deviceId: user.auth[1].deviceId },
+        {
+          secret: cnf.get('JWT_SECRET'),
+        },
+      );
+    });
+    it('should return all users invoices', async () => {
+      user = JSON.parse(JSON.stringify(user));
+      await req(server)
+        .get('/user/payment/history')
+        .set('Authorization', `Bearer ${access}`)
+        .expect(200)
+        .then((res: any) => {
+          expect(res.body.total).toEqual(user.payment.length);
+          expect(res.body.invoices).toStrictEqual(user.payment);
+        });
+    });
+  });
 });

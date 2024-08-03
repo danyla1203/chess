@@ -45,4 +45,10 @@ export class UserController {
     this.logger.log('Update user profile', 'UserController');
     return this.userService.update(user.id, updateUserDto);
   }
+
+  @Get('/payment/history')
+  @UseGuards(AuthGuard)
+  getInvoices(@Request() req) {
+    return this.userService.getUserInvoices(req.user.id);
+  }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateUserDto } from './dto';
-import { Confirmation } from '@prisma/client';
+import { Confirmation, Payment } from '@prisma/client';
 import { prismaSelectUserProfile, UserGames, UserProfile } from './entities';
 
 @Injectable()
@@ -79,6 +79,15 @@ export class UserModel {
       },
       where: { players: { some: { userId: id } } },
       orderBy: { id: 'asc' },
+    });
+  }
+
+  public getUserInvoices(userId: number): Promise<Payment[]> {
+    return this.prisma.payment.findMany({
+      orderBy: {
+        date: 'desc',
+      },
+      where: { userId },
     });
   }
 }

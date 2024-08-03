@@ -1,13 +1,9 @@
 import { Test } from '@nestjs/testing';
 import { UserService } from '../user.service';
-import { UserModel } from '../model';
 import { PrismaService } from '../../prisma.service';
-import { AuthModule } from '../../auth/auth.module';
 import { TokenService } from '../../auth';
 import { faker } from '@faker-js/faker';
 import { ConflictException } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule } from '@nestjs/config';
 import { AppModule } from '../../app.module';
 
 jest.mock('axios', () => null);
@@ -107,6 +103,21 @@ describe('UserService', () => {
         balance: user.balance,
       };
       expect(service.update(user.id, newData)).resolves.toStrictEqual(expected);
+    });
+  });
+  describe('get user invoices', () => {
+    it('should return invoices', async () => {
+      const user = await prisma.user.findFirst({
+        include: {
+          payment: {
+            orderBy: { date: 'desc' },
+          },
+        },
+      });
+      expect(service.getUserInvoices(user.id)).resolves.toStrictEqual({
+        total: user.payment.length,
+        invoices: user.payment,
+      });
     });
   });
 });

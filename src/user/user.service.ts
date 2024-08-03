@@ -88,4 +88,9 @@ export class UserService {
   public topUpBalance(id: number, amount: number) {
     return this.model.updateUserBalance(id, amount);
   }
+
+  public async getUserInvoices(id: number) {
+    const allInvoices = await this.model.getUserInvoices(id);
+    return { total: allInvoices.length, invoices: allInvoices };
+  }
 }

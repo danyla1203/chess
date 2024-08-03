@@ -10,6 +10,7 @@ const options: { env: { type: 'string' | 'boolean' } } = {
 
 async function generateData() {
   for (let i = 1; i < 11; i++) {
+    //Create user and confirmation
     const email = faker.internet.email();
     const user = await prisma.user.create({
       data: {
@@ -25,7 +26,26 @@ async function generateData() {
         },
       },
     });
+    //Create payments for user
+    const paymentsLoopCount = Math.floor(Math.random() * 10);
+    let sum = 0;
+    for (let i = 0; i < paymentsLoopCount; i++) {
+      const payment = await prisma.payment.create({
+        data: {
+          userId: user.id,
+          topUpAmount: Math.floor(Math.random() * 100),
+        },
+      });
+      sum += payment.topUpAmount;
+    }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        balance: sum,
+      },
+    });
 
+    //For some user records create sessions and games
     if (i % 2 == 0) {
       await prisma.auth.createMany({
         data: [
@@ -65,6 +85,7 @@ async function generateData() {
           },
         },
       });
+      //Create some confirmed and unconfirmed confirmations
       await prisma.confirmation.create({
         data: {
           email: faker.internet.email(),
