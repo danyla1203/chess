@@ -12,6 +12,7 @@ import {
 import { GamesTable } from './GamesTable';
 import { Loader } from '@/components';
 import { UserBalance } from './UserBalance';
+import InvoiceHistory from './InvoiceHistory';
 
 export default function UserProfile() {
   const { profile } = useUserState();
@@ -50,7 +51,10 @@ export default function UserProfile() {
           </div>
         </CardFooter>
       </Card>
-      <GamesTable profile={profile} />
+      <div>
+        <GamesTable profile={profile} />
+        {profile.isAuthorized ? <InvoiceHistory profile={profile} /> : null}
+      </div>
     </div>
   );
 }

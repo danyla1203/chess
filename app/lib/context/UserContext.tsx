@@ -5,10 +5,18 @@ import { getProfile } from '@/requests';
 import { RestructedGameResult } from '@/app/game/types';
 import { Loader } from '@/app/components';
 
+export type Invoice = {
+  id: number;
+  key: number;
+  topUpAmount: number;
+  date: Date;
+};
+
 export type Profile = {
   userId: number;
   name: string;
   balance: number;
+  invoices: Invoice[];
   isAuthorized: boolean;
   games: RestructedGameResult[];
   wins: number;
