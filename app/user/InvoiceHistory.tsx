@@ -15,20 +15,39 @@ export default function InvoiceHistory({ profile }: { profile: Profile }) {
     switch (columnKey) {
       case 'id':
         return <div className="flex justify-center">{cellValue}</div>;
-      case 'amount':
-        return <Chip>{cellValue}</Chip>;
+      case 'topUpAmount':
+        return (
+          <div className="flex justify-center">
+            <Chip>{cellValue / 100} $</Chip>
+          </div>
+        );
       case 'date':
-        return <div className="flex justify-center">{cellValue}</div>;
+        const date = new Date(cellValue);
+        const day = date.getDay() < 10 ? `0${date.getDay()}` : date.getDay();
+        const month =
+          date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
+        return (
+          <div className="flex justify-center">
+            {date.getUTCHours()}:{date.getMinutes()} - {day}.{month}.
+            {date.getFullYear()}
+          </div>
+        );
       default:
         return cellValue;
     }
   };
   return (
-    <Table topContent={<h1>Invoices</h1>}>
+    <Table topContent={<h1>Invoices</h1>} className="mt-5">
       <TableHeader className="border-0">
-        <TableColumn key="id">ID</TableColumn>
-        <TableColumn key="amount">Top up amount</TableColumn>
-        <TableColumn key="date">date</TableColumn>
+        <TableColumn className="text-center" key="id">
+          ID
+        </TableColumn>
+        <TableColumn className="text-center" key="topUpAmount">
+          Top up amount
+        </TableColumn>
+        <TableColumn className="text-center" key="date">
+          date
+        </TableColumn>
       </TableHeader>
       <TableBody items={profile.invoices} emptyContent={'No invoices.'}>
         {(item: Invoice) => (

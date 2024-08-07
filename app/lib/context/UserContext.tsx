@@ -19,6 +19,7 @@ export type Profile = {
   invoices: Invoice[];
   isAuthorized: boolean;
   games: RestructedGameResult[];
+  winningBalance: number;
   wins: number;
   draws: number;
   looses: number;

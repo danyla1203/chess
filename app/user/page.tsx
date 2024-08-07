@@ -51,7 +51,7 @@ export default function UserProfile() {
           </div>
         </CardFooter>
       </Card>
-      <div>
+      <div className="w-3/4">
         <GamesTable profile={profile} />
         {profile.isAuthorized ? <InvoiceHistory profile={profile} /> : null}
       </div>
