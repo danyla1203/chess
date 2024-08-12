@@ -12,11 +12,13 @@ import { Emit, useWebSocket } from '@/context/SocketContext';
 import { Slider } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useUserState } from '@/app/lib/context/UserContext';
 
 export function CreateGame() {
   const [minutes, setMinutes] = useState(6);
   const [timeAdd, setTimeAdd] = useState(15);
   const [bet, setBet] = useState(0);
+  const { profile } = useUserState();
 
   const socket = useWebSocket();
   const router = useRouter();
@@ -26,7 +28,7 @@ export function CreateGame() {
       side,
       time: minutes * 60 * 1000,
       timeIncrement: timeAdd * 1000,
-      bet: 0,
+      bet,
     };
     socket.volatile.emit(Emit.createGame, { ...body });
     router.push('/game');
@@ -74,6 +76,7 @@ export function CreateGame() {
             aria-label="Time increment"
             className="max-w-md mt-5"
             value={bet}
+            isDisabled={!profile?.isAuthorized}
             onChange={setBet}
           />
         </CardBody>
