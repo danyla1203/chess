@@ -19,5 +19,18 @@ export const getProfile = async (accessToken: string | null) => {
     return { ...user, ...games, isAuthorized: true };
   }
   const games = await req(`${host}/user/games`, 'GET', accessToken);
-  return { ...user, ...games, isAuthorized: true };
+  const invoices = await req(
+    `${host}/user/payment/history`,
+    'GET',
+    accessToken,
+  );
+  const parsedInvoices = invoices.invoices.map((inv: any) => {
+    return {
+      id: inv.id,
+      key: inv.id,
+      date: inv.date,
+      topUpAmount: inv.topUpAmount,
+    };
+  });
+  return { ...user, ...games, invoices: parsedInvoices, isAuthorized: true };
 };

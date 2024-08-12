@@ -25,7 +25,7 @@ export enum Game {
   boardUpdate = 'game:board-update',
   message = 'game:chat-message',
   surrender = 'game:surrender',
-  drawPurpose = 'game:draw_purpose',
+  drawPurpose = 'game:draw_propose',
   playerDiconnected = 'game:opponent-disconnected',
   playerReconected = 'game:player-reconnected',
 }
@@ -41,7 +41,7 @@ export enum Emit {
   pushMessage = 'chat-message',
   addTime = 'add_time',
   surrender = 'surrender',
-  drawPurpose = 'draw_purpose',
+  drawPurpose = 'draw_propose',
   drawReject = 'draw_reject',
   drawAccept = 'draw_accept',
   leave = 'leave',
@@ -93,6 +93,8 @@ export const WebSocketProvider = ({
         userId,
         name: 'Anonymous',
         balance: 0,
+        invoices: [],
+        winningBalance: 0,
         isAuthorized: false,
         ...gamesStats,
       });

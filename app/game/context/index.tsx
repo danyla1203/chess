@@ -75,7 +75,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  if (!initData) return <Loader />
+  if (!initData) return <Loader />;
 
   return (
     <GameContext.Provider value={initData}>
