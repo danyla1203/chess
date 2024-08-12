@@ -26,7 +26,7 @@ export enum Game {
   boardUpdate = 'game:board-update',
   message = 'game:chat-message',
   surrender = 'game:surrender',
-  drawPurpose = 'game:draw_purpose',
+  drawPropose = 'game:draw_propose',
   playerDiconnected = 'game:opponent-disconnected',
   playerReconected = 'game:player-reconnected',
 }

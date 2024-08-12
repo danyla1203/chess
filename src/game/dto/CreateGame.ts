@@ -15,4 +15,7 @@ export class CreateGameDto {
 
   @IsNumber()
   timeIncrement: number;
+
+  @IsNumber()
+  bet: number;
 }

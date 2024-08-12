@@ -35,34 +35,36 @@ model Game {
 }
 
 model UserInGame {
-  side     String
-  isWinner Boolean
-  userId   Int
-  user     User    @relation(fields: [userId], references: [id])
-  gameId   Int
-  game     Game    @relation(fields: [gameId], references: [id])
+  side          String
+  isWinner      Boolean
+  balanceChange Int     @default(0)
+  userId        Int
+  user          User    @relation(fields: [userId], references: [id])
+  gameId        Int
+  game          Game    @relation(fields: [gameId], references: [id])
 
   @@id([userId, gameId])
 }
 
 model User {
-  id             Int              @id @default(autoincrement())
-  name           String           @db.VarChar
-  email          String           @unique() @db.VarChar
-  password       String           @db.VarChar
-  balance        Int              @default(0)
+  id             Int            @id @default(autoincrement())
+  name           String         @db.VarChar
+  email          String         @unique() @db.VarChar
+  password       String         @db.VarChar
+  balance        Int            @default(0)
+  winningBalance Int            @default(0)
   auth           Auth[]
   players        UserInGame[]
   messages       LobbyMessage[]
-  confirmationId Int              @unique
-  confirmation   Confirmation     @relation(fields: [confirmationId], references: [id])
+  confirmationId Int            @unique
+  confirmation   Confirmation   @relation(fields: [confirmationId], references: [id])
   payment        Payment[]
 }
 
 model Payment {
-  id          Int  @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   userId      Int
-  user        User @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
   topUpAmount Int
   date        DateTime @default(dbgenerated("(now() + '10:00:00'::interval)")) @db.Timestamptz(6)
 }

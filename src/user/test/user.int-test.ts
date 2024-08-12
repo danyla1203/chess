@@ -81,12 +81,14 @@ describe('UserService', () => {
   });
   describe('profile', () => {
     it('should return user profile', async () => {
-      const { id, name, email, balance } = await prisma.user.findFirst();
+      const { id, name, email, balance, winningBalance } =
+        await prisma.user.findFirst();
       expect(service.profile(id)).resolves.toStrictEqual({
         id,
         name,
         email,
         balance,
+        winningBalance,
       });
     });
   });
@@ -101,6 +103,7 @@ describe('UserService', () => {
         email: user.email,
         id: user.id,
         balance: user.balance,
+        winningBalance: user.winningBalance,
       };
       expect(service.update(user.id, newData)).resolves.toStrictEqual(expected);
     });
@@ -119,5 +122,26 @@ describe('UserService', () => {
         invoices: user.payment,
       });
     });
+  });
+  it('should update user balance and add invoice', async () => {
+    const user = await prisma.user.findFirst({
+      include: {
+        payment: {
+          orderBy: { date: 'desc' },
+        },
+      },
+    });
+    await service.topUpBalance(user.id, 666);
+    const newUserBalance = (
+      await prisma.user.findFirst({
+        where: { id: user.id },
+      })
+    ).balance;
+    expect(newUserBalance).toEqual(user.balance + 666);
+
+    const invoice = await prisma.payment.findFirst({
+      where: { userId: user.id, topUpAmount: 666 },
+    });
+    expect(invoice).not.toBeNull();
   });
 });

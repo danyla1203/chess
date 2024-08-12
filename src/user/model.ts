@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Confirmation, Payment } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { CreateUserDto } from './dto';
-import { Confirmation, Payment } from '@prisma/client';
 import { prismaSelectUserProfile, UserGames, UserProfile } from './entities';
 
 @Injectable()
@@ -48,7 +48,7 @@ export class UserModel {
     });
   }
   public updateUserBalance(id: number, increment: number) {
-    return this.prisma.user.update({
+    const updateUser = this.prisma.user.update({
       select: prismaSelectUserProfile,
       where: { id },
       data: {
@@ -57,6 +57,13 @@ export class UserModel {
         },
       },
     });
+    const addInvoice = this.prisma.payment.create({
+      data: {
+        topUpAmount: increment,
+        userId: id,
+      },
+    });
+    return this.prisma.$transaction([updateUser, addInvoice]);
   }
 
   public findUserGames(id: number): Promise<UserGames[]> {

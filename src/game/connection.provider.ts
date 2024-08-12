@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AuthService, TokenService } from '../auth';
 import { Anonymous } from './entities/Anonymous';
-import { PublicUserFields } from 'src/user/entities';
+import { PublicUserFields } from '../user/entities';
 
 @Injectable()
 export class ConnectionPatchProvider {

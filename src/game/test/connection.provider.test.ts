@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { AuthService, TokenService } from '../../auth';
 import { LoggerService } from '../../tools/logger';
 import { ConnectionPatchProvider } from '../connection.provider';
-import { PublicUserFields } from 'src/user/entities';
+import { PublicUserFields } from '../../user/entities';
 
 jest.mock('../../auth');
 

@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { faker } from '@faker-js/faker';
 import * as req from 'supertest';
 import { AppModule } from '../../app.module';
-import { faker } from '@faker-js/faker';
 import { PrismaService } from '../../prisma.service';
-import { ConfigService } from '@nestjs/config';
 import { checkTokens } from '../../../test/utils/checkTokens';
-import { JwtService } from '@nestjs/jwt';
 
 jest.mock('axios', () => null);
 
@@ -125,6 +125,7 @@ describe('User e2e', () => {
           name: user.name,
           email: user.email,
           balance: user.balance,
+          winningBalance: user.winningBalance,
         });
     });
   });
@@ -238,6 +239,7 @@ describe('User e2e', () => {
           name: 'NewName',
           email: user.email,
           balance: user.balance,
+          winningBalance: user.winningBalance,
         });
     });
   });

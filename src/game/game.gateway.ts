@@ -78,7 +78,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ClientSocket() client: Client,
     @MessageBody() config: CreateGameDto,
   ) {
-    const { id } = this.service.createGame(client, config);
+    const { id } = await this.service.createGame(client, config);
     client.join(room(id));
     client.emit(Game.created, { gameId: id });
 
@@ -114,11 +114,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join')
-  joinGame(
+  async joinGame(
     @ClientSocket() client: Client,
     @MessageBody() { gameId }: ConnectToGameDto,
   ) {
-    const game = this.service.connectToGame(client, gameId);
+    const game = await this.service.connectToGame(client, gameId);
     client.join(room(game.id));
 
     for (const player of game.players) {
@@ -132,19 +132,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('move')
   @UseGuards(IsPlayer)
-  move(
-    @ClientSocket() client: Client,
-    @MessageBody() { gameId, figure, cell }: TurnBody,
-  ) {
-    const game = this.service.findGameById(gameId);
-    const { result, prevCell, side } = game.makeTurn(
+  async move(@ClientSocket() client: Client, @MessageBody() turn: TurnBody) {
+    const { result, prevCell, side } = await this.service.makeTurn(
+      turn.gameId,
       client.userId,
-      figure,
-      cell,
+      turn,
     );
-    this.server.to(room(game.id)).emit(Game.boardUpdate, {
+    this.server.to(room(turn.gameId)).emit(Game.boardUpdate, {
       effect: result,
-      update: { figure, cell, prevCell, side },
+      update: { figure: turn.figure, cell: turn.cell, prevCell, side },
     });
   }
 
@@ -154,9 +150,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ClientSocket() client: Client,
     @MessageBody() { gameId, text }: ChatMessage,
   ) {
-    const game = this.service.findGameById(gameId);
-    const message = this.service.pushMessage(game, text, client);
-    this.server.to(room(game.id)).emit(Game.message, message);
+    const message = this.service.pushMessage(gameId, text, client);
+    this.server.to(room(gameId)).emit(Game.message, message);
   }
 
   @SubscribeMessage('surrender')
@@ -178,19 +173,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  @SubscribeMessage('draw_purpose')
+  @SubscribeMessage('draw_propose')
   @UseGuards(IsPlayer)
-  drawPurpose(
+  drawPropose(
     @ClientSocket() client: Client,
     @MessageBody() { gameId }: { gameId: number },
   ) {
-    const purpose = this.service.purposeDraw(gameId, client);
-    client.toRoom(room(gameId), Game.drawPurpose, purpose);
+    const propose = this.service.proposeDraw(gameId, client);
+    client.toRoom(room(gameId), Game.drawPropose, propose);
   }
 
   @SubscribeMessage('draw_accept')
   @UseGuards(IsPlayer)
-  async acceptPurpose(
+  async acceptPropose(
     @ClientSocket() client: Client,
     @MessageBody() { gameId }: { gameId: number },
   ) {
@@ -200,7 +195,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('draw_reject')
   @UseGuards(IsPlayer)
-  rejectPurpose(@MessageBody() { gameId }: { gameId: number }) {
+  rejectPropose(@MessageBody() { gameId }: { gameId: number }) {
     const result = this.service.rejectDraw(gameId);
     this.server.to(room(gameId)).emit(Game.rejectDraw, result);
   }

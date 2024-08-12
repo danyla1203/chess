@@ -37,9 +37,13 @@ export const generateClient = (
     toRoom: jest.fn(),
   };
 };
-export const generateConfig = (side: 'w' | 'b' | 'rand' = 'w'): Config => {
+export const generateConfig = (
+  side: 'w' | 'b' | 'rand' = 'w',
+  bet?: number,
+): Config => {
   return {
     side,
+    bet: bet || (bet === 0 ? bet : faker.number.int({ min: 0, max: 500 })),
     time: faker.number.int({ min: 3600, max: 100000 }),
     timeIncrement: faker.number.int({ min: 60, max: 10000 }),
   };

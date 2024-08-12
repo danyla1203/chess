@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import Stripe from 'stripe';
 import { ConfigModule } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 import { PaymentsService } from '../payments.service';
@@ -6,7 +7,6 @@ import { UserService } from '../../user/user.service';
 import { StripeService } from '../stripe/stripe.service';
 import { LoggerService } from '../../tools/logger';
 import { LoggerServiceStub } from '../../../test/utils/LoggerServiceStub';
-import Stripe from 'stripe';
 
 describe('PaymentsService (unit)', () => {
   let service: PaymentsService;

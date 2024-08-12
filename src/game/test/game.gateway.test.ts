@@ -1,9 +1,9 @@
 import { Test } from '@nestjs/testing';
+import { faker } from '@faker-js/faker';
 import { GameGateway } from '../game.gateway';
 import { GameService } from '../game.service';
 import { AuthService, TokenService } from '../../auth';
 import { Game, Lobby, room } from '../EmitTypes';
-import { faker } from '@faker-js/faker';
 import { generateConfig } from './generators';
 import { LoggerService } from '../../tools/logger';
 import { Client } from '../entities';
@@ -113,12 +113,12 @@ describe('GameGateway (unit)', () => {
       expect(player.emit).toBeCalledWith(Game.init, { id: 12345 });
       expect(gateway.server.to).toBeCalledWith(room(12345));
     });
-    it('join', () => {
+    it('join', async () => {
       jest.spyOn(service, 'connectToGame').mockImplementationOnce((): any => {
         return game;
       });
 
-      gateway.joinGame(player2, { gameId: game.id });
+      await gateway.joinGame(player2, { gameId: game.id });
       expect(service.connectToGame).toBeCalledWith(player2, game.id);
       expect(player2.join).toBeCalledWith(room(game.id));
 
@@ -129,13 +129,20 @@ describe('GameGateway (unit)', () => {
       expect(game.start).toBeCalled();
       expect(gateway.server.emit).toBeCalledWith(Lobby.update, []);
     });
-    it('move', () => {
+    it('move', async () => {
+      const turnBody = { gameId: game.id, figure: 'B1', cell: 'a4' };
       jest.spyOn(service, 'findGameById').mockImplementationOnce((): any => {
         return game;
       });
-
-      gateway.move(player, { gameId: game.id, figure: 'B1', cell: 'a4' });
-      expect(game.makeTurn).toBeCalledWith(player.id, 'B1', 'a4');
+      jest.spyOn(service, 'makeTurn').mockImplementationOnce((): any => {
+        return {
+          result: { shah: null, mate: null, strike: null },
+          prevCell: '',
+          side: '',
+        };
+      });
+      await gateway.move(player, turnBody);
+      expect(service.makeTurn).toBeCalledWith(game.id, player.id, turnBody);
 
       expect(gateway.server.to).toBeCalledWith(room(game.id));
       expect(gateway.server.to(room(game.id)).emit).toHaveBeenCalledWith(
@@ -155,7 +162,7 @@ describe('GameGateway (unit)', () => {
         return message;
       });
       gateway.chatMessage(player, { gameId: game.id, text: 'some text' });
-      expect(service.pushMessage).toBeCalledWith(game, 'some text', player);
+      expect(service.pushMessage).toBeCalledWith(game.id, 'some text', player);
       expect(gateway.server.to).toBeCalledWith(room(game.id));
       expect(gateway.server.to(room(game.id)).emit).toBeCalledWith(
         Game.message,
@@ -180,15 +187,15 @@ describe('GameGateway (unit)', () => {
         game,
       });
     });
-    it('set draw purpose', () => {
+    it('set draw propose', () => {
       const stubDraw: any = {};
-      jest.spyOn(service, 'purposeDraw').mockImplementationOnce(() => {
+      jest.spyOn(service, 'proposeDraw').mockImplementationOnce(() => {
         return stubDraw;
       });
-      gateway.drawPurpose(player, { gameId: game.id });
+      gateway.drawPropose(player, { gameId: game.id });
       expect(player.toRoom).toBeCalledWith(
         room(game.id),
-        Game.drawPurpose,
+        Game.drawPropose,
         stubDraw,
       );
     });
@@ -197,7 +204,7 @@ describe('GameGateway (unit)', () => {
       jest.spyOn(service, 'acceptDraw').mockImplementationOnce(() => {
         return stubDraw;
       });
-      await gateway.acceptPurpose(player, { gameId: game.id });
+      await gateway.acceptPropose(player, { gameId: game.id });
       expect(gateway.server.to(room(game.id)).emit).toBeCalledWith(Game.end, {
         reason: 'draw',
         game: {},
@@ -226,7 +233,7 @@ describe('GameGateway (unit)', () => {
       jest.spyOn(service, 'rejectDraw').mockImplementationOnce(() => {
         return stubDraw;
       });
-      gateway.rejectPurpose({ gameId: game.id });
+      gateway.rejectPropose({ gameId: game.id });
       expect(gateway.server.to(room(game.id)).emit).toBeCalledWith(
         Game.rejectDraw,
         stubDraw,

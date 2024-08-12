@@ -1,8 +1,8 @@
+import Stripe from 'stripe';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { StripeService } from './stripe/stripe.service';
 import { LoggerService } from '../tools/logger';
 import { UserService } from '../user/user.service';
-import Stripe from 'stripe';
 
 @Injectable()
 export class PaymentsService {

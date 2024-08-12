@@ -1,11 +1,11 @@
 import { Test } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { GameGateway } from '../game.gateway';
 import { GameService } from '../game.service';
 import { AuthService, TokenService } from '../../auth';
 import { Game, Lobby, User } from '../EmitTypes';
 import { LoggerService } from '../../tools/logger';
 import { AppModule } from '../../app.module';
-import { NotFoundException } from '@nestjs/common';
 
 jest.mock('../game.service');
 jest.mock('axios', () => null);

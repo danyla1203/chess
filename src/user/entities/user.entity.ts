@@ -7,6 +7,7 @@ export const prismaSelectUserProfile = {
   name: true,
   email: true,
   balance: true,
+  winningBalance: true,
 };
 
 export class UserProfile {
@@ -14,6 +15,7 @@ export class UserProfile {
   name: string;
   email: string;
   balance: number;
+  winningBalance: number;
 }
 export class PublicUserFields {
   id: number;

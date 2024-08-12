@@ -28,6 +28,7 @@ export type Config = {
   side: 'w' | 'b' | 'rand';
   time: number;
   timeIncrement: number;
+  bet: number;
 };
 
 export type GameData = {

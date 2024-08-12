@@ -120,7 +120,7 @@ export class Game {
     this.isActive = false;
     return this.gameResultDto(pl1, pl2, true) as DrawGame;
   }
-  public setDrawPurposeFrom(side: 'w' | 'b'): void {
+  public setDrawProposeFrom(side: 'w' | 'b'): void {
     this.draw[side] = true;
   }
   public rejectDraw(): void {
@@ -138,7 +138,7 @@ export class Game {
     active.time -= 1000;
     if (active.time <= 0) {
       const game = this.endGame(waiter, active);
-      this.endGameByTimeoutCb(game, waiter, active);
+      await this.endGameByTimeoutCb(game, waiter, active);
     }
     this.timerTickCb({ w: white.time, b: black.time });
   }

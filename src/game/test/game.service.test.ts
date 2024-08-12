@@ -1,3 +1,4 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GameService } from '../game.service';
 import { GameList } from '../game.list';
@@ -11,11 +12,11 @@ import {
   getFigureCellState,
 } from './generators';
 import { Config, Game } from '../entities/game';
-import { ConflictException, NotFoundException } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
 import { Client, Player } from '../entities';
 import { TokenService } from '../../auth';
 import { ConnectionPatchProvider } from '../connection.provider';
+import { LoggerService } from '../../tools/logger';
 
 jest.mock('../../auth');
 jest.mock('../connection.provider');
@@ -38,6 +39,7 @@ describe('GameService (unit)', () => {
         GameModel,
         PrismaService,
         TokenService,
+        LoggerService,
         ConnectionPatchProvider,
       ],
     })
@@ -119,39 +121,76 @@ describe('GameService (unit)', () => {
     });
   });
   describe('createGame', () => {
-    it('should create and return game entity, add it to lobby', () => {
+    it('should create and return game entity, add it to lobby', async () => {
       const pl = generateClient();
-      const cnf = generateConfig();
+      const cnf = generateConfig('w', 0);
       const addGameToLobbyMock = jest
         .spyOn(list, 'addGameToLobby')
         .mockImplementation();
-      const gm = service.createGame(pl, cnf);
+      jest
+        .spyOn(service as any, 'checkPlayerBalanceForGame')
+        .mockImplementation(jest.fn());
+      const gm = await service.createGame(pl, cnf);
       expect(gm).toBeInstanceOf(Game);
       expect(addGameToLobbyMock).toBeCalledWith(gm);
+    });
+  });
+  describe('checkPlayerBalanceForGame', () => {
+    it('should resolves if authorized user have enough money', async () => {
+      const pl = generateClient();
+      const { bet } = generateConfig('w', 50);
+      jest.spyOn(model, 'getUserBalance').mockResolvedValue(100);
+      await service['checkPlayerBalanceForGame'](pl, bet);
+      expect(true).toBeTruthy();
+    });
+    it('should resolves if game bet is zero', async () => {
+      const pl = generateClient();
+      const { bet } = generateConfig('w', 0);
+      console.log(bet);
+      await service['checkPlayerBalanceForGame'](pl, bet);
+      expect(true).toBeTruthy();
+    });
+    it('should throw error if anon-player create or connect to game with bet', async () => {
+      const pl = generateClient(false);
+      const { bet } = generateConfig('w', 50);
+      expect(
+        service['checkPlayerBalanceForGame'](pl, bet),
+      ).rejects.toThrowError(ConflictException);
+    });
+    it('should throw error if authorized user dont have enough money', async () => {
+      const pl = generateClient();
+      const { bet } = generateConfig('w', 100);
+      jest.spyOn(model, 'getUserBalance').mockResolvedValue(50);
+      expect(
+        service['checkPlayerBalanceForGame'](pl, bet),
+      ).rejects.toThrowError(ConflictException);
     });
   });
   describe('connectToGame', () => {
     it('should throw not found if game isnt in lobby', () => {
       const cl = generateClient();
       jest.spyOn(list, 'findInLobby').mockImplementation(() => null);
-      expect(() => service.connectToGame(cl, -1)).toThrow(
+      expect(service.connectToGame(cl, -1)).rejects.toThrow(
         new NotFoundException('Game not found'),
       );
     });
     it('should throw err if client already in game', () => {
       jest.spyOn(list, 'findInLobby').mockImplementation(() => gm);
-      expect(() => service.connectToGame(cl1, gm.id)).toThrow(
+      expect(service.connectToGame(cl1, gm.id)).rejects.toThrow(
         new ConflictException('You are already in game'),
       );
     });
-    it('should add player and remove game from lobby on successfull connect', () => {
+    it('should add player and remove game from lobby on successfull connect', async () => {
       gm.addPlayer = jest.fn();
       jest.spyOn(list, 'findInLobby').mockImplementation(() => gm);
       const remove = jest
         .spyOn(list, 'pushToStartedGames')
         .mockImplementation();
-
-      expect(service.connectToGame(cl2, gm.id)).toStrictEqual(gm);
+      jest
+        .spyOn(service as any, 'checkPlayerBalanceForGame')
+        .mockImplementation(jest.fn());
+      const result = await service.connectToGame(cl2, gm.id);
+      expect(result).toStrictEqual(gm);
       expect(gm.addPlayer).toBeCalledWith(cl2);
       expect(remove).toBeCalledWith(gm.id);
     });
@@ -188,7 +227,7 @@ describe('GameService (unit)', () => {
       expect(gm.endGame).toBeCalledWith(pl2, pl1);
     });
   });
-  describe('purposeDraw', () => {
+  describe('proposeDraw', () => {
     beforeEach(() => {
       jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
     });
@@ -203,35 +242,35 @@ describe('GameService (unit)', () => {
         w: true,
         b: false,
       };
-      expect(() => service.purposeDraw(gm.id, cl1)).toThrow(
-        new ConflictException('Purpose already set'),
+      expect(() => service.proposeDraw(gm.id, cl1)).toThrow(
+        new ConflictException('Propose already set'),
       );
     });
-    it('purpose draw from client (white side)', () => {
-      expect(service.purposeDraw(gm.id, cl1)).toStrictEqual({
+    it('propose draw from client (white side)', () => {
+      expect(service.proposeDraw(gm.id, cl1)).toStrictEqual({
         w: true,
         b: false,
       });
     });
-    it('purpose draw from client (black side)', () => {
-      expect(service.purposeDraw(gm.id, cl2)).toStrictEqual({
+    it('propose draw from client (black side)', () => {
+      expect(service.proposeDraw(gm.id, cl2)).toStrictEqual({
         w: false,
         b: true,
       });
     });
   });
   describe('acceptDraw', () => {
-    it('should throw Conflict err if draw purpose wasnt send', async () => {
+    it('should throw Conflict err if draw propose wasnt send', async () => {
       gm.draw = { w: false, b: false };
       jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
       expect(service.acceptDraw(gm.id, cl2)).rejects.toThrow(
-        new ConflictException('Draw purpose wasnt set'),
+        new ConflictException('Draw propose wasnt set'),
       );
     });
-    it('should set draw purpose and end the game', async () => {
+    it('should set draw propose and end the game', async () => {
       gm.draw = { w: true, b: false };
       jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-      jest.spyOn(gm, 'setDrawPurposeFrom').mockImplementation();
+      jest.spyOn(gm, 'setDrawProposeFrom').mockImplementation();
       const stub = {
         id: gm.id,
         moves: gm.moves,
@@ -247,10 +286,10 @@ describe('GameService (unit)', () => {
     });
   });
   describe('reject draw', () => {
-    it('should throw conflict err if draw purpose wasnt set', () => {
+    it('should throw conflict err if draw propose wasnt set', () => {
       jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
       expect(() => service.rejectDraw(gm.id)).toThrow(
-        new ConflictException('Draw purpose wasnt set'),
+        new ConflictException('Draw propose wasnt set'),
       );
     });
     it('should reject draw and sent result', () => {
@@ -278,6 +317,53 @@ describe('GameService (unit)', () => {
         [pl1.side]: pl1Copy.time,
         [pl2.side]: pl2Copy.time + gm.config.timeIncrement,
       });
+    });
+  });
+  describe('makeTurn', () => {
+    it('should return completed move', async () => {
+      const completedMove = {
+        result: { shah: null, mate: null, strike: null },
+        prevCell: 'b5',
+        side: 'w',
+      };
+      jest.spyOn(gm, 'makeTurn').mockReturnValue(completedMove as any);
+      jest.spyOn(service, 'findGameById').mockReturnValueOnce(gm);
+      const result = await service.makeTurn(gm.id, 1, {
+        figure: 'Q',
+        cell: 'b5',
+        gameId: gm.id,
+      });
+      expect(result).toStrictEqual(completedMove);
+    });
+    it('should call gm.endGame and GameService.saveGame in case of mate', async () => {
+      const completedMove = {
+        result: {
+          shah: null,
+          mate: { matedSide: 'b', byFigure: 'Q' },
+          strike: null,
+        },
+        prevCell: 'b5',
+        side: 'w',
+      };
+      jest.spyOn(gm, 'makeTurn').mockReturnValue(completedMove as any);
+      jest.spyOn(gm, 'endGame').mockReturnValue({ id: gm.id } as any);
+      jest.spyOn(service as any, 'saveGame').mockImplementation(jest.fn());
+      jest.spyOn(service['list'], 'gameEnd').mockImplementation(jest.fn());
+      jest.spyOn(service, 'findGameById').mockReturnValueOnce(gm);
+      const result = await service.makeTurn(gm.id, gm.players[0].userId, {
+        figure: 'Q',
+        cell: 'b5',
+        gameId: gm.id,
+      });
+      expect(result).toStrictEqual(completedMove);
+      expect(gm.endGame).toBeCalledWith(gm.players[0], gm.players[1]);
+      expect(service['list'].gameEnd).toBeCalledWith(gm.id);
+      expect(service['saveGame']).toBeCalledWith(
+        gm.players[0],
+        gm.players[1],
+        { id: gm.id },
+        true,
+      );
     });
   });
 });

@@ -8,6 +8,8 @@ import {
   PlainBoardState,
   TimeUpdate,
   DrawAgreement,
+  TurnBody,
+  CompletedMove,
 } from './dto';
 import { GameList } from './game.list';
 import { Client, Player } from './entities';
@@ -20,7 +22,8 @@ import {
 } from './entities/game';
 import { Game as GameEmits, GameEnd } from './EmitTypes';
 import { GameModel } from './model';
-import { GameWithWinner, DrawGame } from './entities/game/game.types';
+import { GameWithWinner, DrawGame, Cell } from './entities/game/game.types';
+import { Game as PrismaGameType } from '@prisma/client';
 
 @Injectable()
 export class GameService {
@@ -29,13 +32,15 @@ export class GameService {
     private readonly model: GameModel,
   ) {}
 
+  /**
+   * If game ends with winner call function with: pl1 is winner, pl2 is looser, winner = true
+   */
   private async saveGame(
     pl1: Player,
     pl2: Player,
     result: GameResult,
     winner = false,
-  ) {
-    this.list.gameEnd(result.id);
+  ): Promise<PrismaGameType> {
     if (!pl1.authorized || !pl2.authorized) return null;
     return winner
       ? await this.model.saveGameWithWinner({
@@ -53,7 +58,13 @@ export class GameService {
       pl.emit(GameEmits.timeTick, { w: time.w, b: time.b });
     }
   }
-  private injectableGameEndCallback(game, winner: Player, looser: Player) {
+  private async injectableGameEndCallback(
+    game,
+    winner: Player,
+    looser: Player,
+  ) {
+    this.list.gameEnd(game.id);
+    await this.saveGame(winner, looser, game, true);
     winner.emit(GameEmits.end, {
       reason: GameEnd.timeout,
       winner: true,
@@ -66,24 +77,37 @@ export class GameService {
     });
   }
 
-  public createGame(player: Client, config: CreateGameDto): Game {
+  private async checkPlayerBalanceForGame(player: Client, bet: number) {
+    if (bet > 0) {
+      if (!player.authorized) throw new ConflictException('Invalid config');
+      const playerBalance = await this.model.getUserBalance(player.userId);
+      if (playerBalance < bet) throw new ConflictException('Invalid config');
+    }
+  }
+
+  public async createGame(
+    player: Client,
+    config: CreateGameDto,
+  ): Promise<Game> {
+    await this.checkPlayerBalanceForGame(player, config.bet);
     const newGame = new Game(
       player,
       config,
-      this.injectableGameEndCallback,
+      this.injectableGameEndCallback.bind(this),
       this.injectableTimerTick,
     );
     this.list.addGameToLobby(newGame);
     return newGame;
   }
 
-  public connectToGame(player: Client, gameId: number): Game {
+  public async connectToGame(player: Client, gameId: number): Promise<Game> {
     const game = this.list.findInLobby(gameId);
     if (!game) throw new NotFoundException('Game not found');
     const pl1 = game.players[0];
     if (player.userId && pl1.userId === player.userId) {
       throw new ConflictException('You are already in game');
     }
+    await this.checkPlayerBalanceForGame(player, game.config.bet);
 
     game.addPlayer(player);
     this.list.pushToStartedGames(gameId);
@@ -115,6 +139,7 @@ export class GameService {
     const winner = pl1.userId !== client.userId ? pl1 : pl2;
     const looser = pl1.userId === client.userId ? pl1 : pl2;
     const result = game.endGame(winner, looser);
+    this.list.gameEnd(result.id);
     await this.saveGame(winner, looser, result, true);
     return result;
   }
@@ -167,7 +192,8 @@ export class GameService {
     return plainObj;
   }
 
-  public pushMessage(game: Game, message: string, player: Client): Message {
+  public pushMessage(gameId: number, message: string, player: Client): Message {
+    const game = this.findGameById(gameId);
     return game.chat.addMessage(message, player);
   }
 
@@ -180,15 +206,16 @@ export class GameService {
     const winner = pl1.userId !== client.userId ? pl1 : pl2;
     const looser = pl1.userId === client.userId ? pl1 : pl2;
     const result = game.endGame(winner, looser);
+    this.list.gameEnd(result.id);
     await this.saveGame(winner, looser, result, true);
     return result;
   }
 
-  public purposeDraw(gameId: number, client: Client): DrawAgreement {
+  public proposeDraw(gameId: number, client: Client): DrawAgreement {
     const game = this.findGameById(gameId);
     const { side } = game.players.find((pl) => pl.userId === client.userId);
-    if (game.draw[side]) throw new ConflictException('Purpose already set');
-    game.setDrawPurposeFrom(side);
+    if (game.draw[side]) throw new ConflictException('Propose already set');
+    game.setDrawProposeFrom(side);
     return game.draw;
   }
 
@@ -197,9 +224,10 @@ export class GameService {
     const { w, b } = game.draw;
     const { side } = game.players.find((pl) => pl.userId === client.userId);
 
-    if (!w && !b) throw new ConflictException('Draw purpose wasnt set');
-    game.setDrawPurposeFrom(side);
+    if (!w && !b) throw new ConflictException('Draw propose wasnt set');
+    game.setDrawProposeFrom(side);
     const result = game.endGameByDraw();
+    this.list.gameEnd(result.id);
     await this.saveGame(result.pl1, result.pl2, result);
     return result;
   }
@@ -208,7 +236,7 @@ export class GameService {
     const game = this.findGameById(gameId);
     const { w, b } = game.draw;
 
-    if (!w && !b) throw new ConflictException('Draw purpose wasnt set');
+    if (!w && !b) throw new ConflictException('Draw propose wasnt set');
 
     game.rejectDraw();
     return { w: false, b: false };
@@ -224,5 +252,27 @@ export class GameService {
       [players[0].side]: players[0].time,
       [players[1].side]: players[1].time,
     };
+  }
+
+  public async makeTurn(
+    gameId: number,
+    userId: number,
+    { figure, cell }: TurnBody,
+  ): Promise<{
+    result: CompletedMove;
+    prevCell: Cell;
+    side: 'w' | 'b';
+  }> {
+    const game = this.findGameById(gameId);
+    const completedMove = game.makeTurn(userId, figure, cell);
+    if (completedMove.result.mate) {
+      const [pl1, pl2] = game.players;
+      const winner = pl1.userId === userId ? pl1 : pl2;
+      const looser = pl1.userId !== userId ? pl1 : pl2;
+      const gameResult = game.endGame(winner, looser);
+      this.list.gameEnd(gameResult.id);
+      await this.saveGame(winner, looser, gameResult, true);
+    }
+    return completedMove;
   }
 }
