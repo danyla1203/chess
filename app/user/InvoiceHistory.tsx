@@ -33,7 +33,7 @@ export default function InvoiceHistory({ profile }: { profile: Profile }) {
     }
   };
   return (
-    <Table topContent={<h1>Invoices</h1>} className="mt-5">
+    <Table topContent={<h1>Invoices</h1>} className="mt-5 2xl:mt-0 2xl:ml-4">
       <TableHeader className="border-0">
         <TableColumn className="text-center" key="id">
           ID
