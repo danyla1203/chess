@@ -21,7 +21,7 @@ export function UserBalance({ profile }: { profile: Profile }) {
       <div className="flex align-center mb-2">
         <div className="mr-3 flex flex-col justify-between">
           <h1 className="text-green-500">Income: </h1>
-          <h1 className="mb-1 text-red-500">Balance: </h1>
+          <h1 className="mb-1 text-yellow-500">Balance: </h1>
         </div>
         <div className="mr-3 flex flex-col justify-between">
           <Chip className="mb-1">
