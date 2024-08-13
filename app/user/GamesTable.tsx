@@ -18,8 +18,9 @@ export function GamesTable({ profile }: { profile: Profile }) {
       case 'result':
         if (cellValue.winner) {
           return (
-            <div className="gap-5 flex items-center justify-center">
+            <div className="flex items-center justify-center">
               <User
+                classNames={{ base: 'w-36 justify-start' }}
                 name={
                   cellValue.winner.userId === profile.userId
                     ? 'You'
@@ -46,6 +47,7 @@ export function GamesTable({ profile }: { profile: Profile }) {
               </svg>
 
               <User
+                classNames={{ base: 'w-36 justify-start' }}
                 name={
                   cellValue.looser.userId === profile.userId
                     ? 'You'
@@ -59,20 +61,37 @@ export function GamesTable({ profile }: { profile: Profile }) {
         return <div className="flex justify-center">Draw</div>;
       case 'cnf':
         return (
-          <Chip>
-            {game.cnf.time}-{game.cnf.inc}
-          </Chip>
+          <div className="flex justify-center">
+            <Chip>
+              {game.cnf.time}-{game.cnf.inc}
+            </Chip>
+          </div>
+        );
+      case 'bet':
+        return (
+          <div className="flex justify-center">
+            <Chip>{cellValue / 100} $</Chip>
+          </div>
         );
       default:
-        return cellValue;
+        return <div className="flex justify-center">{cellValue}</div>;
     }
   };
   return (
     <Table topContent={<h1>Games</h1>}>
       <TableHeader className="border-0">
-        <TableColumn key="id">ID</TableColumn>
-        <TableColumn key="cnf">Max time - Time increment</TableColumn>
-        <TableColumn key="sidepick">Side picking</TableColumn>
+        <TableColumn className="text-center" key="id">
+          ID
+        </TableColumn>
+        <TableColumn className="text-center" key="cnf">
+          Max time - Time increment
+        </TableColumn>
+        <TableColumn className="text-center" key="bet">
+          Game bet
+        </TableColumn>
+        <TableColumn className="text-center" key="sidepick">
+          Side picking
+        </TableColumn>
         <TableColumn className="flex justify-center items-center" key="result">
           Winner - Looser
         </TableColumn>
