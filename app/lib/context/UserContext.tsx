@@ -23,6 +23,7 @@ export type Profile = {
   wins: number;
   draws: number;
   looses: number;
+  createdAt: string;
 };
 
 export type UserState = {
