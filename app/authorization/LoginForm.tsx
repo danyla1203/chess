@@ -8,7 +8,7 @@ import { useNotification } from '@/context/NotificationContext';
 import { Button, Input, Spacer } from '@nextui-org/react';
 
 export function LoginForm() {
-  const [email, setEmail] = useState('');
+  const [emailOrName, setEmailOrName] = useState('');
   const [password, setPassword] = useState('');
   const { updateUser } = useUserState();
   const { addNotification } = useNotification();
@@ -17,7 +17,7 @@ export function LoginForm() {
 
   const login = async () => {
     const data = {
-      email,
+      emailOrName,
       password,
     };
     const { access, refresh } = await userLogin(data);
@@ -33,11 +33,11 @@ export function LoginForm() {
     <form className="space-y-4">
       <div>
         <Input
-          label="Email"
-          value={email}
+          label="Email or name"
+          value={emailOrName}
           labelPlacement="outside"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email or name"
+          onChange={(e) => setEmailOrName(e.target.value)}
         />
         <Spacer y={2} />
         <Input
