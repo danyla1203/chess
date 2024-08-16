@@ -8,6 +8,7 @@ import {
   TableCell,
   Chip,
 } from '@nextui-org/react';
+import moment from 'moment';
 import { Profile } from '@/context/UserContext';
 import { RestructedGameResult } from '../game/types';
 
@@ -73,6 +74,12 @@ export function GamesTable({ profile }: { profile: Profile }) {
             <Chip>{cellValue / 100} $</Chip>
           </div>
         );
+      case 'date':
+        return (
+          <div className="flex justify-center">
+            {moment(cellValue).format('DD.MM.YYYY, HH:mm')}
+          </div>
+        );
       default:
         return <div className="flex justify-center">{cellValue}</div>;
     }
@@ -82,6 +89,9 @@ export function GamesTable({ profile }: { profile: Profile }) {
       <TableHeader className="border-0">
         <TableColumn className="text-center" key="id">
           ID
+        </TableColumn>
+        <TableColumn className="flex justify-center items-center" key="date">
+          Date
         </TableColumn>
         <TableColumn className="text-center" key="cnf">
           Max time - Time increment
