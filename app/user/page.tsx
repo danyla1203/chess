@@ -24,18 +24,19 @@ export default function UserProfile() {
   const authorized = profile.isAuthorized;
 
   return (
-    <div className="flex container mx-auto mt-8">
-      <Card className="mr-4 w-1/4">
+    <div className="flex justify-center mt-5 p-9">
+      <Card className="mr-4 h-fit">
         <CardHeader className="pb-1">
           <h1>{profile.name}</h1>
         </CardHeader>
         <CardBody className="pb-0 pt-2">
+          {/* Wait for backend */}
           <h3 className="text-xs font-semibold">
             Authorize first to see Rating
           </h3>
-          <div className="flex flex-col xl:flex-row space-y-2 xl:space-y-0 mt-3 h-full">
-            <Chip>Wins: {profile.wins}</Chip>
-            <Chip>Looses: {profile.looses}</Chip>
+          <div className="flex flex-col xl:flex-row space-y-2 xl:space-y-0 mt-4 mb-4 h-full">
+            <Chip className="mr-1">Wins: {profile.wins}</Chip>
+            <Chip className="mr-1">Looses: {profile.looses}</Chip>
             <Chip>Draws: {profile.draws}</Chip>
           </div>
           {profile.isAuthorized ? <UserBalance profile={profile} /> : null}
@@ -51,7 +52,7 @@ export default function UserProfile() {
           </div>
         </CardFooter>
       </Card>
-      <div className="w-3/4">
+      <div className="w-3/4 2xl:flex">
         <GamesTable profile={profile} />
         {profile.isAuthorized ? <InvoiceHistory profile={profile} /> : null}
       </div>

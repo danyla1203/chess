@@ -7,10 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
+import moment from 'moment';
 import { Invoice, Profile } from '../lib/context/UserContext';
 
 export default function InvoiceHistory({ profile }: { profile: Profile }) {
-  const renderCells = (invoice: Invoice, columnKey: string) => {
+  const renderCells = (invoice: Invoice, columnKey: any) => {
     const cellValue = invoice[columnKey];
     switch (columnKey) {
       case 'id':
@@ -22,14 +23,9 @@ export default function InvoiceHistory({ profile }: { profile: Profile }) {
           </div>
         );
       case 'date':
-        const date = new Date(cellValue);
-        const day = date.getDay() < 10 ? `0${date.getDay()}` : date.getDay();
-        const month =
-          date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
         return (
           <div className="flex justify-center">
-            {date.getUTCHours()}:{date.getMinutes()} - {day}.{month}.
-            {date.getFullYear()}
+            {moment(cellValue).format('MMM Do YYYY, h:mm:ss a')}
           </div>
         );
       default:
@@ -37,7 +33,7 @@ export default function InvoiceHistory({ profile }: { profile: Profile }) {
     }
   };
   return (
-    <Table topContent={<h1>Invoices</h1>} className="mt-5">
+    <Table topContent={<h1>Invoices</h1>} className="mt-5 2xl:mt-0 2xl:ml-4">
       <TableHeader className="border-0">
         <TableColumn className="text-center" key="id">
           ID
