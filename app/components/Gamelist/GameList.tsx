@@ -10,10 +10,24 @@ import {
   TableRow,
   TableCell,
 } from '@nextui-org/react';
-import { useGameList } from '@/context/GameListContext';
+import { GameData, useGameList } from '@/context/GameListContext';
 
 export function GameList() {
   const { connect, games } = useGameList();
+
+  const renderCells = (game: GameData, columnKey) => {
+    const cellValue = game[columnKey];
+    switch (columnKey) {
+      case 'cnf':
+        return (
+          <div>
+            {cellValue.time}-{cellValue.inc}
+          </div>
+        );
+      default:
+        return cellValue;
+    }
+  };
 
   const topContent = (
     <div>
@@ -25,15 +39,14 @@ export function GameList() {
     <Table topContent={topContent} isStriped>
       <TableHeader className="border-0">
         <TableColumn key="opponent">Player name</TableColumn>
-        <TableColumn key="time">Max time - minutes</TableColumn>
-        <TableColumn key="inc">Time increment - seconds</TableColumn>
+        <TableColumn key="cnf">Max time - Time increment</TableColumn>
         <TableColumn key="sidepick">Side picking</TableColumn>
       </TableHeader>
       <TableBody items={games} emptyContent={'No games in lobby.'}>
         {(item) => (
           <TableRow onClick={() => connect(item.id)} key={item.key}>
             {(columnKey) => (
-              <TableCell>{getKeyValue(item, columnKey)}</TableCell>
+              <TableCell>{renderCells(item, columnKey)}</TableCell>
             )}
           </TableRow>
         )}

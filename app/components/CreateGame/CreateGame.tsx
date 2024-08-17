@@ -12,10 +12,13 @@ import { Emit, useWebSocket } from '@/context/SocketContext';
 import { Slider } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useUserState } from '@/app/lib/context/UserContext';
 
 export function CreateGame() {
   const [minutes, setMinutes] = useState(6);
   const [timeAdd, setTimeAdd] = useState(15);
+  const [bet, setBet] = useState(0);
+  const { profile } = useUserState();
 
   const socket = useWebSocket();
   const router = useRouter();
@@ -25,6 +28,7 @@ export function CreateGame() {
       side,
       time: minutes * 60 * 1000,
       timeIncrement: timeAdd * 1000,
+      bet: bet * 100,
     };
     socket.volatile.emit(Emit.createGame, { ...body });
     router.push('/game');
@@ -61,6 +65,19 @@ export function CreateGame() {
             className="max-w-md mt-5"
             value={timeAdd}
             onChange={setTimeAdd}
+          />
+          <Slider
+            label="Bet"
+            size="md"
+            color="warning"
+            step={0.1}
+            maxValue={10}
+            minValue={0}
+            aria-label="Time increment"
+            className="max-w-md mt-5"
+            value={bet}
+            isDisabled={!profile?.isAuthorized}
+            onChange={setBet}
           />
         </CardBody>
         <Divider />

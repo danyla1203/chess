@@ -25,7 +25,7 @@ export enum Game {
   boardUpdate = 'game:board-update',
   message = 'game:chat-message',
   surrender = 'game:surrender',
-  drawPurpose = 'game:draw_purpose',
+  drawPurpose = 'game:draw_propose',
   playerDiconnected = 'game:opponent-disconnected',
   playerReconected = 'game:player-reconnected',
 }
@@ -41,7 +41,7 @@ export enum Emit {
   pushMessage = 'chat-message',
   addTime = 'add_time',
   surrender = 'surrender',
-  drawPurpose = 'draw_purpose',
+  drawPurpose = 'draw_propose',
   drawReject = 'draw_reject',
   drawAccept = 'draw_accept',
   leave = 'leave',
@@ -66,18 +66,24 @@ export const WebSocketProvider = ({
   const { updateUser } = useUserState();
 
   const authConnection = (accessToken: string) => {
-    return io(`ws://localhost:8080/game?Authorization=${accessToken}`, {
-      transports: ['websocket'],
-      retries: 3,
-    });
+    return io(
+      `${process.env.NEXT_PUBLIC_WS_HOST}/game?Authorization=${accessToken}`,
+      {
+        transports: ['websocket'],
+        retries: 3,
+      },
+    );
   };
 
   const anonConnection = () => {
     const anonToken = localStorage.getItem('anon-token');
-    const socket = io(`ws://localhost:8080/game?Authorization=${anonToken}`, {
-      transports: ['websocket'],
-      retries: 3,
-    });
+    const socket = io(
+      `${process.env.NEXT_PUBLIC_WS_HOST}/game?Authorization=${anonToken}`,
+      {
+        transports: ['websocket'],
+        retries: 3,
+      },
+    );
     socket.on(User.anonymousToken, ({ tempToken, userId }) => {
       if (tempToken !== anonToken) {
         localStorage.removeItem('anon-games');
@@ -86,6 +92,9 @@ export const WebSocketProvider = ({
       updateUser({
         userId,
         name: 'Anonymous',
+        balance: 0,
+        invoices: [],
+        winningBalance: 0,
         isAuthorized: false,
         ...gamesStats,
       });

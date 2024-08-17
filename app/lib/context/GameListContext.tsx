@@ -23,10 +23,12 @@ export type GameDataPayload = {
 export type GameData = {
   id: string;
   key: string;
-  time: number;
-  inc: number;
-  opponent: string;
+  cnf: {
+    time: number;
+    inc: number;
+  };
   sidepick: 'w' | 'b' | 'rand';
+  opponent: string;
 };
 
 export type GameList = {
@@ -87,10 +89,12 @@ export const GameListProvider = ({
         return {
           id: g.id,
           key: g.id,
-          opponent: g.players[0].name,
-          inc: beautyTimeIncrement,
-          time: beautyMaxTime,
           sidepick: g.config.side,
+          cnf: {
+            inc: beautyTimeIncrement,
+            time: beautyMaxTime,
+          },
+          opponent: g.players[0].name,
         };
       });
       setGames(data);
