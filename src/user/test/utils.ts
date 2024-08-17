@@ -8,6 +8,8 @@ export const generateUserGames = () => {
       sideSelecting: 'w',
       isDraw: false,
       moves: [],
+      bet: 100,
+      date: undefined,
       players: [
         {
           userId: 1,
@@ -36,6 +38,8 @@ export const generateUserGames = () => {
       id: i,
       key: i,
       sidepick: 'w',
+      bet: 100,
+      date: undefined,
       cnf: {
         inc: 3,
         time: 6,

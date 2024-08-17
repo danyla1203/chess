@@ -125,6 +125,7 @@ describe('User e2e', () => {
           name: user.name,
           email: user.email,
           balance: user.balance,
+          createdAt: user.createdAt.toISOString(),
           winningBalance: user.winningBalance,
         });
     });
@@ -155,6 +156,8 @@ describe('User e2e', () => {
           sideSelecting: true,
           isDraw: true,
           moves: true,
+          bet: true,
+          createdAt: true,
           players: {
             select: {
               userId: true,
@@ -194,6 +197,8 @@ describe('User e2e', () => {
         return {
           id: g.id,
           key: g.id,
+          bet: g.bet,
+          date: g.createdAt.toISOString(),
           cnf: {
             inc,
             time,
@@ -239,6 +244,7 @@ describe('User e2e', () => {
           name: 'NewName',
           email: user.email,
           balance: user.balance,
+          createdAt: user.createdAt.toISOString(),
           winningBalance: user.winningBalance,
         });
     });
@@ -281,6 +287,57 @@ describe('User e2e', () => {
           expect(res.body.total).toEqual(user.payment.length);
           expect(res.body.invoices).toStrictEqual(user.payment);
         });
+    });
+  });
+  describe('update user name', () => {
+    let access: string;
+    let user: any;
+    beforeAll(async () => {
+      user = await prisma.user.findFirst({
+        include: {
+          auth: true,
+          payment: {
+            orderBy: {
+              date: 'desc',
+            },
+          },
+        },
+        where: {
+          auth: {
+            some: {
+              expiresIn: { gte: new Date() },
+            },
+          },
+        },
+      });
+      access = jwt.sign(
+        { id: user.id, deviceId: user.auth[1].deviceId },
+        {
+          secret: cnf.get('JWT_SECRET'),
+        },
+      );
+    });
+    it('should throw Conflict error if provided name already taken', async () => {
+      const anotherUser = await prisma.user.findFirst({
+        where: { id: { not: user.id } },
+      });
+      await req(server)
+        .patch('/user')
+        .set('Authorization', `Bearer ${access}`)
+        .send({ name: anotherUser.name })
+        .expect(409);
+    });
+    it('should update user name', async () => {
+      const newName = faker.string.alpha({ length: { min: 5, max: 14 } });
+      await req(server)
+        .patch('/user')
+        .set('Authorization', `Bearer ${access}`)
+        .send({ name: newName })
+        .expect(200);
+      const updatedUser = await prisma.user.findUnique({
+        where: { id: user.id },
+      });
+      expect(updatedUser.name).toEqual(newName);
     });
   });
 });

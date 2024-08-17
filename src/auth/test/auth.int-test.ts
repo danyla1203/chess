@@ -160,7 +160,7 @@ describe('Auth module (integration)', () => {
       ).rejects.toThrow(new UnauthorizedException());
     });
     it('should create session. Try on a user with some sessions', async () => {
-      const { email, password } = await prisma.user.findFirst({
+      const { id, email, password } = await prisma.user.findFirst({
         include: {
           auth: true,
         },
@@ -171,22 +171,20 @@ describe('Auth module (integration)', () => {
         },
       });
       jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
-      jest.spyOn(tokenService, 'getPair').mockImplementation(async () => {
-        return {
-          refresh: 'refresh',
-          access: 'access',
-        };
+      const res = await service.login({
+        email,
+        password,
+        deviceId: 'someSessionDevId',
       });
-      await expect(
-        service.login({ email, password, deviceId: 'testD' }),
-      ).resolves.toStrictEqual({
-        access: 'access',
-        refresh: 'refresh',
+      expect(res).toHaveProperty('refresh');
+      expect(res).toHaveProperty('access');
+      const session = await prisma.auth.findFirst({
+        where: { deviceId: 'someSessionDevId', userId: id },
       });
-      jest.clearAllMocks();
+      expect(session).toHaveProperty('refreshToken', res.refresh);
     });
     it('should create session. Try on a user with no sessions', async () => {
-      const { email, password } = await prisma.user.findFirst({
+      const { id, email, password } = await prisma.user.findFirst({
         include: {
           auth: true,
         },
@@ -197,26 +195,44 @@ describe('Auth module (integration)', () => {
         },
       });
       jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
-      jest.spyOn(tokenService, 'getPair').mockImplementation(async () => {
-        return {
-          refresh: 'refresh',
-          access: 'access',
-        };
+      const res = await service.login({
+        email,
+        password,
+        deviceId: 'emailDevId',
       });
-      await expect(
-        service.login({ email, password, deviceId: 'testD' }),
-      ).resolves.toStrictEqual({
-        access: 'access',
-        refresh: 'refresh',
+      expect(res).toHaveProperty('refresh');
+      expect(res).toHaveProperty('access');
+      const session = await prisma.auth.findFirst({
+        where: { deviceId: 'emailDevId', userId: id },
       });
+      expect(session).toHaveProperty('refreshToken', res.refresh);
+    });
+    it('should create session. Try on login with name', async () => {
+      const { id, name, password } = await prisma.user.findFirst({
+        include: {
+          auth: true,
+        },
+      });
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
+      const res = await service.login({
+        name,
+        password,
+        deviceId: 'nameDevId',
+      });
+      expect(res).toHaveProperty('access');
+      expect(res).toHaveProperty('refresh');
+      const session = await prisma.auth.findFirst({
+        where: { deviceId: 'nameDevId', userId: id },
+      });
+      expect(session).toHaveProperty('refreshToken', res.refresh);
     });
   });
-  describe('validateCreds', () => {
+  describe('checkoutUserSession', () => {
     it('should throw Unauthorized err if session doesnt exist', async () => {
-      await expect(service.validateCreds(-1, 'devId')).rejects.toThrow(
+      await expect(service.checkoutUserSession(-1, 'devId')).rejects.toThrow(
         new UnauthorizedException(),
       );
-      await expect(service.validateCreds(1, 'fakeDevId')).rejects.toThrow(
+      await expect(service.checkoutUserSession(1, 'fakeDevId')).rejects.toThrow(
         new UnauthorizedException(),
       );
     });
@@ -228,9 +244,9 @@ describe('Auth module (integration)', () => {
           },
         },
       });
-      await expect(service.validateCreds(userId, deviceId)).rejects.toThrow(
-        new BadRequestException('Session expired'),
-      );
+      await expect(
+        service.checkoutUserSession(userId, deviceId),
+      ).rejects.toThrow(new BadRequestException('Session expired'));
       const deletedAuth = await prisma.auth.findUnique({
         where: { id },
       });
@@ -247,10 +263,10 @@ describe('Auth module (integration)', () => {
           },
         },
       });
-      const expected = { id: user.id, name: user.name };
-      expect(service.validateCreds(user.id, deviceId)).resolves.toStrictEqual(
-        expected,
-      );
+      const expected = { id: user.id, name: user.name, deviceId };
+      expect(
+        service.checkoutUserSession(user.id, deviceId),
+      ).resolves.toStrictEqual(expected);
     });
   });
   describe('createSession', () => {

@@ -11,7 +11,7 @@ model Auth {
   id           Int      @id @default(autoincrement())
   refreshToken String   @db.VarChar
   deviceId     String   @db.VarChar
-  expiresIn    DateTime @default(dbgenerated("(now() + '417:00:00'::interval)")) @db.Timestamptz(6)
+  expiresIn    DateTime @default(dbgenerated("(now() + '417:00:00'::interval)")) @db.Timestamptz()
   userId       Int
   user         User     @relation(fields: [userId], references: [id])
 }
@@ -32,6 +32,8 @@ model Game {
   isDraw        Boolean
   players       UserInGame[]
   moves         Json
+  bet           Int          @default(0)
+  createdAt     DateTime     @default(now()) @db.Timestamptz()
 }
 
 model UserInGame {
@@ -48,11 +50,12 @@ model UserInGame {
 
 model User {
   id             Int            @id @default(autoincrement())
-  name           String         @db.VarChar
+  name           String         @unique() @db.VarChar
   email          String         @unique() @db.VarChar
   password       String         @db.VarChar
   balance        Int            @default(0)
   winningBalance Int            @default(0)
+  createdAt      DateTime       @default(now()) @db.Timestamptz()
   auth           Auth[]
   players        UserInGame[]
   messages       LobbyMessage[]
@@ -66,13 +69,13 @@ model Payment {
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
   topUpAmount Int
-  date        DateTime @default(dbgenerated("(now() + '10:00:00'::interval)")) @db.Timestamptz(6)
+  date        DateTime @default(now()) @db.Timestamptz()
 }
 
 model LobbyMessage {
   id     Int      @id @default(autoincrement())
   text   String   @db.Text
-  date   DateTime @default(dbgenerated("(now() + '10:00:00'::interval)")) @db.Timestamptz(6)
+  date   DateTime @default(now()) @db.Timestamptz()
   userId Int
   user   User     @relation(fields: [userId], references: [id])
 }

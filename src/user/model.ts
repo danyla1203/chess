@@ -33,6 +33,12 @@ export class UserModel {
       where: { id },
     });
   }
+  public findUserByName(name: string): Promise<{ id: number }> {
+    return this.prisma.user.findUnique({
+      select: { id: true },
+      where: { name },
+    });
+  }
   public findProfileByEmail(email: string): Promise<UserProfile> {
     return this.prisma.user.findUnique({
       select: prismaSelectUserProfile,
@@ -75,6 +81,8 @@ export class UserModel {
         sideSelecting: true,
         moves: true,
         isDraw: true,
+        bet: true,
+        createdAt: true,
         players: {
           select: {
             userId: true,

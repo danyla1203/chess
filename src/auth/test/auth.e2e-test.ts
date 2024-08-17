@@ -33,7 +33,7 @@ describe('Auth e2e', () => {
   describe('login', () => {
     it('should throw Unuathorized err if user doesnt exist', (done) => {
       req(server)
-        .post('/auth/login')
+        .post('/auth/login/email')
         .send({
           email: faker.internet.email(),
           password: faker.internet.password(),
@@ -45,7 +45,7 @@ describe('Auth e2e', () => {
     it('should throw Unuathorized err if password invalid', async () => {
       const { email } = await prisma.user.findFirst();
       await req(server)
-        .post('/auth/login')
+        .post('/auth/login/email')
         .send({
           email,
           password: 'fakePassword',
@@ -56,12 +56,23 @@ describe('Auth e2e', () => {
     it('should return tokens', async () => {
       const { email } = await prisma.user.findFirst();
       bcrypt.compare.mockResolvedValue(true);
-      const { body } = await req(server).post('/auth/login').send({
+      const { body } = await req(server).post('/auth/login/email').send({
         email,
         password: 'correctPassword',
         deviceId: 'test1',
       });
 
+      expect(body).toHaveProperty('access');
+      expect(body).toHaveProperty('refresh');
+    });
+    it('login with name', async () => {
+      const { name } = await prisma.user.findFirst();
+      bcrypt.compare.mockResolvedValue(true);
+      const { body } = await req(server).post('/auth/login/name').send({
+        name,
+        password: 'correctPassword',
+        deviceId: 'test1',
+      });
       expect(body).toHaveProperty('access');
       expect(body).toHaveProperty('refresh');
     });
@@ -123,7 +134,7 @@ describe('Auth e2e', () => {
         .set('Authorization', `Bearer ${body.access}`)
         .expect(200, { message: 'ok' });
       const deleted = await prisma.auth.findMany({
-        where: { userId: auth.userId },
+        where: { userId: auth.userId, deviceId: auth.deviceId },
       });
       expect(deleted).toHaveLength(0);
     });

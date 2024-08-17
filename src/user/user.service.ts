@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto, UpdateUserDto } from './dto';
+import { CreateUserDto } from './dto';
 import { UserModel } from './model';
 import { AuthService, Tokens } from '../auth';
 import { UserGames } from './entities';
@@ -60,8 +60,10 @@ export class UserService {
           inc,
           time,
         },
+        date: g.createdAt,
         result,
         sidepick: g.sideSelecting,
+        bet: g.bet,
       };
     });
   }
@@ -81,8 +83,10 @@ export class UserService {
     return { games: parsed, wins, looses, draws };
   }
 
-  public update(id: number, updateUserDto: UpdateUserDto) {
-    return this.model.updateUser(id, updateUserDto.name);
+  public async updateUserName(id: number, name: string) {
+    const userWithProvidedName = await this.model.findUserByName(name);
+    if (userWithProvidedName) throw new ConflictException('This name is taken');
+    return this.model.updateUser(id, name);
   }
 
   public topUpBalance(id: number, amount: number) {

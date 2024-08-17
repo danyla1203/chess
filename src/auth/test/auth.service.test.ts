@@ -68,15 +68,21 @@ describe('AuthService (unit)', () => {
     it('should return user', async () => {
       const auth: any = {
         expiresIn: new Date(Date.now() + 1000 * 60 * 60),
-        user: { id: -1, email: 'test', name: 'test' },
+        user: { id: -1, name: 'test' },
+        deviceId: 'test',
       };
       jest.spyOn(model, 'findSessionByUserId').mockImplementation(() => auth);
-      expect(await service.validateCreds(-1, 'test')).toStrictEqual(auth.user);
+      expect(await service.checkoutUserSession(-1, 'test')).toStrictEqual({
+        ...auth.user,
+        deviceId: auth.deviceId,
+      });
     });
 
     it('should throw error if no auth found', () => {
       jest.spyOn(model, 'findSessionByUserId').mockImplementation(() => null);
-      expect(service.validateCreds(-1, 'test')).rejects.toThrow('Unauthorized');
+      expect(service.checkoutUserSession(-1, 'test')).rejects.toThrow(
+        'Unauthorized',
+      );
     });
 
     it('should throw error if auth expired', () => {
@@ -86,7 +92,7 @@ describe('AuthService (unit)', () => {
       jest
         .spyOn(model, 'findSessionByUserId')
         .mockImplementation(() => auth as any);
-      expect(service.validateCreds(-1, 'test')).rejects.toThrow(
+      expect(service.checkoutUserSession(-1, 'test')).rejects.toThrow(
         'Session expired',
       );
     });
@@ -107,9 +113,21 @@ describe('AuthService (unit)', () => {
       const loginDto = { ...user, deviceId: 'test' };
       expect(await service.login(loginDto)).toStrictEqual(tokens);
     });
+    it('should return pair of tokens. By name', async () => {
+      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => true);
+      const user: any = { name: 'test', password: 'test' };
+      jest.spyOn(model, 'findUserByName').mockImplementation(async () => user);
+      const tokens = { access: 'token', refresh: 'token' };
+      jest
+        .spyOn(tokenService, 'getPair')
+        .mockImplementation(async () => tokens);
+      const loginDto = { ...user, deviceId: 'test' };
+      expect(await service.login(loginDto)).toStrictEqual(tokens);
+    });
 
     it('should throw error if no user found', () => {
       jest.spyOn(model, 'findUserByEmail').mockImplementation(async () => null);
+      jest.spyOn(model, 'findUserByName').mockImplementation(async () => null);
       const loginDto = { password: 'test' };
       expect(service.login(loginDto as any)).rejects.toThrow('Unauthorized');
     });

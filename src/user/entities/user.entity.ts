@@ -8,6 +8,7 @@ export const prismaSelectUserProfile = {
   email: true,
   balance: true,
   winningBalance: true,
+  createdAt: true,
 };
 
 export class UserProfile {
@@ -16,10 +17,12 @@ export class UserProfile {
   email: string;
   balance: number;
   winningBalance: number;
+  createdAt: Date;
 }
-export class PublicUserFields {
+export class InternalAuthorizedUserFields {
   id: number;
   name: string;
+  deviceId: string;
 }
 
 export class UserGames {
@@ -29,6 +32,8 @@ export class UserGames {
   sideSelecting: string;
   isDraw: boolean;
   moves: Prisma.JsonValue;
+  bet: number;
+  createdAt: Date;
   players: {
     userId: number;
     side: string;

@@ -5,10 +5,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dto';
+import { EmailLoginDto, NameLoginDto } from './dto';
 import { AuthModel } from './model';
 import { TokenService } from './tokens/token.service';
-import { PublicUserFields } from 'src/user/entities/user.entity';
+import { InternalAuthorizedUserFields } from 'src/user/entities/user.entity';
 import { Tokens } from './tokens/token.entities';
 import { ConfigService } from '@nestjs/config';
 
@@ -79,21 +79,24 @@ export class AuthService {
     return tokens;
   }
 
-  public async validateCreds(
+  public async checkoutUserSession(
     id: number,
     deviceId: string,
-  ): Promise<PublicUserFields> {
+  ): Promise<InternalAuthorizedUserFields> {
     const auth = await this.model.findSessionByUserId(id, deviceId);
     if (!auth) throw new UnauthorizedException();
     if (auth.expiresIn < new Date()) {
       await this.model.deleteSession(auth.id);
       throw new BadRequest('Session expired');
     }
-    return auth.user;
+    return { ...auth.user, deviceId: auth.deviceId };
   }
 
-  public async login(loginData: LoginDto): Promise<Tokens> {
-    const user = await this.model.findUserByEmail(loginData.email);
+  public async login(loginData: NameLoginDto | EmailLoginDto): Promise<Tokens> {
+    const user =
+      'email' in loginData
+        ? await this.model.findUserByEmail(loginData.email)
+        : await this.model.findUserByName(loginData.name);
     if (!user) throw new UnauthorizedException();
 
     const isPasswordValid = await bcrypt.compare(

@@ -19,7 +19,7 @@ export class AuthGuard implements CanActivate {
     const authorization = request.headers.authorization;
     try {
       const payload = this.jwtService.parseAuthHeader(authorization);
-      request.user = await this.authService.validateCreds(
+      request.user = await this.authService.checkoutUserSession(
         payload.id,
         payload.deviceId,
       );

@@ -106,13 +106,12 @@ describe('Socket connection (integration)', () => {
         };
       });
       jest
-        .spyOn(authService, 'validateCreds')
+        .spyOn(authService, 'checkoutUserSession')
         .mockImplementationOnce(async () => {
           return {
             name: 'Danek',
             id: 12345,
-            balance: 0,
-            email: 'email@gmail.com',
+            deviceId: 'string',
           };
         });
       jest.spyOn(gmService, 'getLobby').mockImplementationOnce(() => []);

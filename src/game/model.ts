@@ -28,6 +28,7 @@ export class GameModel {
         timeIncrement: config.timeIncrement,
         sideSelecting: config.side,
         moves: jsonMoves,
+        bet: config.bet,
         players: {
           create: [
             {
@@ -67,6 +68,7 @@ export class GameModel {
           timeIncrement: config.timeIncrement,
           sideSelecting: config.side,
           moves: jsonMoves,
+          bet: config.bet,
           players: {
             create: [
               {

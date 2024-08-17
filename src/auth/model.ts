@@ -9,6 +9,9 @@ export class AuthModel {
   public async findUserByEmail(email: string): Promise<User> {
     return this.prisma.user.findUnique({ where: { email } });
   }
+  public async findUserByName(name: string): Promise<User> {
+    return this.prisma.user.findUnique({ where: { name } });
+  }
 
   public async findConfirmation(email: string): Promise<Confirmation> {
     return this.prisma.confirmation.findUnique({ where: { email } });

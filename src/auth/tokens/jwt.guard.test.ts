@@ -20,7 +20,7 @@ describe('AuthGuard', () => {
         {
           provide: AuthService,
           useValue: {
-            validateCreds: jest.fn(),
+            checkoutUserSession: jest.fn(),
           },
         },
       ],
@@ -38,8 +38,8 @@ describe('AuthGuard', () => {
       .spyOn(guard['jwtService'], 'parseAuthHeader')
       .mockReturnValue({ id: 'userId', deviceId: '123' });
     jest
-      .spyOn(guard['authService'], 'validateCreds')
-      .mockResolvedValue({ id: 123, name: 'Test' });
+      .spyOn(guard['authService'], 'checkoutUserSession')
+      .mockResolvedValue({ id: 123, name: 'Test', deviceId: 'string' });
 
     const mockContext = {
       switchToHttp: jest.fn().mockReturnValue({

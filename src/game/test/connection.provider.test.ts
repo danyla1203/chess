@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { AuthService, TokenService } from '../../auth';
 import { LoggerService } from '../../tools/logger';
 import { ConnectionPatchProvider } from '../connection.provider';
-import { PublicUserFields } from '../../user/entities';
+import { InternalAuthorizedUserFields } from '../../user/entities';
 
 jest.mock('../../auth');
 
@@ -34,9 +34,11 @@ describe('Connection provider (unit)', () => {
       };
     });
     it('conn without token', async () => {
-      jest.spyOn(authService, 'validateCreds').mockImplementationOnce(() => {
-        throw new Error();
-      });
+      jest
+        .spyOn(authService, 'checkoutUserSession')
+        .mockImplementationOnce(() => {
+          throw new Error();
+        });
       jest.spyOn(provider as any, 'withoutToken').mockImplementation();
       const res = await provider.processClient(client);
       expect(res).toBeDefined();
@@ -44,13 +46,12 @@ describe('Connection provider (unit)', () => {
     });
     it('connection with correct token', async () => {
       jest
-        .spyOn(authService, 'validateCreds')
+        .spyOn(authService, 'checkoutUserSession')
         .mockImplementationOnce(async () => {
           return {
             name: 'Name',
             id: 5,
-            balance: 0,
-            email: 'email@gmail.com',
+            deviceId: 'string',
           };
         });
       const tokenPayload = {
@@ -91,7 +92,8 @@ describe('Connection provider (unit)', () => {
       const payload = {
         id: -1,
         name: 'Danek',
-      } as PublicUserFields;
+        deviceId: 'testD',
+      } as InternalAuthorizedUserFields;
       await provider['authorizedPatch'](payload, client);
       expect(client.name).toEqual('Danek');
       expect(client.authorized).toBeTruthy();

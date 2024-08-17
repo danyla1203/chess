@@ -1,8 +1,8 @@
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsString, Length, Matches } from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
-  @MinLength(4)
-  @MaxLength(20)
+  @Length(4, 15)
+  @Matches(/\w+/)
   name: string;
 }

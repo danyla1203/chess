@@ -40,7 +40,7 @@ describe('AuthController unit', () => {
   });
 
   describe('login with incorrect data', () => {
-    const cases = [
+    const emailCases = [
       {},
       { password: 'correctPass', deviceId: 'correctId' },
       { email: 'correct.email@gmail.com', deviceId: 'correctId' },
@@ -84,8 +84,33 @@ describe('AuthController unit', () => {
         deviceId: 1234,
       },
     ];
-    test.each(cases)('for data - %p should throw bad request', (data) => {
-      return req(server).post('/auth/login').send(data).expect(400);
+    test.each(emailCases)('for data - %p should throw bad request', (data) => {
+      return req(server).post(`/auth/login/email`).send(data).expect(400);
+    });
+    const nameCases = [
+      {
+        name: 'shr',
+        password: 'correctPassword',
+        deviceId: 'correctId',
+      },
+      {
+        name: 'thisIsToLongNameForUserAccount',
+        password: 'correctPassword',
+        deviceId: 'correctId',
+      },
+      {
+        name: '',
+        password: 'correctPassword',
+        deviceId: 'correctId',
+      },
+      {
+        name: '       ',
+        password: 'correctPassword',
+        deviceId: 'correctId',
+      },
+    ];
+    test.each(nameCases)('for data - %p should throw bad request', (data) => {
+      return req(server).post(`/auth/login/name`).send(data).expect(400);
     });
   });
   describe('login with correct data', () => {
@@ -94,12 +119,28 @@ describe('AuthController unit', () => {
       'for correct login data should call service methods',
       async () => {
         await req(server)
-          .post('/auth/login')
+          .post(`/auth/login/email`)
           .send({
             email: faker.internet.email(),
             password: faker.internet.password(),
             deviceId: faker.string.nanoid(7),
-          });
+          })
+          .expect(201);
+
+        expect(service.login).toBeCalled();
+      },
+    );
+    test.each(cases)(
+      'for correct login data should call service methods',
+      async () => {
+        await req(server)
+          .post(`/auth/login/name`)
+          .send({
+            name: faker.string.alpha({ length: { min: 5, max: 15 } }),
+            password: faker.internet.password(),
+            deviceId: faker.string.nanoid(7),
+          })
+          .expect(201);
         expect(service.login).toBeCalled();
       },
     );
@@ -112,7 +153,7 @@ describe('AuthController unit', () => {
       { refreshToken: 1234 },
     ];
     test.each(cases)('for data - %p should throw bad request', (data) => {
-      return req(server).post('/auth/login').send(data).expect(400);
+      return req(server).put('/auth/use-refresh').send(data).expect(400);
     });
   });
   describe('use refresh with correct data', () => {

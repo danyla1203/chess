@@ -81,31 +81,16 @@ describe('UserService', () => {
   });
   describe('profile', () => {
     it('should return user profile', async () => {
-      const { id, name, email, balance, winningBalance } =
+      const { id, name, email, balance, winningBalance, createdAt } =
         await prisma.user.findFirst();
       expect(service.profile(id)).resolves.toStrictEqual({
         id,
         name,
         email,
+        createdAt,
         balance,
         winningBalance,
       });
-    });
-  });
-  describe('update', () => {
-    it('should update and return user', async () => {
-      const user = await prisma.user.findFirst();
-      const newData = {
-        name: faker.internet.userName(),
-      };
-      const expected = {
-        name: newData.name,
-        email: user.email,
-        id: user.id,
-        balance: user.balance,
-        winningBalance: user.winningBalance,
-      };
-      expect(service.update(user.id, newData)).resolves.toStrictEqual(expected);
     });
   });
   describe('get user invoices', () => {
@@ -143,5 +128,23 @@ describe('UserService', () => {
       where: { userId: user.id, topUpAmount: 666 },
     });
     expect(invoice).not.toBeNull();
+  });
+  describe('update user name', () => {
+    it('should throw Conflict error if provided name is already taken', async () => {
+      const user = await prisma.user.findFirst();
+      const userForUpdate = await prisma.user.findFirst({
+        where: { id: 3 },
+      });
+      await expect(
+        service.updateUserName(userForUpdate.id, user.name),
+      ).rejects.toThrow(ConflictException);
+    });
+    it('should update user name', async () => {
+      const user = await prisma.user.findFirst();
+      const newName = faker.string.alpha({ length: { min: 5, max: 14 } });
+      await service.updateUserName(user.id, newName);
+      const newUser = await prisma.user.findUnique({ where: { id: user.id } });
+      expect(newUser.name).toEqual(newName);
+    });
   });
 });

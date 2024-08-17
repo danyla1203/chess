@@ -1,8 +1,13 @@
 import {
-  PublicUserFields,
+  InternalAuthorizedUserFields,
   UserProfile,
   UserGames,
   prismaSelectUserProfile,
 } from './user.entity';
 
-export { PublicUserFields, UserProfile, UserGames, prismaSelectUserProfile };
+export {
+  InternalAuthorizedUserFields,
+  UserProfile,
+  UserGames,
+  prismaSelectUserProfile,
+};

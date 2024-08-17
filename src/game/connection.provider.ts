@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AuthService, TokenService } from '../auth';
 import { Anonymous } from './entities/Anonymous';
-import { PublicUserFields } from '../user/entities';
+import { InternalAuthorizedUserFields } from '../user/entities';
 
 @Injectable()
 export class ConnectionPatchProvider {
@@ -10,7 +10,10 @@ export class ConnectionPatchProvider {
     private readonly tokensService: TokenService,
   ) {}
 
-  private async authorizedPatch({ name, id }: PublicUserFields, client) {
+  private async authorizedPatch(
+    { name, id }: InternalAuthorizedUserFields,
+    client,
+  ) {
     client.name = name;
     client.authorized = true;
     client.userId = id;
@@ -22,7 +25,7 @@ export class ConnectionPatchProvider {
   }
   private async withToken(payload, client) {
     try {
-      const authorizedUserData = await this.authService.validateCreds(
+      const authorizedUserData = await this.authService.checkoutUserSession(
         payload.userId,
         payload.deviceId,
       );

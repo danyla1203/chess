@@ -1,9 +1,6 @@
-import { IsEmail, IsString, Length } from 'class-validator';
+import { IsEmail, IsString, Length, Matches } from 'class-validator';
 
-export class LoginDto {
-  @IsEmail()
-  email: string;
-
+class LoginBase {
   @IsString()
   @Length(6, 20)
   password: string;
@@ -11,4 +8,16 @@ export class LoginDto {
   @IsString()
   @Length(5)
   deviceId: string;
+}
+
+export class EmailLoginDto extends LoginBase {
+  @IsEmail()
+  email: string;
+}
+
+export class NameLoginDto extends LoginBase {
+  @IsString()
+  @Length(4, 15)
+  @Matches(/\w+/)
+  name: string;
 }
