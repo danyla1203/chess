@@ -14,6 +14,7 @@ import { GamesTable } from './GamesTable';
 import { Loader } from '@/components';
 import { UserBalance } from './UserBalance';
 import InvoiceHistory from './InvoiceHistory';
+import ChangeName from './ChangeName';
 
 export default function UserProfile() {
   const { profile } = useUserState();
@@ -51,9 +52,7 @@ export default function UserProfile() {
         </CardBody>
         <CardFooter className="pt-1">
           <div className="w-full flex flex-col place-items-stretch justify-between">
-            <Button size="sm" disabled={!authorized}>
-              Change name
-            </Button>
+            <ChangeName profile={profile} />
             <Button className="mt-1" size="sm" disabled={!authorized}>
               Logout
             </Button>
