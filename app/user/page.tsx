@@ -53,9 +53,11 @@ export default function UserProfile() {
         <CardFooter className="pt-1">
           <div className="w-full flex flex-col place-items-stretch justify-between">
             <ChangeName profile={profile} />
-            <Button className="mt-1" size="sm" disabled={!authorized}>
-              Logout
-            </Button>
+            {authorized ? (
+              <Button className="mt-1" size="sm" disabled={!authorized}>
+                Logout
+              </Button>
+            ) : null}
           </div>
         </CardFooter>
       </Card>
