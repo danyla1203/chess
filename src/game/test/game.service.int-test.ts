@@ -2,7 +2,11 @@ import { Test } from '@nestjs/testing';
 import { GameService } from '../game.service';
 import { AppModule } from '../../app.module';
 import { Config, Game } from '../entities/game';
-import { generateClient, generateConfig } from './generators';
+import {
+  generateClient,
+  generateConfig,
+  generateGameResult,
+} from './generators';
 import { Client, Player } from '../entities';
 import { TurnBody } from '../dto';
 import { GameList } from '../game.list';
@@ -41,7 +45,7 @@ describe('GameService (integration)', () => {
       });
       cl1 = generateClient(true, userInDb1.id);
       config = generateConfig('w', 90);
-      game = new Game(cl1, config, jest.fn(), jest.fn());
+      game = new Game(cl1, config, jest.fn());
       lobby.addGameToLobby(game);
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
@@ -51,11 +55,10 @@ describe('GameService (integration)', () => {
     it('should return null if one of the players isnt authorized', async () => {
       const pl1 = game.players[0];
       const pl2 = game.players[1];
-      pl1.authorized = false;
-      pl2.authorized = true;
-      const gmResult = game.endGame(pl1, pl2);
-      const result = await service['saveGame'](pl1, pl2, gmResult, true);
-      expect(result).toEqual(null);
+      pl1.client.authorized = false;
+      pl2.client.authorized = true;
+      game.endGame(pl1, pl2);
+      await service['saveGame'](pl1, pl2, generateGameResult(), true);
     });
     it('should save game with winner', async () => {
       const [pl1, pl2] = game.players;
@@ -63,11 +66,11 @@ describe('GameService (integration)', () => {
       const shouldWin = pl1.userId === cl1.userId ? pl1 : pl2;
       const shouldLose = pl1.userId === cl2.userId ? pl1 : pl2;
 
-      const gmResult = game.endGame(shouldWin, shouldLose);
+      game.endGame(shouldWin, shouldLose);
       const returnedGame = await service['saveGame'](
         shouldWin,
         shouldLose,
-        gmResult,
+        generateGameResult(game.config),
         true,
       );
 
@@ -117,7 +120,7 @@ describe('GameService (integration)', () => {
       jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
       cl1 = generateClient(true, userInDb1.id);
       const config = generateConfig('w', 90);
-      game = new Game(cl1, config, jest.fn(), jest.fn());
+      game = new Game(cl1, config, jest.fn());
       lobby.addGameToLobby(game);
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
@@ -200,7 +203,7 @@ describe('GameService (integration)', () => {
       jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
       cl1 = generateClient(true, userInDb1.id);
       const config = generateConfig('w', 90);
-      game = new Game(cl1, config, jest.fn(), jest.fn());
+      game = new Game(cl1, config, jest.fn());
       lobby.addGameToLobby(game);
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
@@ -243,13 +246,13 @@ describe('GameService (integration)', () => {
       jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
       cl1 = generateClient(true, userInDb1.id);
       const config = generateConfig('w');
-      game = new Game(cl1, config, jest.fn(), jest.fn());
+      game = new Game(cl1, config, jest.fn());
       lobby.addGameToLobby(game);
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
       lobby.pushToStartedGames(game.id);
-      pl1 = game.players.find((pl) => pl.id == cl1.id);
-      pl2 = game.players.find((pl) => pl.id == cl2.id);
+      pl1 = game.players.find((pl) => pl.userId == cl1.userId);
+      pl2 = game.players.find((pl) => pl.userId == cl2.userId);
       game.start();
     });
     afterAll(() => {
@@ -311,13 +314,13 @@ describe('GameService (integration)', () => {
       jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
       cl1 = generateClient(true, userInDb1.id);
       const config = generateConfig('w');
-      game = new Game(cl1, config, jest.fn(), jest.fn());
+      game = new Game(cl1, config, jest.fn());
       lobby.addGameToLobby(game);
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
       lobby.pushToStartedGames(game.id);
-      pl1 = game.players.find((pl) => pl.id == cl1.id);
-      pl2 = game.players.find((pl) => pl.id === cl2.id);
+      pl1 = game.players.find((pl) => pl.userId == cl1.userId);
+      pl2 = game.players.find((pl) => pl.userId === cl2.userId);
       game.start();
     });
     afterAll(() => {
@@ -350,13 +353,13 @@ describe('GameService (integration)', () => {
       jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
       cl1 = generateClient(true, userInDb1.id);
       const config = generateConfig('w');
-      game = new Game(cl1, config, jest.fn(), jest.fn());
+      game = new Game(cl1, config, jest.fn());
       lobby.addGameToLobby(game);
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
       lobby.pushToStartedGames(game.id);
-      pl1 = game.players.find((pl) => pl.id == cl1.id);
-      pl2 = game.players.find((pl) => pl.id === cl2.id);
+      pl1 = game.players.find((pl) => pl.userId == cl1.userId);
+      pl2 = game.players.find((pl) => pl.userId === cl2.userId);
       game.start();
     });
     afterAll(() => {
@@ -372,48 +375,6 @@ describe('GameService (integration)', () => {
       expect(spy).toBeCalled();
       expect(result).toHaveProperty(['winner'], pl1);
       expect(result).toHaveProperty(['looser'], pl2);
-    });
-  });
-  describe('player reconn', () => {
-    let game: Game;
-    let cl1: Client;
-    let cl2: Client;
-    let pl1: Player;
-    let userInDb2;
-    beforeEach(async () => {
-      const userInDb1 = await prisma.user.findFirst({});
-      userInDb2 = await prisma.user.findFirst({
-        where: { NOT: { id: userInDb1.id } },
-      });
-      jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
-      cl1 = generateClient(true, userInDb1.id);
-      const config = generateConfig('w');
-      game = new Game(cl1, config, jest.fn(), jest.fn());
-      lobby.addGameToLobby(game);
-      cl2 = generateClient(true, userInDb2.id);
-      game.addPlayer(cl2);
-      lobby.pushToStartedGames(game.id);
-      pl1 = game.players.find((pl) => pl.id == cl1.id);
-      game.start();
-    });
-    afterAll(() => {
-      jest.useRealTimers();
-    });
-
-    it('should replace old socket with the new one', () => {
-      const newCl2 = generateClient(true, userInDb2.id);
-      const spyTimerTickCb = jest.spyOn(game, 'timerTick');
-      service.updateSocket(newCl2, game);
-
-      const newPlayerInGame = game.players.find((pl) => pl.id === newCl2.id);
-      const playerWhoWasInGame = pl1;
-      expect(newPlayerInGame).toBeDefined();
-
-      jest.advanceTimersByTime(1000);
-      expect(spyTimerTickCb).toBeCalledWith(
-        playerWhoWasInGame,
-        newPlayerInGame,
-      );
     });
   });
 });

@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,26 +11,30 @@ import {
   DrawAgreement,
   TurnBody,
   CompletedMove,
+  InitedGameData,
 } from './dto';
 import { GameList } from './game.list';
 import { Client, Player } from './entities';
 import {
   Game,
   GameData,
-  FiguresCellState,
   Message,
   GameResult,
+  GameWithWinner,
+  DrawGame,
+  Cell,
 } from './entities/game';
-import { Game as GameEmits, GameEnd } from './EmitTypes';
+import { GameEnd } from './EmitTypes';
 import { GameModel } from './model';
-import { GameWithWinner, DrawGame, Cell } from './entities/game/game.types';
 import { Game as PrismaGameType } from '@prisma/client';
+import { GameAdapterI } from './game.adapter.interface';
 
 @Injectable()
 export class GameService {
   constructor(
     private readonly list: GameList,
     private readonly model: GameModel,
+    @Inject('GameAdapterI') private readonly adapter: GameAdapterI,
   ) {}
 
   /**
@@ -50,51 +55,27 @@ export class GameService {
         })
       : await this.model.saveDraw({ ...result, pl1, pl2 });
   }
-  private injectableTimerTick(
-    players: Player[],
-    time: { w: number; b: number },
-  ) {
-    for (const pl of players) {
-      pl.emit(GameEmits.timeTick, { w: time.w, b: time.b });
-    }
-  }
+  //TODO: Rework on-timeout logic implementation
   private async injectableGameEndCallback(
-    game,
+    game: Game,
     winner: Player,
     looser: Player,
-  ) {
-    this.list.gameEnd(game.id);
-    await this.saveGame(winner, looser, game, true);
-    winner.emit(GameEmits.end, {
-      reason: GameEnd.timeout,
-      winner: true,
-      game,
-    });
-    looser.emit(GameEmits.end, {
-      reason: GameEnd.timeout,
-      winner: false,
-      game,
-    });
-  }
-
-  private async checkPlayerBalanceForGame(player: Client, bet: number) {
-    if (bet > 0) {
-      if (!player.authorized) throw new ConflictException('Invalid config');
-      const playerBalance = await this.model.getUserBalance(player.userId);
-      if (playerBalance < bet) throw new ConflictException('Invalid config');
-    }
+  ): Promise<void> {
+    const gameDto = this.adapter.gameWithWinnerDto(game);
+    this.list.gameEnd(gameDto.id);
+    await this.saveGame(winner, looser, gameDto, true);
+    winner.gameEndEvent(true, gameDto, GameEnd.timeout);
+    winner.gameEndEvent(false, gameDto, GameEnd.timeout);
   }
 
   public async createGame(
     player: Client,
     config: CreateGameDto,
   ): Promise<Game> {
-    await this.checkPlayerBalanceForGame(player, config.bet);
     const newGame = new Game(
       player,
       config,
       this.injectableGameEndCallback.bind(this),
-      this.injectableTimerTick,
     );
     this.list.addGameToLobby(newGame);
     return newGame;
@@ -107,7 +88,6 @@ export class GameService {
     if (player.userId && pl1.userId === player.userId) {
       throw new ConflictException('You are already in game');
     }
-    await this.checkPlayerBalanceForGame(player, game.config.bet);
 
     game.addPlayer(player);
     this.list.pushToStartedGames(gameId);
@@ -131,37 +111,25 @@ export class GameService {
     return game;
   }
 
-  public async leaveGame(client: Client): Promise<GameWithWinner> {
+  public async leaveGame(
+    client: Client,
+  ): Promise<{ winner: Player; looser: Player; gameDto: GameWithWinner }> {
     const game = this.list.findPendingClientGame(client);
     if (!game) throw new NotFoundException('Game not found');
 
     const [pl1, pl2] = game.players;
     const winner = pl1.userId !== client.userId ? pl1 : pl2;
     const looser = pl1.userId === client.userId ? pl1 : pl2;
-    const result = game.endGame(winner, looser);
-    this.list.gameEnd(result.id);
-    await this.saveGame(winner, looser, result, true);
-    return result;
-  }
-  public updateSocket(socket, game: Game): Player {
-    const adaptedSocket = {
-      id: socket.id,
-      authorized: socket.authorized,
-      name: socket.name,
-      userId: socket.userId,
-      join: socket.join.bind(socket),
-      emit: socket.emit.bind(socket),
-      toRoom: (room: string, event: string, data: any) => {
-        socket.to(room).emit(event, data);
-      },
-    };
-    const newPlayer = game.resetPlayer(adaptedSocket);
-    game.resetTicking();
-    return newPlayer;
+    game.endGame(winner, looser);
+
+    const gameDto = this.adapter.gameWithWinnerDto(game);
+    this.list.gameEnd(gameDto.id);
+    await this.saveGame(winner, looser, gameDto, true);
+    return { winner, looser, gameDto };
   }
 
   public getLobby(): GameData[] {
-    return this.list.lobby.map((game) => game.data);
+    return this.list.getLobby();
   }
   public findGameById(id: number): Game {
     const game = this.list.games.find((game) => game.id === id);
@@ -169,46 +137,32 @@ export class GameService {
     return game;
   }
 
-  public pendingGameData(game) {
+  public pendingGameData(game): PlainBoardState {
     return this.getActualGameState(game);
   }
 
   public getActualGameState(game: Game): PlainBoardState {
-    const boards: FiguresCellState = game.process.state;
-
-    const plainObj = {
-      w: {},
-      b: {},
-    };
-
-    const [white, black] = Object.values(boards);
-    for (const [figure, cell] of white.entries()) {
-      plainObj.w[cell] = figure;
-    }
-    for (const [figure, cell] of black.entries()) {
-      plainObj.b[cell] = figure;
-    }
-
-    return plainObj;
+    return this.adapter.plainBoardState(game);
   }
 
-  public pushMessage(gameId: number, message: string, player: Client): Message {
+  public pushMessage(gameId: number, message: string, client: Client): Message {
     const game = this.findGameById(gameId);
-    return game.chat.addMessage(message, player);
+    return game.chat.addMessage(message, client);
   }
 
   public async surrender(
     gameId: number,
     client: Client,
-  ): Promise<GameWithWinner> {
+  ): Promise<{ winner: Player; looser: Player; gameDto: GameWithWinner }> {
     const game = this.findGameById(gameId);
     const [pl1, pl2] = game.players;
     const winner = pl1.userId !== client.userId ? pl1 : pl2;
     const looser = pl1.userId === client.userId ? pl1 : pl2;
-    const result = game.endGame(winner, looser);
-    this.list.gameEnd(result.id);
-    await this.saveGame(winner, looser, result, true);
-    return result;
+    game.endGame(winner, looser);
+    const gameDto = this.adapter.gameWithWinnerDto(game);
+    this.list.gameEnd(gameDto.id);
+    await this.saveGame(winner, looser, gameDto, true);
+    return { winner, looser, gameDto };
   }
 
   public proposeDraw(gameId: number, client: Client): DrawAgreement {
@@ -226,10 +180,11 @@ export class GameService {
 
     if (!w && !b) throw new ConflictException('Draw propose wasnt set');
     game.setDrawProposeFrom(side);
-    const result = game.endGameByDraw();
-    this.list.gameEnd(result.id);
-    await this.saveGame(result.pl1, result.pl2, result);
-    return result;
+    game.endGameByDraw();
+    const gameDto = this.adapter.gameWithDrawDto(game);
+    this.list.gameEnd(gameDto.id);
+    await this.saveGame(game.players[0], game.players[1], gameDto);
+    return gameDto;
   }
 
   public rejectDraw(gameId: number): DrawAgreement {
@@ -269,10 +224,14 @@ export class GameService {
       const [pl1, pl2] = game.players;
       const winner = pl1.userId === userId ? pl1 : pl2;
       const looser = pl1.userId !== userId ? pl1 : pl2;
-      const gameResult = game.endGame(winner, looser);
-      this.list.gameEnd(gameResult.id);
-      await this.saveGame(winner, looser, gameResult, true);
+      game.endGame(winner, looser);
+      const gameDto = this.adapter.gameWithWinnerDto(game);
+      this.list.gameEnd(gameDto.id);
+      await this.saveGame(winner, looser, gameDto, true);
     }
     return completedMove;
+  }
+  public getInitedGameData(userId: number, game: Game): InitedGameData {
+    return this.adapter.initedGameDataDto(userId, game);
   }
 }

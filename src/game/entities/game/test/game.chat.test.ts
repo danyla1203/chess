@@ -17,7 +17,7 @@ describe('GameChat (unit)', () => {
         id: 12345,
         text: 'test',
         author: {
-          id: cl.id,
+          id: cl.userId,
           name: cl.name,
         },
         date: new Date(),

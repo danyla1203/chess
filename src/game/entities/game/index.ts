@@ -15,6 +15,7 @@ import {
 } from './game.types';
 import { Game } from './game';
 import { Message } from './game.chat';
+import { GameAdapter } from './game.adapter';
 
 export {
   Game,
@@ -32,4 +33,5 @@ export {
   Move,
   Message,
   GameResult,
+  GameAdapter,
 };

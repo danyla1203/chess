@@ -2,14 +2,10 @@ import { Client } from '../../Client';
 import { Game } from '../game';
 import { GameProcess } from '../process/game.process';
 import { GameChat } from '../game.chat';
-import { InitedGameData } from 'src/game/dto';
 import { ConflictException } from '@nestjs/common';
 import { Config } from '../game.types';
-import {
-  generateConfig,
-  generateClient,
-  getFigureCellState,
-} from '../../../test/generators';
+import { generateConfig, generateClient } from '../../../test/generators';
+import { Player } from '../../Player';
 
 describe('Game entity (unit)', () => {
   let game: Game;
@@ -18,20 +14,21 @@ describe('Game entity (unit)', () => {
   beforeEach(() => {
     config = generateConfig();
     fClient = generateClient();
-    game = new Game(fClient, config, jest.fn(), jest.fn());
+    game = new Game(fClient, config, jest.fn());
   });
   afterEach(() => {
     jest.clearAllMocks();
   });
   it('constructor', () => {
     jest.spyOn(Math, 'random').mockImplementation(() => 0.12345);
-    const newGame = new Game(fClient, config, jest.fn(), jest.fn());
+    const newGame = new Game(fClient, config, jest.fn());
     expect(newGame.id).toBe(12345);
     expect(newGame.isActive).toBe(false);
     expect(newGame.players).toContainEqual({
-      ...fClient,
+      client: fClient,
       side: newGame.players[0].side,
       time: config.time,
+      turningPlayer: false,
     });
     expect(newGame.config).toStrictEqual(config);
     expect(newGame.process).toBeInstanceOf(GameProcess);
@@ -56,50 +53,19 @@ describe('Game entity (unit)', () => {
       b: false,
     });
   });
-  it('get data', () => {
-    expect(game.data).toStrictEqual({
-      id: game.id,
-      players: game.players,
-      config: game.config,
-    });
-  });
   it('addTimeTo', () => {
     const prevTime = game.players[0].time;
     game.addTimeTo(game.players[0], 1000);
     expect(game.players[0].time).toEqual(prevTime + 1000);
-  });
-  describe('getInitedGameData', () => {
-    it('return game data with board state on game init', () => {
-      const player = generateClient();
-      const pickedSide = Object.values(game.players)[0].side;
-      const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push({ ...player, side, time: game.config.time });
-      const expected: InitedGameData = {
-        board: getFigureCellState(),
-        gameId: game.id,
-        side: game.players[0].side,
-        maxTime: game.config.time,
-        timeIncrement: game.config.timeIncrement,
-      };
-      expect(game.getInitedGameData(game.players[0].userId)).toStrictEqual(
-        expected,
-      );
-      expected.side = game.players[1].side;
-      expect(game.getInitedGameData(game.players[1].userId)).toStrictEqual(
-        expected,
-      );
-    });
   });
   describe('addPlayer', () => {
     it('should add new player to game.players array', () => {
       const cl = generateClient();
       const nonPickedSide = game.players[0].side === 'w' ? 'b' : 'w';
       game.addPlayer(cl);
-      expect(game.players[1]).toStrictEqual({
-        ...cl,
-        side: nonPickedSide,
-        time: game.config.time,
-      });
+      expect(game.players[1]).toStrictEqual(
+        new Player(cl, nonPickedSide, game.config.time),
+      );
     });
   });
   describe('start', () => {
@@ -107,7 +73,7 @@ describe('Game entity (unit)', () => {
       const player = generateClient();
       const pickedSide = Object.values(game.players)[0].side;
       const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push({ ...player, side, time: game.config.time });
+      game.players.push(new Player(player, side, 100000));
       jest.spyOn(game, 'changeTickingSide').mockImplementation();
       const whitePlayer = game.players.find((player) => player.side === 'w');
       const blackPlayer = game.players.find((player) => player.side === 'b');
@@ -124,7 +90,7 @@ describe('Game entity (unit)', () => {
       const player = generateClient();
       const pickedSide = Object.values(game.players)[0].side;
       const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push({ ...player, side, time: game.config.time });
+      game.players.push(new Player(player, side, 100000));
 
       jest.useFakeTimers();
       jest.spyOn(global, 'setInterval');
@@ -145,7 +111,7 @@ describe('Game entity (unit)', () => {
       const player = generateClient();
       const pickedSide = Object.values(game.players)[0].side;
       const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push({ ...player, side, time: game.config.time });
+      game.players.push(new Player(player, side, 100000));
       const [pl1, pl2] = game.players;
       const prevPl1Time = pl1.time;
       game.timerTick(pl1, pl2);
@@ -155,7 +121,7 @@ describe('Game entity (unit)', () => {
       const player = generateClient();
       const pickedSide = Object.values(game.players)[0].side;
       const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push({ ...player, side, time: game.config.time });
+      game.players.push(new Player(player, side, 100000));
       const [pl1, pl2] = game.players;
       const endGameMock = jest.spyOn(game, 'endGame');
 
@@ -170,7 +136,7 @@ describe('Game entity (unit)', () => {
       const player = generateClient();
       const pickedSide = Object.values(game.players)[0].side;
       const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push({ ...player, side, time: game.config.time });
+      game.players.push(new Player(player, side, 100000));
 
       jest.useFakeTimers();
       jest.spyOn(global, 'clearInterval');
@@ -189,7 +155,7 @@ describe('Game entity (unit)', () => {
       const player = generateClient();
       const pickedSide = Object.values(game.players)[0].side;
       const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push({ ...player, side, time: game.config.time });
+      game.players.push(new Player(player, side, 100000));
 
       jest.useFakeTimers();
       jest.spyOn(global, 'clearInterval');
@@ -217,7 +183,7 @@ describe('Game entity (unit)', () => {
       const player = generateClient();
       const pickedSide = Object.values(game.players)[0].side;
       const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push({ ...player, side, time: game.config.time });
+      game.players.push(new Player(player, side, 100000));
 
       const { userId } = side === 'w' ? game.players[0] : game.players[1];
       expect(() => game.makeTurn(userId, 'pawn4', 'd5')).toThrow(

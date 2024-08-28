@@ -1,28 +1,33 @@
-import { ExecutionContext, createParamDecorator } from '@nestjs/common';
+import { Socket } from 'socket.io';
+import { Game as GameEvent, Lobby, room, User } from '../EmitTypes';
+import { Game, GameData } from './game';
 
-export const ClientSocket = createParamDecorator(
-  (_: unknown, ctx: ExecutionContext) => {
-    const socket = ctx.switchToHttp().getRequest();
-    const player = {
-      id: socket.id,
-      authorized: socket.authorized,
-      name: socket.name,
-      userId: socket.userId,
-      join: socket.join.bind(socket),
-      emit: socket.emit.bind(socket),
-      toRoom: (room: string, event: string, data: any) =>
-        socket.to(room).emit(event, data),
-    };
-    return player;
-  },
-);
-
-export type Client = {
-  id: string;
-  name: string;
+export class Client {
   authorized: boolean;
-  userId?: number;
-  join: (room: string) => void;
-  emit: (event: string, data: any) => void;
-  toRoom: (room: string, event: string, data: any) => void;
-};
+  name: string;
+  userId: number;
+  socket: Socket;
+  anonymousTempToken?: string;
+
+  constructor(socket: Socket) {
+    this.socket = socket;
+  }
+  public lobbyUpdateEvent(lobby: GameData[]): void {
+    this.socket.emit(Lobby.update, lobby);
+  }
+  public anonymouseTokenEvent(): void {
+    this.socket.emit(User.anonymousToken, {
+      tempToken: this.anonymousTempToken,
+      userId: this.userId,
+    });
+  }
+  public pendingGameEvent(gameId: number): void {
+    this.socket.emit(GameEvent.pendingGame, { gameId });
+  }
+  public gameCreatedEvent(game: Game): void {
+    this.socket.emit(GameEvent.created, { gameId: game.id });
+  }
+  public join(gameId: number): void {
+    this.socket.join(room(gameId));
+  }
+}

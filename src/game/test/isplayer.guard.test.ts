@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
-import { IsPlayer } from '../guards/isplayer.guard';
+import { IsPlayer } from '../guards';
 import { GameService } from '../game.service';
-import { Player } from '../entities';
 import { Game } from '../entities/game';
 
 describe('IsPlayer (unit)', () => {
@@ -42,7 +41,7 @@ describe('IsPlayer (unit)', () => {
 
     jest.spyOn(gameService, 'findGameById').mockReturnValue({
       id: 1,
-      players: [{ id: '11' } as Player],
+      players: [{ client: { socket: { id: '11' } } } as any],
     } as Game);
 
     const result = guard.canActivate(wsContextMock);
@@ -52,14 +51,14 @@ describe('IsPlayer (unit)', () => {
   it('should deny access when the player is not in the game', () => {
     const wsContextMock: ExecutionContext = {
       switchToWs: jest.fn().mockReturnValue({
-        getClient: jest.fn().mockReturnValue({ id: '1' }),
+        getClient: jest.fn().mockReturnValue({ id: 'id' }),
         getData: jest.fn().mockReturnValue({ gameId: 'gameId' }),
       }),
     } as unknown as ExecutionContext;
 
     jest.spyOn(gameService, 'findGameById').mockReturnValue({
       id: 1,
-      players: [{ id: '-1' } as Player],
+      players: [{ id: '-1', client: { socket: { id: 'anotherId' } } } as any],
     } as Game);
 
     const result = guard.canActivate(wsContextMock);

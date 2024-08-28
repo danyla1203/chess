@@ -2,13 +2,11 @@ import { Test } from '@nestjs/testing';
 import { AuthService, TokenService } from '../../auth';
 import { LoggerService } from '../../tools/logger';
 import { ConnectionPatchProvider } from '../connection.provider';
-import { InternalAuthorizedUserFields } from '../../user/entities';
 
 jest.mock('../../auth');
 
 describe('Connection provider (unit)', () => {
   let tokenService: TokenService;
-  let authService: AuthService;
   let provider: ConnectionPatchProvider;
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -19,41 +17,33 @@ describe('Connection provider (unit)', () => {
         ConnectionPatchProvider,
       ],
     }).compile();
-    authService = moduleRef.get(AuthService);
     tokenService = moduleRef.get(TokenService);
     provider = moduleRef.get(ConnectionPatchProvider);
   });
   describe('process client connection', () => {
-    let client: any;
+    let socket: any;
     beforeEach(() => {
-      client = {
+      socket = {
         handshake: {
           query: {},
         },
         emit: jest.fn(),
       };
     });
-    it('conn without token', async () => {
+    it('process without token', async () => {
+      jest.spyOn(tokenService, 'parseToken').mockImplementationOnce(() => {
+        throw new Error();
+      });
       jest
-        .spyOn(authService, 'checkoutUserSession')
+        .spyOn(provider as any, 'createAnonymousToken')
         .mockImplementationOnce(() => {
-          throw new Error();
+          return null;
         });
-      jest.spyOn(provider as any, 'withoutToken').mockImplementation();
-      const res = await provider.processClient(client);
+      const res = await provider.processClient(socket);
       expect(res).toBeDefined();
-      expect(provider['withoutToken']).toBeCalledWith(client);
+      expect(provider['createAnonymousToken']).toBeCalled();
     });
-    it('connection with correct token', async () => {
-      jest
-        .spyOn(authService, 'checkoutUserSession')
-        .mockImplementationOnce(async () => {
-          return {
-            name: 'Name',
-            id: 5,
-            deviceId: 'string',
-          };
-        });
+    it('process with correct token', async () => {
       const tokenPayload = {
         id: 5,
         deviceId: 'string',
@@ -61,43 +51,22 @@ describe('Connection provider (unit)', () => {
       jest.spyOn(tokenService, 'parseToken').mockImplementationOnce(() => {
         return tokenPayload;
       });
-      jest.spyOn(provider as any, 'withToken').mockImplementation(() => {
-        client.authorized = true;
+      jest.spyOn(provider as any, 'withToken').mockImplementationOnce(() => {
+        return null;
       });
-      const res = await provider.processClient(client);
-      expect(res.authorized).toBeTruthy();
+      const res = await provider.processClient(socket);
       expect(res).toBeDefined();
-      expect(provider['withToken']).toBeCalledWith(tokenPayload, client);
+      expect(provider['withToken']).toBeCalled();
     });
-    it('anonymous method', () => {
+    it('createAnonymousToken', () => {
       jest.spyOn(Math, 'random').mockReturnValueOnce(1);
       jest
         .spyOn(tokenService, 'anonymousToken')
         .mockReturnValueOnce({ token: 'tkn', exp: '1' });
-      provider['withoutToken'](client);
-      expect(client.userId).toEqual(100000);
-      expect(client.name).toEqual('Anonymous');
-      expect(client.token).toEqual('tkn');
-    });
-    it('anonymousSession', () => {
-      const payload = {
-        name: 'Anonymous',
-        userId: -1,
-      };
-      provider['anonymousPatch'](payload, client);
-      expect(client.name).toEqual(payload.name);
-      expect(client.userId).toEqual(payload.userId);
-    });
-    it('authorized', async () => {
-      const payload = {
-        id: -1,
-        name: 'Danek',
-        deviceId: 'testD',
-      } as InternalAuthorizedUserFields;
-      await provider['authorizedPatch'](payload, client);
-      expect(client.name).toEqual('Danek');
-      expect(client.authorized).toBeTruthy();
-      expect(client.userId).toEqual(-1);
+      provider['createAnonymousToken'](socket);
+      expect(socket.userId).toEqual(100000);
+      expect(socket.name).toEqual('Anonymous');
+      expect(socket.anonymousTempToken).toEqual('tkn');
     });
   });
 });

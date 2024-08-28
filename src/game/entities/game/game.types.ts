@@ -1,4 +1,3 @@
-import { Player } from '..';
 import { MateData, ShahData, StrikedData } from '../../dto';
 
 export type Cell = string;
@@ -30,10 +29,14 @@ export type Config = {
   timeIncrement: number;
   bet: number;
 };
-
+type SimplifiedPlayer = {
+  userId: number;
+  name: string;
+  side: 'w' | 'b';
+};
 export type GameData = {
   id: number;
-  players: Player[];
+  players: SimplifiedPlayer[];
   config: Config;
 };
 export type GameResult = {
@@ -42,12 +45,12 @@ export type GameResult = {
   moves: Move[];
 };
 export type GameWithWinner = GameResult & {
-  winner: Player;
-  looser: Player;
+  winner: SimplifiedPlayer;
+  looser: SimplifiedPlayer;
 };
 export type DrawGame = GameResult & {
-  pl1: Player;
-  pl2: Player;
+  pl1: SimplifiedPlayer;
+  pl2: SimplifiedPlayer;
 };
 export type Move = {
   side: 'w' | 'b';

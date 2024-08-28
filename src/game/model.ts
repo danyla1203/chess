@@ -11,7 +11,7 @@ export class GameModel {
     private readonly logger: LoggerService,
   ) {}
 
-  public async getUserBalance(id: number) {
+  public async getUserBalance(id: number): Promise<number> {
     return (
       await this.prisma.user.findFirst({
         where: { id },

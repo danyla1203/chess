@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Game } from './entities/game';
+import { Game, GameData } from './entities/game';
 import { Client } from './entities';
 
 @Injectable()
@@ -29,9 +29,9 @@ export class GameList {
     this.games.push(this.lobby[index]);
     this.lobby.splice(index, 1);
   }
-  public removeInitedGames({ id }: Client): void {
+  public removeInitedGames({ userId }: Client): void {
     this.lobby = this.lobby.filter((game) => {
-      return game.players.find((pl) => pl.id !== id);
+      return game.players.find((pl) => pl.userId !== userId);
     });
   }
   public findPendingClientGame({ userId }: Client): Game | null {
@@ -39,5 +39,16 @@ export class GameList {
       return g.players.find((pl) => pl.userId === userId);
     });
     return game?.isActive ? game : null;
+  }
+  public getLobby(): GameData[] {
+    return this.lobby.map((game) => {
+      return {
+        id: game.id,
+        players: game.players.map(({ userId, name, side }) => {
+          return { userId, name, side };
+        }),
+        config: game.config,
+      };
+    });
   }
 }

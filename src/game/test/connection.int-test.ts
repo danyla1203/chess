@@ -6,6 +6,7 @@ import { AuthService, TokenService } from '../../auth';
 import { Game, Lobby, User } from '../EmitTypes';
 import { LoggerService } from '../../tools/logger';
 import { AppModule } from '../../app.module';
+import { ClientStore } from '../ClientStore';
 
 jest.mock('../game.service');
 jest.mock('axios', () => null);
@@ -15,7 +16,8 @@ describe('Socket connection (integration)', () => {
   let authService: AuthService;
   let tokenService: TokenService;
   let gmService: GameService;
-  let client: any;
+  let store: ClientStore;
+  let socket: any;
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
@@ -29,7 +31,8 @@ describe('Socket connection (integration)', () => {
     authService = moduleRef.get(AuthService);
     tokenService = moduleRef.get(TokenService);
     gmService = moduleRef.get(GameService);
-    client = {
+    store = moduleRef.get(ClientStore);
+    socket = {
       emit: jest.fn(),
     };
     gateway.server = {
@@ -40,7 +43,8 @@ describe('Socket connection (integration)', () => {
   describe('anonymous flow', () => {
     beforeEach(() => {
       jest.spyOn(gmService, 'getLobby').mockImplementationOnce(() => []);
-      client.handshake = {
+      socket.id = 'test';
+      socket.handshake = {
         query: '',
       };
     });
@@ -48,12 +52,12 @@ describe('Socket connection (integration)', () => {
       jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
         throw new NotFoundException('Game not found');
       });
-      await gateway.handleConnection(client);
-      expect(client.name).toEqual('Anonymous');
-      expect(client).toHaveProperty('token');
-      expect(client).toHaveProperty('userId');
-      expect(client.authorized).toBeFalsy();
-      expect(client.emit).toBeCalledWith(Lobby.update, []);
+      await gateway.handleConnection(socket);
+      const cl = store.getClient('test');
+      expect(cl.name).toEqual('Anonymous');
+      expect(cl).toHaveProperty('anonymousTempToken');
+      expect(cl).toHaveProperty('userId');
+      expect(cl.authorized).toBeFalsy();
     });
     it('anonymous connection without temp token - return pending game', async () => {
       jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
@@ -61,40 +65,42 @@ describe('Socket connection (integration)', () => {
           id: 12345,
         } as any;
       });
-      jest.spyOn(gmService, 'updateSocket').mockImplementation();
-      await gateway.handleConnection(client);
-      expect(client.name).toEqual('Anonymous');
-      expect(client).toHaveProperty('token');
-      expect(client).toHaveProperty('userId');
-      expect(client.authorized).toBeFalsy();
-      expect(client.emit).toHaveBeenNthCalledWith(1, User.anonymousToken, {
-        tempToken: client.token,
-        userId: client.userId,
+      await gateway.handleConnection(socket);
+      const cl = store.getClient('test');
+      expect(cl.name).toEqual('Anonymous');
+      expect(cl).toHaveProperty('anonymousTempToken');
+      expect(cl).toHaveProperty('userId');
+      expect(cl.authorized).toBeFalsy();
+      expect(socket.emit).toHaveBeenNthCalledWith(1, User.anonymousToken, {
+        tempToken: cl.anonymousTempToken,
+        userId: cl.userId,
       });
-      expect(client.emit).toHaveBeenNthCalledWith(2, Game.pendingGame, {
+      expect(socket.emit).toHaveBeenNthCalledWith(2, Game.pendingGame, {
         gameId: 12345,
       });
-      expect(client.emit).toHaveBeenNthCalledWith(3, Lobby.update, []);
+      expect(socket.emit).toHaveBeenNthCalledWith(3, Lobby.update, []);
     });
     it('anonymous connection with temp token', async () => {
       jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
         throw new NotFoundException('Game not found');
       });
-      client.handshake = {
+      socket.id = 'test';
+      socket.handshake = {
         query: {
           Authorization: 'Bearer tempToken',
         },
       };
-      await gateway.handleConnection(client);
-      expect(client.name).toEqual('Anonymous');
-      expect(client).toHaveProperty('userId');
-      expect(client.authorized).toBeFalsy();
-      expect(client.emit).toBeCalledWith(Lobby.update, []);
+      await gateway.handleConnection(socket);
+      const cl = store.getClient('test');
+      expect(cl.name).toEqual('Anonymous');
+      expect(cl).toHaveProperty('userId');
+      expect(cl.authorized).toBeFalsy();
     });
   });
   describe('authorized flow', () => {
     beforeEach(() => {
-      client.handshake = {
+      socket.id = 'test';
+      socket.handshake = {
         query: {
           Authorization: 'Bearer accessToken',
         },
@@ -120,11 +126,11 @@ describe('Socket connection (integration)', () => {
       jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
         throw new NotFoundException('Game not found');
       });
-      await gateway.handleConnection(client);
-      expect(client.name).toEqual('Danek');
-      expect(client.userId).toEqual(12345);
-      expect(client.authorized).toBeTruthy();
-      expect(client.emit).toBeCalledWith(Lobby.update, []);
+      await gateway.handleConnection(socket);
+      const cl = store.getClient('test');
+      expect(cl.name).toEqual('Danek');
+      expect(cl.userId).toEqual(12345);
+      expect(cl.authorized).toBeTruthy();
     });
     it('authorized conn with pending game', async () => {
       jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
@@ -132,15 +138,11 @@ describe('Socket connection (integration)', () => {
           id: 12345,
         } as any;
       });
-      jest.spyOn(gmService, 'updateSocket').mockImplementation();
-      await gateway.handleConnection(client);
-      expect(client.name).toEqual('Danek');
-      expect(client.userId).toEqual(12345);
-      expect(client.authorized).toBeTruthy();
-      expect(client.emit).toHaveBeenNthCalledWith(1, Game.pendingGame, {
-        gameId: 12345,
-      });
-      expect(client.emit).toHaveBeenNthCalledWith(2, Lobby.update, []);
+      await gateway.handleConnection(socket);
+      const cl = store.getClient('test');
+      expect(cl.name).toEqual('Danek');
+      expect(cl.userId).toEqual(12345);
+      expect(cl.authorized).toBeTruthy();
     });
   });
 });

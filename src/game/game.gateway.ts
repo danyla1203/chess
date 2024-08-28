@@ -5,8 +5,9 @@ import {
   OnGatewayConnection,
   WebSocketServer,
   OnGatewayDisconnect,
+  ConnectedSocket,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import {
   UseFilters,
   UseGuards,
@@ -16,11 +17,10 @@ import {
 import { WsValidationFilter } from '../tools/WsValidationFilter';
 import { GameService } from './game.service';
 import { ConnectToGameDto, CreateGameDto, TurnBody, ChatMessage } from './dto';
-import { Client, ClientSocket } from './entities';
-import { IsPlayer } from './guards/isplayer.guard';
-import { Game, GameEnd, Lobby, User, room } from './EmitTypes';
+import { Game, GameEnd, Lobby, room } from './EmitTypes';
 import { ConnectionPatchProvider } from './connection.provider';
-import { LoggerService } from '../tools/logger';
+import { ClientStore } from './ClientStore';
+import { IsBalanceEnough, IsPlayer } from './guards';
 
 @WebSocketGateway({ namespace: 'game', cors: true, transports: ['websocket'] })
 @UsePipes(new ValidationPipe())
@@ -29,100 +29,89 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly service: GameService,
     private readonly connService: ConnectionPatchProvider,
-    private readonly loggingService: LoggerService,
+    private readonly clientStore: ClientStore,
   ) {}
 
   @WebSocketServer()
   server: Server;
 
-  handleDisconnect(client: Client) {
+  handleDisconnect(socket: Socket) {
+    const client = this.clientStore.getClient(socket.id);
     this.service.removeInitedGamesBy(client);
     const opponent = this.service.findCurrentOpponent(client);
     if (opponent) {
-      opponent.emit(Game.playerDiconnected, {
-        opponent: { id: opponent.id, name: opponent.name, side: opponent.side },
-      });
+      opponent.opponentDisconnectedEvent();
     }
     const lobby = this.service.getLobby();
     this.server.emit(Lobby.update, lobby);
   }
 
-  async handleConnection(client) {
-    const patchedClient = await this.connService.processClient(client);
-    if (!patchedClient.authorized) {
-      patchedClient.emit(User.anonymousToken, {
-        tempToken: client.token,
-        userId: client.userId,
-      });
-      this.loggingService.log(
-        `Anonymous. userId = ${client.userId}`,
-        'Ws Connection',
-      );
-    } else {
-      this.loggingService.log(
-        `Authorized. userId = ${client.userId}, name=${client.name}`,
-        'Ws Connection',
-      );
+  async handleConnection(socket: Socket) {
+    const client = await this.connService.processClient(socket);
+    this.clientStore.setClient(socket.id, client);
+    if (!client.authorized) {
+      client.anonymouseTokenEvent();
     }
     try {
       const game = this.service.findPendingGame(client);
-      patchedClient.emit(Game.pendingGame, { gameId: game.id });
-      this.service.updateSocket(client, game);
+      client.pendingGameEvent(game.id);
     } catch (e) {}
 
-    patchedClient.emit(Lobby.update, this.service.getLobby());
+    client.lobbyUpdateEvent(this.service.getLobby());
   }
 
   @SubscribeMessage('create')
+  @UseGuards(IsBalanceEnough)
   async createGame(
-    @ClientSocket() client: Client,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() config: CreateGameDto,
-  ) {
-    const { id } = await this.service.createGame(client, config);
-    client.join(room(id));
-    client.emit(Game.created, { gameId: id });
+  ): Promise<void> {
+    const client = this.clientStore.getClient(socket.id);
+    const game = await this.service.createGame(client, config);
+    client.join(game.id);
+    client.gameCreatedEvent(game);
 
     const lobby = this.service.getLobby();
     this.server.emit(Lobby.update, lobby);
   }
 
   @SubscribeMessage('rejoin')
-  rejoinGame(@ClientSocket() client: Client) {
+  rejoinGame(@ConnectedSocket() socket: Socket): void {
+    const client = this.clientStore.getClient(socket.id);
     const game = this.service.findPendingGame(client);
-    client.join(room(game.id));
-    client.emit(Game.init, game.getInitedGameData(client.userId));
+    client.join(game.id);
+    const player = game.players.find((pl) => pl.userId === client.userId);
+    player.initedGameDataEvent(
+      this.service.getInitedGameData(client.userId, game),
+    );
     this.server.to(room(game.id)).emit(Game.playerReconected, {
       opponent: {
-        id: client.id,
+        id: client.userId,
         name: client.name,
       },
     });
   }
   @SubscribeMessage('leave')
-  async leaveGame(@ClientSocket() client: Client) {
-    const game = await this.service.leaveGame(client);
-    game.winner.emit(Game.end, {
-      reason: GameEnd.playerLeave,
-      winner: true,
-      game,
-    });
-    game.looser.emit(Game.end, {
-      reason: GameEnd.playerLeave,
-      winner: false,
-      game,
-    });
+  async leaveGame(@ConnectedSocket() socket: Socket): Promise<void> {
+    const client = this.clientStore.getClient(socket.id);
+    const { winner, looser, gameDto } = await this.service.leaveGame(client);
+    winner.gameEndEvent(true, gameDto, GameEnd.playerLeave);
+    looser.gameEndEvent(false, gameDto, GameEnd.playerLeave);
   }
-
   @SubscribeMessage('join')
+  @UseGuards(IsBalanceEnough)
   async joinGame(
-    @ClientSocket() client: Client,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: ConnectToGameDto,
-  ) {
+  ): Promise<void> {
+    const client = this.clientStore.getClient(socket.id);
     const game = await this.service.connectToGame(client, gameId);
-    client.join(room(game.id));
+    client.join(game.id);
 
     for (const player of game.players) {
-      player.emit(Game.init, game.getInitedGameData(player.userId));
+      player.initedGameDataEvent(
+        this.service.getInitedGameData(player.userId, game),
+      );
     }
     this.server.to(room(game.id)).emit(Game.start);
     game.start();
@@ -132,7 +121,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('move')
   @UseGuards(IsPlayer)
-  async move(@ClientSocket() client: Client, @MessageBody() turn: TurnBody) {
+  async move(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() turn: TurnBody,
+  ): Promise<void> {
+    const client = this.clientStore.getClient(socket.id);
     const { result, prevCell, side } = await this.service.makeTurn(
       turn.gameId,
       client.userId,
@@ -147,9 +140,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('chat-message')
   @UseGuards(IsPlayer)
   chatMessage(
-    @ClientSocket() client: Client,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId, text }: ChatMessage,
-  ) {
+  ): void {
+    const client = this.clientStore.getClient(socket.id);
     const message = this.service.pushMessage(gameId, text, client);
     this.server.to(room(gameId)).emit(Game.message, message);
   }
@@ -157,45 +151,43 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('surrender')
   @UseGuards(IsPlayer)
   async surrender(
-    @ClientSocket() client: Client,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
-  ) {
-    const game = await this.service.surrender(gameId, client);
-    game.winner.emit(Game.end, {
-      reason: GameEnd.surrender,
-      winner: true,
-      game,
-    });
-    game.looser.emit(Game.end, {
-      reason: GameEnd.surrender,
-      winner: false,
-      game,
-    });
+  ): Promise<void> {
+    const client = this.clientStore.getClient(socket.id);
+    const { winner, looser, gameDto } = await this.service.surrender(
+      gameId,
+      client,
+    );
+    winner.gameEndEvent(true, gameDto, GameEnd.surrender);
+    looser.gameEndEvent(false, gameDto, GameEnd.surrender);
   }
 
   @SubscribeMessage('draw_propose')
   @UseGuards(IsPlayer)
   drawPropose(
-    @ClientSocket() client: Client,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
-  ) {
+  ): void {
+    const client = this.clientStore.getClient(socket.id);
     const propose = this.service.proposeDraw(gameId, client);
-    client.toRoom(room(gameId), Game.drawPropose, propose);
+    this.server.to(room(gameId)).emit(Game.drawPropose, propose);
   }
 
   @SubscribeMessage('draw_accept')
   @UseGuards(IsPlayer)
   async acceptPropose(
-    @ClientSocket() client: Client,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
-  ) {
+  ): Promise<void> {
+    const client = this.clientStore.getClient(socket.id);
     const game = await this.service.acceptDraw(gameId, client);
     this.server.to(room(gameId)).emit(Game.end, { reason: GameEnd.draw, game });
   }
 
   @SubscribeMessage('draw_reject')
   @UseGuards(IsPlayer)
-  rejectPropose(@MessageBody() { gameId }: { gameId: number }) {
+  rejectPropose(@MessageBody() { gameId }: { gameId: number }): void {
     const result = this.service.rejectDraw(gameId);
     this.server.to(room(gameId)).emit(Game.rejectDraw, result);
   }
@@ -203,9 +195,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('add_time')
   @UseGuards(IsPlayer)
   addTime(
-    @ClientSocket() client: Client,
+    @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
-  ) {
+  ): void {
+    const client = this.clientStore.getClient(socket.id);
     const result = this.service.addTimeToAnotherPlayer(gameId, client);
     this.server.to(room(gameId)).emit(Game.addTime, result);
   }

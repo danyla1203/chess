@@ -1,41 +1,79 @@
 import { faker } from '@faker-js/faker';
 import { Client, Player } from '../entities';
-import { Config, GameResult } from '../entities/game';
+import { Config, GameResult, Game as GameEntity } from '../entities/game';
 
-export const generateGameResult = (): GameResult => {
+export const generateGameResult = (
+  config?: Config,
+  id?: number,
+): GameResult => {
   return {
-    id: faker.number.int(),
-    config: generateConfig(),
+    id: id || faker.number.int(),
+    config: config || generateConfig(),
     moves: [],
+  };
+};
+export const generateGameWithWinner = (gm?: GameEntity) => {
+  gm = gm ? gm : new GameEntity(generateClient(), generateConfig(), jest.fn());
+  const res = generateGameResult(gm?.config, gm?.id);
+  return {
+    ...res,
+    looser: {
+      userId: gm?.looser.userId,
+      side: gm?.looser.side,
+      name: gm?.looser.name,
+    },
+    winner: {
+      userId: gm?.winner.userId,
+      side: gm?.winner.side,
+      name: gm?.winner.name,
+    },
+  };
+};
+export const generateGameWithDraw = (gm?: GameEntity) => {
+  console.log(gm.players);
+  gm = gm ? gm : new GameEntity(generateClient(), generateConfig(), jest.fn());
+  const res = generateGameResult(gm?.config, gm?.id);
+  return {
+    ...res,
+    pl1: {
+      userId: gm?.players[0].client.userId,
+      side: gm?.players[0].side,
+      name: gm?.players[0].name,
+    },
+    pl2: {
+      userId: gm?.players[1].client.userId,
+      side: gm?.players[1].side,
+      name: gm?.players[1].name,
+    },
   };
 };
 
 export const generatePlayer = (
   side: 'w' | 'b',
   authorized = true,
-  userId = parseInt(faker.string.nanoid(8)),
+  userId = faker.number.int({ max: 99999, min: 1 }),
 ): Player => {
   const cl = generateClient(authorized, userId);
-  return {
-    side,
-    time: faker.number.int({ min: 0, max: 1000000 }),
-    ...cl,
-  };
+  const pl = new Player(cl, side, 10000);
+  pl.gameEndEvent = jest.fn();
+  pl.initedGameDataEvent = jest.fn();
+  pl.timeTickEvent = jest.fn();
+  return pl;
 };
 
 export const generateClient = (
   authorized = true,
   userId = faker.number.int({ max: 99999, min: 1 }),
 ): Client => {
-  return {
-    id: faker.string.nanoid(8),
-    name: faker.internet.userName(),
-    authorized,
-    userId,
-    join: jest.fn(),
-    emit: jest.fn(),
-    toRoom: jest.fn(),
-  };
+  const socket = { emit: jest.fn() } as any;
+  const client = new Client(socket);
+  client.join = jest.fn();
+  client.gameCreatedEvent = jest.fn();
+  client.pendingGameEvent = jest.fn();
+  client.lobbyUpdateEvent = jest.fn();
+  client.authorized = authorized;
+  client.userId = userId;
+  return client;
 };
 export const generateConfig = (
   side: 'w' | 'b' | 'rand' = 'w',

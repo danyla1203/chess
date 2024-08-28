@@ -8,6 +8,7 @@ import {
   generateClient,
   generateConfig,
   generateGameResult,
+  generateGameWithWinner,
   generatePlayer,
   getFigureCellState,
 } from './generators';
@@ -17,6 +18,7 @@ import { Client, Player } from '../entities';
 import { TokenService } from '../../auth';
 import { ConnectionPatchProvider } from '../connection.provider';
 import { LoggerService } from '../../tools/logger';
+import { GameAdapter } from '../entities/game';
 
 jest.mock('../../auth');
 jest.mock('../connection.provider');
@@ -41,6 +43,10 @@ describe('GameService (unit)', () => {
         TokenService,
         LoggerService,
         ConnectionPatchProvider,
+        {
+          provide: 'GameAdapterI',
+          useClass: GameAdapter,
+        },
       ],
     })
       .overrideProvider(PrismaService)
@@ -54,7 +60,7 @@ describe('GameService (unit)', () => {
     cl2 = generateClient(true, faker.number.int());
     cnf = generateConfig('w');
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    gm = new Game(cl1, cnf, jest.fn(), jest.fn());
+    gm = new Game(cl1, cnf, jest.fn());
     gm.addPlayer(cl2);
     pl1 = gm.players[0];
     pl2 = gm.players[1];
@@ -87,11 +93,11 @@ describe('GameService (unit)', () => {
       expect(service['saveGame'](pl1, pl2, result)).resolves.toBeNull();
       expect(service['saveGame'](pl1, pl2, result, true)).resolves.toBeNull();
 
-      pl2.authorized = false;
+      pl2.client.authorized = false;
       expect(service['saveGame'](pl1, pl2, result)).resolves.toBeNull();
       expect(service['saveGame'](pl1, pl2, result, true)).resolves.toBeNull();
 
-      pl1.authorized = true;
+      pl1.client.authorized = true;
       expect(service['saveGame'](pl1, pl2, result)).resolves.toBeNull();
       expect(service['saveGame'](pl1, pl2, result, true)).resolves.toBeNull();
     });
@@ -127,43 +133,9 @@ describe('GameService (unit)', () => {
       const addGameToLobbyMock = jest
         .spyOn(list, 'addGameToLobby')
         .mockImplementation();
-      jest
-        .spyOn(service as any, 'checkPlayerBalanceForGame')
-        .mockImplementation(jest.fn());
       const gm = await service.createGame(pl, cnf);
       expect(gm).toBeInstanceOf(Game);
       expect(addGameToLobbyMock).toBeCalledWith(gm);
-    });
-  });
-  describe('checkPlayerBalanceForGame', () => {
-    it('should resolves if authorized user have enough money', async () => {
-      const pl = generateClient();
-      const { bet } = generateConfig('w', 50);
-      jest.spyOn(model, 'getUserBalance').mockResolvedValue(100);
-      await service['checkPlayerBalanceForGame'](pl, bet);
-      expect(true).toBeTruthy();
-    });
-    it('should resolves if game bet is zero', async () => {
-      const pl = generateClient();
-      const { bet } = generateConfig('w', 0);
-      console.log(bet);
-      await service['checkPlayerBalanceForGame'](pl, bet);
-      expect(true).toBeTruthy();
-    });
-    it('should throw error if anon-player create or connect to game with bet', async () => {
-      const pl = generateClient(false);
-      const { bet } = generateConfig('w', 50);
-      expect(
-        service['checkPlayerBalanceForGame'](pl, bet),
-      ).rejects.toThrowError(ConflictException);
-    });
-    it('should throw error if authorized user dont have enough money', async () => {
-      const pl = generateClient();
-      const { bet } = generateConfig('w', 100);
-      jest.spyOn(model, 'getUserBalance').mockResolvedValue(50);
-      expect(
-        service['checkPlayerBalanceForGame'](pl, bet),
-      ).rejects.toThrowError(ConflictException);
     });
   });
   describe('connectToGame', () => {
@@ -186,9 +158,6 @@ describe('GameService (unit)', () => {
       const remove = jest
         .spyOn(list, 'pushToStartedGames')
         .mockImplementation();
-      jest
-        .spyOn(service as any, 'checkPlayerBalanceForGame')
-        .mockImplementation(jest.fn());
       const result = await service.connectToGame(cl2, gm.id);
       expect(result).toStrictEqual(gm);
       expect(gm.addPlayer).toBeCalledWith(cl2);
@@ -223,7 +192,14 @@ describe('GameService (unit)', () => {
       jest.spyOn(gm, 'endGame').mockImplementationOnce(() => gm);
       jest.spyOn(service as any, 'saveGame').mockImplementation();
       jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-      expect(service.surrender(gm.id, cl1)).resolves.toStrictEqual(gm);
+      const gmResult = generateGameWithWinner(gm);
+
+      const expected = {
+        gameDto: gmResult,
+        winner: gm.winner,
+        looser: gm.looser,
+      };
+      expect(service.surrender(gm.id, cl1)).resolves.toStrictEqual(expected);
       expect(gm.endGame).toBeCalledWith(pl2, pl1);
     });
   });
@@ -271,18 +247,15 @@ describe('GameService (unit)', () => {
       gm.draw = { w: true, b: false };
       jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
       jest.spyOn(gm, 'setDrawProposeFrom').mockImplementation();
-      const stub = {
-        id: gm.id,
-        moves: gm.moves,
-        config: gm.config,
-        pl1,
-        pl2,
-      };
-      jest.spyOn(gm, 'endGameByDraw').mockImplementationOnce(() => {
-        return stub;
-      });
       jest.spyOn(service as any, 'saveGame').mockImplementation();
-      expect(service.acceptDraw(gm.id, cl1)).resolves.toStrictEqual(stub);
+      jest
+        .spyOn(service['adapter'], 'gameWithDrawDto')
+        .mockImplementation(() => {
+          return { id: gm.id } as any;
+        });
+      expect(service.acceptDraw(gm.id, cl1)).resolves.toStrictEqual({
+        id: gm.id,
+      });
     });
   });
   describe('reject draw', () => {
@@ -346,8 +319,13 @@ describe('GameService (unit)', () => {
         side: 'w',
       };
       jest.spyOn(gm, 'makeTurn').mockReturnValue(completedMove as any);
-      jest.spyOn(gm, 'endGame').mockReturnValue({ id: gm.id } as any);
+      jest.spyOn(gm, 'endGame').mockImplementation();
       jest.spyOn(service as any, 'saveGame').mockImplementation(jest.fn());
+      jest
+        .spyOn(service['adapter'], 'gameWithWinnerDto')
+        .mockImplementation(() => {
+          return { id: gm.id } as any;
+        });
       jest.spyOn(service['list'], 'gameEnd').mockImplementation(jest.fn());
       jest.spyOn(service, 'findGameById').mockReturnValueOnce(gm);
       const result = await service.makeTurn(gm.id, gm.players[0].userId, {

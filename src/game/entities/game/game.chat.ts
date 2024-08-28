@@ -4,7 +4,7 @@ export type Message = {
   id: number;
   text: string;
   author: {
-    id: string;
+    id: number;
     name: string;
   };
   date: Date;
@@ -13,11 +13,11 @@ export type Message = {
 export class GameChat {
   messages: Message[] = [];
 
-  public addMessage(message: string, { id, name }: Client) {
+  public addMessage(message: string, { userId, name }: Client) {
     const messageObj = {
       id: Math.floor(Math.random() * 100000),
       text: message,
-      author: { id, name },
+      author: { id: userId, name },
       date: new Date(),
     };
     this.messages.push(messageObj);

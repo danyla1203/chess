@@ -7,11 +7,11 @@ export class IsPlayer implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const wsContext = context.switchToWs();
-    const client = wsContext.getClient();
+    const socket = wsContext.getClient();
     const gameId = wsContext.getData().gameId;
 
     const game = this.service.findGameById(gameId);
 
-    return !!game.players.find((pl) => pl.id === client.id);
+    return !!game.players.find((pl) => pl.client.socket.id === socket.id);
   }
 }

@@ -1,4 +1,4 @@
-import { Game } from '../entities/game';
+import { Game, GameData } from '../entities/game';
 import { GameList } from '../game.list';
 import { generateClient, generateConfig } from './generators';
 
@@ -9,7 +9,7 @@ describe('GameList (unit)', () => {
     for (let i = 0; i < 10; i++) {
       const config = generateConfig();
       const fClient = generateClient();
-      const game = new Game(fClient, config, jest.fn(), jest.fn());
+      const game = new Game(fClient, config, jest.fn());
       list.lobby.push(game);
     }
   });
@@ -17,7 +17,7 @@ describe('GameList (unit)', () => {
   it('addGameToLobby', () => {
     const config = generateConfig();
     const fClient = generateClient();
-    const game = new Game(fClient, config, jest.fn(), jest.fn());
+    const game = new Game(fClient, config, jest.fn());
     list.addGameToLobby(game);
     expect(list.lobby).toHaveLength(11);
   });
@@ -31,7 +31,7 @@ describe('GameList (unit)', () => {
   it('should remove games from lobby', () => {
     const len = list.lobby.length;
     const cl = list.lobby[6].players[0];
-    list.removeInitedGames(cl);
+    list.removeInitedGames(cl.client);
     expect(list.lobby).toHaveLength(len - 1);
   });
   it('should remove a game from the lobby by ID', () => {
@@ -48,5 +48,43 @@ describe('GameList (unit)', () => {
     list.pushToStartedGames(1);
     expect(list.games.length).toBe(gmLen + 1);
     expect(list.games[0]).toEqual(gameToAdd);
+  });
+  describe('getLobby', () => {
+    beforeEach(() => {
+      list.lobby = [];
+      list.games = [];
+    });
+    it('should return an empty array when the lobby is empty', () => {
+      const result: GameData[] = list.getLobby();
+      expect(result).toEqual([]);
+    });
+
+    it('should return the correct data structure when the lobby has games', () => {
+      const config = generateConfig();
+      const game: any = {
+        id: 1,
+        players: [
+          { userId: 1, name: 'Player1', side: 'w' },
+          { userId: 2, name: 'Player2', side: 'b' },
+        ],
+        config,
+        isActive: true,
+      };
+
+      list.addGameToLobby(game);
+
+      const result: GameData[] = list.getLobby();
+
+      expect(result).toEqual([
+        {
+          id: 1,
+          players: [
+            { userId: 1, name: 'Player1', side: 'w' },
+            { userId: 2, name: 'Player2', side: 'b' },
+          ],
+          config,
+        },
+      ]);
+    });
   });
 });
