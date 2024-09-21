@@ -9,6 +9,7 @@ import { generateClient, generateConfig } from '../../../test/generators';
 import { Client } from '../../Client';
 import { Config } from '../game.types';
 import { Game as GameEmits } from '../../../EmitTypes';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 describe('Game entity (integration)', () => {
   let service: GameService;
@@ -22,7 +23,16 @@ describe('Game entity (integration)', () => {
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
+      .compile();
     service = moduleRef.get<GameService>(GameService);
     lobby = moduleRef.get<GameList>(GameList);
     prisma = moduleRef.get<PrismaService>(PrismaService);

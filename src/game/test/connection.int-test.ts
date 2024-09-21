@@ -7,6 +7,7 @@ import { Game, Lobby, User } from '../EmitTypes';
 import { LoggerService } from '../../tools/logger';
 import { AppModule } from '../../app.module';
 import { ClientStore } from '../ClientStore';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 jest.mock('../game.service');
 jest.mock('axios', () => null);
@@ -22,6 +23,14 @@ describe('Socket connection (integration)', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
       .overrideProvider(LoggerService)
       .useValue({
         log: jest.fn(),

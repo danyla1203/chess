@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { EmailLoginDto, NameLoginDto } from './dto';
-import { AuthModel } from './model';
+import { AuthModel } from './auth.model';
 import { TokenService } from './tokens/token.service';
 import { InternalAuthorizedUserFields } from 'src/user/entities/user.entity';
 import { Tokens } from './tokens/token.entities';

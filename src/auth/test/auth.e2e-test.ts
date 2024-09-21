@@ -9,6 +9,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../app.module';
 import { PrismaService } from '../../prisma.service';
 import { faker } from '@faker-js/faker';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 jest.mock('axios', () => null);
 jest.mock('bcrypt');
@@ -20,7 +21,16 @@ describe('Auth e2e', () => {
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
+      .compile();
     app = moduleFixture.createNestApplication();
     await app.init();
     server = app.getHttpServer();

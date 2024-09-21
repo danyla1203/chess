@@ -5,6 +5,7 @@ import { TokenService } from '../../auth';
 import { faker } from '@faker-js/faker';
 import { ConflictException } from '@nestjs/common';
 import { AppModule } from '../../app.module';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 jest.mock('axios', () => null);
 
@@ -15,7 +16,16 @@ describe('UserService', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
+      .compile();
 
     tokenService = module.get(TokenService);
     service = module.get(UserService);

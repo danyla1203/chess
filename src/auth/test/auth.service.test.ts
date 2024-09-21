@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from '..';
-import { AuthModel } from '../model';
+import { AuthModel } from '../auth.model';
 import { TokenService } from '../tokens/token.service';
 import { PrismaService } from '../../prisma.service';
 import { TestTokenModule } from '../../../test/utils/TestTokenModule';

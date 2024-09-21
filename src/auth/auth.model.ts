@@ -62,7 +62,10 @@ export class AuthModel {
     return this.prisma.auth.delete({ where: { id } });
   }
   public findSession(refreshToken: string): Promise<Auth> {
-    return this.prisma.auth.findFirst({ where: { refreshToken } });
+    return this.prisma.auth.findFirst({
+      where: { refreshToken },
+      include: { user: true },
+    });
   }
   public findSessionByUserId(id: number, deviceId: string) {
     return this.prisma.auth.findFirst({

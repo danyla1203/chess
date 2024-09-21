@@ -6,11 +6,13 @@ import {
   Patch,
   Request,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { AuthGuard } from '../auth';
-
+import { UserCacheInterceptor } from './interceptors/UserCache.interceptor';
+@UseInterceptors(UserCacheInterceptor)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

@@ -12,6 +12,7 @@ import { TurnBody } from '../dto';
 import { GameList } from '../game.list';
 import { PrismaService } from '../../prisma.service';
 import { User } from '@prisma/client';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 jest.mock('axios', () => null);
 
@@ -23,7 +24,16 @@ describe('GameService (integration)', () => {
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
+      .compile();
     service = moduleRef.get<GameService>(GameService);
     lobby = moduleRef.get<GameList>(GameList);
     prisma = moduleRef.get<PrismaService>(PrismaService);

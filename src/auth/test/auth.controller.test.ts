@@ -6,6 +6,7 @@ import { AuthService } from '../auth.service';
 import { faker } from '@faker-js/faker';
 import { PrismaService } from '../../prisma.service';
 import { LoggerService } from '../../tools/logger';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 jest.mock('axios', () => null);
 
@@ -17,6 +18,14 @@ describe('AuthController unit', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
       .overrideProvider(AuthService)
       .useValue({
         login: jest.fn(),

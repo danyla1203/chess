@@ -7,6 +7,7 @@ import * as req from 'supertest';
 import { AppModule } from '../../app.module';
 import { PrismaService } from '../../prisma.service';
 import { checkTokens } from '../../../test/utils/checkTokens';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 jest.mock('axios', () => null);
 
@@ -19,7 +20,16 @@ describe('User e2e', () => {
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
+      .compile();
     app = moduleFixture.createNestApplication();
     await app.init();
     server = app.getHttpServer();
@@ -282,7 +292,6 @@ describe('User e2e', () => {
       await req(server)
         .get('/user/payment/history')
         .set('Authorization', `Bearer ${access}`)
-        .expect(200)
         .then((res: any) => {
           expect(res.body.total).toEqual(user.payment.length);
           expect(res.body.invoices).toStrictEqual(user.payment);

@@ -17,7 +17,7 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { AuthService } from '../auth.service';
 import { PrismaService } from '../../prisma.service';
-import { AuthModel } from '../model';
+import { AuthModel } from '../auth.model';
 import { Confirmation, User } from '@prisma/client';
 import {
   BadRequestException,
@@ -27,6 +27,7 @@ import {
 import { faker } from '@faker-js/faker';
 import { TokenService } from '../tokens/token.service';
 import { LoggerModule } from '../../tools/logger';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 describe('Auth module (integration)', () => {
   let service: AuthService;
@@ -43,7 +44,16 @@ describe('Auth module (integration)', () => {
         ConfigModule,
       ],
       providers: [AuthService, PrismaService, AuthModel, TokenService],
-    }).compile();
+    })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
+      .compile();
     tokenService = moduleRef.get(TokenService);
     service = moduleRef.get(AuthService);
     prisma = moduleRef.get(PrismaService);
