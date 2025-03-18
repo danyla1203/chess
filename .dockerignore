@@ -1,0 +1,9 @@
+**/node_modules
+**/test
+dist
+logs
+.github
+.postman
+README.md
+.prettierrc
+.gitignore

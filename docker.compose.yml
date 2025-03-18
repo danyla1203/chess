@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  chesser:
+    networks:
+      - chesser_net
+    build: .
+    env_file:
+      - .env.docker
+    volumes:
+      - ./src:/usr/src/app/src
+      - /usr/src/app/node_modules
+      - ./package.json:/usr/src/app/package.json
+    container_name: chesser
+    ports:
+      - "9200:9200"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:17
+    container_name: postgres_db
+    networks:
+      - chesser_net
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chess
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    networks:
+      - chesser_net
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    networks:
+      - chesser_net
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
+  prometheus:
+    networks:
+      - chesser_net
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-otlp-receiver
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  redis:
+    networks:
+      - chesser_net
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6380:6379"
+
+volumes:
+  postgres_data:
+  grafana-storage:
+networks:
+  chesser_net:
+    driver: bridge
