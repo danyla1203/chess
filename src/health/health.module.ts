@@ -1,9 +1,14 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { HealthController } from './health.controller';
 
-@Module({
-  controllers: [HealthController],
-  providers: [PrismaService],
-})
-export class HealthModule {}
+@Module({})
+export class HealthModule {
+  static forRoot({ database }: { database: boolean }): DynamicModule {
+    return {
+      module: HealthModule,
+      controllers: [HealthController],
+      providers: database ? [PrismaService] : [],
+    };
+  }
+}

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { GameModule } from './game/game.module';
+import { GatewayModule } from './gateway/gateway.module';
 import { PaymentsModule } from './payments/payments.module';
 import { UserModule } from './user/user.module';
 import { MailService } from './mail/mail.service';
@@ -29,9 +29,9 @@ import { HealthModule } from './health/health.module';
     TelemetryModule,
     RedisModule,
     MessagingModule,
-    HealthModule,
+    HealthModule.forRoot({ database: true }),
     AuthModule,
-    GameModule,
+    GatewayModule,
     PaymentsModule,
     UserModule,
     GameHistoryModule,

@@ -11,22 +11,23 @@ import {
 import type { Namespace, Socket } from 'socket.io';
 import {
   BeforeApplicationShutdown,
+  NotFoundException,
   UseFilters,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { WsValidationFilter } from '../tools/WsValidationFilter';
-import { GameService } from './game.service';
-import { CreateGameDto, TurnBody, ChatMessage } from './dto';
-import type { ConnectToGameDto } from './dto';
-import { Game, GameEnd, Lobby, User, room } from './EmitTypes';
+import { CreateGameDto, TurnBody, ChatMessage } from '../game/dto';
+import type { ConnectToGameDto } from '../game/dto';
+import { Game, GameEnd, Lobby, User, room } from '../game/EmitTypes';
+import { annotateActiveSpan } from '../tools/telemetry';
 import { ConnectionPatchProvider } from './connection.provider';
 import { ClientStore } from './ClientStore';
-import { IsBalanceEnough, IsPlayer } from './guards';
-import { GameMetrics } from './game.metrics';
-import { GameNotifier, userRoom } from './game.notifier';
-import { annotateActiveSpan } from '../tools/telemetry';
+import { IsBalanceEnough } from './guards';
+import { GatewayMetrics } from './gateway.metrics';
+import { SocketNotifier, userRoom } from './socket.notifier';
+import { GameClient } from './game.client';
 
 @WebSocketGateway({ namespace: 'game', cors: true, transports: ['websocket'] })
 @UsePipes(new ValidationPipe())
@@ -41,11 +42,11 @@ export class GameGateway
   private shuttingDown = false;
 
   constructor(
-    private readonly service: GameService,
+    private readonly games: GameClient,
     private readonly connService: ConnectionPatchProvider,
     private readonly clientStore: ClientStore,
-    private readonly metrics: GameMetrics,
-    private readonly notifier: GameNotifier,
+    private readonly metrics: GatewayMetrics,
+    private readonly notifier: SocketNotifier,
   ) {}
 
   @WebSocketServer()
@@ -60,7 +61,7 @@ export class GameGateway
   }
 
   private async broadcastLobby(): Promise<void> {
-    this.notifier.lobbyUpdate(await this.service.getLobby());
+    this.notifier.lobbyUpdate(await this.games.lobby());
   }
 
   async handleDisconnect(socket: Socket) {
@@ -73,8 +74,8 @@ export class GameGateway
       .fetchSockets();
     if (otherSockets.length > 0) return;
 
-    await this.service.removeInitedGamesBy(client);
-    const opponent = await this.service.findCurrentOpponent(client);
+    await this.games.cancelLobbyGame(client);
+    const opponent = await this.games.currentOpponent(client);
     if (opponent) {
       this.notifier.opponentDisconnected(opponent.userId);
     }
@@ -92,15 +93,13 @@ export class GameGateway
         userId: client.userId,
       });
     }
-    const pending = await this.service
-      .findPendingGame(client)
-      .catch(() => null);
+    const pending = await this.games.pendingGame(client);
     if (pending) {
       await socket.join(room(pending.id));
       socket.emit(Game.pendingGame, { gameId: pending.id });
     }
 
-    socket.emit(Lobby.update, await this.service.getLobby());
+    socket.emit(Lobby.update, await this.games.lobby());
   }
 
   @SubscribeMessage('create')
@@ -110,7 +109,7 @@ export class GameGateway
     @MessageBody() config: CreateGameDto,
   ): Promise<void> {
     const client = this.clientStore.getClient(socket);
-    const game = await this.service.createGame(client, config);
+    const game = await this.games.createGame(client, config);
     annotateActiveSpan({
       'chess.game.id': game.id,
       'chess.match.id': game.matchId,
@@ -125,10 +124,11 @@ export class GameGateway
   @SubscribeMessage('rejoin')
   async rejoinGame(@ConnectedSocket() socket: Socket): Promise<void> {
     const client = this.clientStore.getClient(socket);
-    const game = await this.service.findPendingGame(client);
-    await socket.join(room(game.id));
-    socket.emit(Game.init, this.service.getInitedGameData(client.userId, game));
-    this.notifier.toGame(game.id, Game.playerReconected, {
+    const pending = await this.games.pendingGame(client);
+    if (!pending) throw new NotFoundException('Game not found');
+    await socket.join(room(pending.id));
+    socket.emit(Game.init, pending.initData);
+    this.notifier.toGame(pending.id, Game.playerReconected, {
       opponent: {
         id: client.userId,
         name: client.name,
@@ -139,7 +139,7 @@ export class GameGateway
   @SubscribeMessage('leave')
   async leaveGame(@ConnectedSocket() socket: Socket): Promise<void> {
     const client = this.clientStore.getClient(socket);
-    const { winner, looser, gameDto } = await this.service.leaveGame(client);
+    const { winner, looser, gameDto } = await this.games.leave(client);
     this.notifier.gameEnd(winner.userId, true, gameDto, GameEnd.playerLeave);
     this.notifier.gameEnd(looser.userId, false, gameDto, GameEnd.playerLeave);
   }
@@ -155,21 +155,17 @@ export class GameGateway
       'chess.game.id': gameId,
       'enduser.id': client.userId,
     });
-    const game = await this.service.connectToGame(client, gameId);
+    const game = await this.games.joinGame(client, gameId);
 
     for (const player of game.players) {
       this.notifier.joinGame(player.userId, game.id);
-      this.notifier.initData(
-        player.userId,
-        this.service.getInitedGameData(player.userId, game),
-      );
+      this.notifier.initData(player.userId, player.initData);
     }
     this.notifier.gameStart(game.players.map((pl) => pl.userId));
     await this.broadcastLobby();
   }
 
   @SubscribeMessage('move')
-  @UseGuards(IsPlayer)
   async move(
     @ConnectedSocket() socket: Socket,
     @MessageBody() turn: TurnBody,
@@ -179,9 +175,7 @@ export class GameGateway
       'chess.game.id': turn.gameId,
       'enduser.id': client.userId,
     });
-    const { result, prevCell, side } = await this.metrics.trackMove(() =>
-      this.service.makeTurn(turn.gameId, client.userId, turn),
-    );
+    const { result, prevCell, side } = await this.games.move(client, turn);
     this.notifier.toGame(turn.gameId, Game.boardUpdate, {
       effect: result,
       update: { figure: turn.figure, cell: turn.cell, prevCell, side },
@@ -189,71 +183,67 @@ export class GameGateway
   }
 
   @SubscribeMessage('chat-message')
-  @UseGuards(IsPlayer)
   async chatMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId, text }: ChatMessage,
   ): Promise<void> {
     const client = this.clientStore.getClient(socket);
-    const message = await this.service.pushMessage(gameId, text, client);
+    const message = await this.games.chat(client, gameId, text);
     this.notifier.toGame(gameId, Game.message, message);
   }
 
   @SubscribeMessage('surrender')
-  @UseGuards(IsPlayer)
   async surrender(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
     annotateActiveSpan({ 'chess.game.id': gameId });
     const client = this.clientStore.getClient(socket);
-    const { winner, looser, gameDto } = await this.service.surrender(
-      gameId,
+    const { winner, looser, gameDto } = await this.games.surrender(
       client,
+      gameId,
     );
     this.notifier.gameEnd(winner.userId, true, gameDto, GameEnd.surrender);
     this.notifier.gameEnd(looser.userId, false, gameDto, GameEnd.surrender);
   }
 
   @SubscribeMessage('draw_propose')
-  @UseGuards(IsPlayer)
   async drawPropose(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
     const client = this.clientStore.getClient(socket);
-    const propose = await this.service.proposeDraw(gameId, client);
+    const propose = await this.games.proposeDraw(client, gameId);
     this.notifier.toGame(gameId, Game.drawPropose, propose);
   }
 
   @SubscribeMessage('draw_accept')
-  @UseGuards(IsPlayer)
   async acceptPropose(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
     const client = this.clientStore.getClient(socket);
-    const game = await this.service.acceptDraw(gameId, client);
+    const game = await this.games.acceptDraw(client, gameId);
     this.notifier.toGame(gameId, Game.end, { reason: GameEnd.draw, game });
   }
 
   @SubscribeMessage('draw_reject')
-  @UseGuards(IsPlayer)
   async rejectPropose(
+    @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
-    const result = await this.service.rejectDraw(gameId);
+    const client = this.clientStore.getClient(socket);
+    const result = await this.games.rejectDraw(client, gameId);
     this.notifier.toGame(gameId, Game.rejectDraw, result);
   }
 
   @SubscribeMessage('add_time')
-  @UseGuards(IsPlayer)
   async addTime(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
     const client = this.clientStore.getClient(socket);
-    const result = await this.service.addTimeToAnotherPlayer(gameId, client);
+    const result = await this.games.addTime(client, gameId);
     this.notifier.toGame(gameId, Game.addTime, result);
   }
 }

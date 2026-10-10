@@ -1,12 +1,12 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ClientStore } from '../ClientStore';
-import { GameModel } from '../model';
+import { BalanceModel } from '../balance.model';
 
 @Injectable()
 export class IsBalanceEnough implements CanActivate {
   constructor(
     private readonly clientStore: ClientStore,
-    private readonly model: GameModel,
+    private readonly model: BalanceModel,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

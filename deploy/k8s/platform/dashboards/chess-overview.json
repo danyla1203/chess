@@ -20,10 +20,10 @@
           "uid": "prometheus"
         },
         "query": {
-          "query": "label_values(chess_ws_connections, job)",
+          "query": "label_values({__name__=~\"chess_.*\"}, job)",
           "refId": "service"
         },
-        "definition": "label_values(chess_ws_connections, job)",
+        "definition": "label_values({__name__=~\"chess_.*\"}, job)",
         "includeAll": true,
         "multi": true,
         "allValue": ".*",
@@ -670,6 +670,72 @@
       "description": "Exactly 1 is healthy. 0 means no pod runs game clocks."
     },
     {
+      "id": 30,
+      "type": "timeseries",
+      "title": "Command round trip p95 (core -> game-svc)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 39
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le, rpc_method) (rate(chess_rpc_client_duration_seconds_bucket{job=~\"$service\"}[$__rate_interval])))",
+          "legendFormat": "{{rpc_method}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "Command errors and timeouts",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 39
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (rpc_method, outcome) (rate(chess_rpc_client_duration_seconds_count{job=~\"$service\", outcome!=\"ok\"}[$__rate_interval]))",
+          "legendFormat": "{{rpc_method}} {{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
       "id": 16,
       "type": "row",
       "title": "Runtime",
@@ -678,7 +744,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 47
       },
       "panels": []
     },
@@ -694,7 +760,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 40
+        "y": 48
       },
       "targets": [
         {
@@ -728,7 +794,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 40
+        "y": 48
       },
       "targets": [
         {
@@ -762,7 +828,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 40
+        "y": 48
       },
       "targets": [
         {
@@ -793,7 +859,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 56
       },
       "panels": []
     },
@@ -809,7 +875,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 49
+        "y": 57
       },
       "targets": [
         {
@@ -843,7 +909,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 49
+        "y": 57
       },
       "targets": [
         {
@@ -877,7 +943,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 49
+        "y": 57
       },
       "targets": [
         {
@@ -911,7 +977,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 57
+        "y": 65
       },
       "targets": [
         {
@@ -945,7 +1011,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 57
+        "y": 65
       },
       "targets": [
         {

@@ -66,6 +66,65 @@ export default tseslint.config(
     },
   },
   {
+    files: ['src/game/**/*.ts', 'src/game-service/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/gateway',
+                '**/gateway/**',
+                '**/auth',
+                '**/auth/**',
+                '**/user',
+                '**/user/**',
+                '**/payments',
+                '**/payments/**',
+                '**/game-history',
+                '**/game-history/**',
+                '**/prisma.service',
+              ],
+              message:
+                'game-svc runs without core: reach core through messaging, not imports.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['src/game/**', 'src/game-service/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/game-service', '**/game-service/**'],
+              message: 'core talks to game-svc through GameClient RPC.',
+            },
+            {
+              group: [
+                '**/game/*',
+                '!**/game/dto',
+                '!**/game/entities',
+                '!**/game/entities/game',
+                '!**/game/EmitTypes',
+                '!**/game/game.contract',
+                '!**/game/game.notifier',
+              ],
+              message:
+                'core may only use game contracts, DTOs, entities and EmitTypes; game logic runs in game-svc.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['test/**/*.ts'],
     rules: {
       '@typescript-eslint/unbound-method': 'off',

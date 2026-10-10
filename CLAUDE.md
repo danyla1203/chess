@@ -1,13 +1,14 @@
 # chess_backend
 
-NestJS 12 API + Socket.IO game server for an online chess app. Postgres via Prisma 7, Redis cache, RabbitMQ events, Stripe top-ups, Google OAuth, OpenTelemetry (traces, metrics, logs). Frontend lives in `../chess_frontend`.
+NestJS 12 API + Socket.IO game server for an online chess app, deployed as two processes from one codebase: core (`src/main.ts`: REST, Socket.IO gateway, game history) and game-svc (`src/game-service/main.ts`: game rules, Redis state, clocks). Postgres via Prisma 7, Redis cache, RabbitMQ events, Stripe top-ups, Google OAuth, OpenTelemetry (traces, metrics, logs). Frontend lives in `../chess_frontend`.
 
 See [MAP.md](MAP.md) for the module layout, REST routes, WebSocket events and data model.
 
 ## Commands
 
 ```bash
-npm run start:dev          # watch mode, needs .env (copy .env.sample)
+npm run start:dev          # core in watch mode, needs .env (copy .env.sample)
+npm run start:game-svc     # game-svc in watch mode (health on HEALTH_PORT, default 9300)
 npm run build              # nest build -> dist/
 npm run typecheck          # tsc --noEmit over src, test, prisma
 npm run lint               # eslint (flat config, type-aware); lint:fix to autofix
@@ -35,13 +36,16 @@ Single test file: `NODE_OPTIONS=--experimental-vm-modules npx jest test/game/gam
 
 ## Conventions
 
-- One Nest module per domain: `auth`, `user`, `game`, `payments`. Each has `*.controller.ts` / `*.gateway.ts`, `*.service.ts`, and a `model.ts` / `*.model.ts` that wraps Prisma.
+- One Nest module per domain: `auth`, `user`, `gateway`, `payments`, `game-history` in core; `game` + `game-service` in game-svc. Each has `*.controller.ts` / `*.gateway.ts`, `*.service.ts`, and a `model.ts` / `*.model.ts` that wraps Prisma.
 - DTOs are `class-validator` classes in `<module>/dto/`, re-exported from `dto/index.ts`.
 - Live game state is in Redis (`GameRepository`), never in process memory, so any instance can serve any socket. Change a game only through `GameRepository.update(id, mutate)`: `mutate` may run several times on conflict, so keep it free of side effects (emit and record metrics after it returns).
-- Emit to clients through `GameNotifier` (user/game rooms), not by holding socket references; the Redis adapter delivers across instances.
+- `src/game` must not import from `src/gateway` (and vice versa, except types in `game.contract.ts`, `dto`, `entities`, `EmitTypes`). core reaches the game only through `GameClient` RPC; add a command by extending `GameCommands` in `game.contract.ts`, a handler in `game-service/game.commands.ts`, and a method in `gateway/game.client.ts`.
+- Emit to clients through `SocketNotifier` (user/game rooms), not by holding socket references; the Redis adapter delivers across instances. game-svc reaches sockets only via `GameNotifier` -> `game.notifications`.
 - A game turning `ended` writes `game.ended` to the Redis outbox in the same Lua script; `OutboxRelay` publishes it to RabbitMQ, and `GameHistoryConsumer` persists it, only if both players are authorized.
 - Redis must run with AOF (`appendonly yes`), or outbox entries and live games are lost on a Redis restart.
 - Messaging topology (exchanges, queues, DLX) is declared in `src/messaging/topology.ts`. Changing queue arguments on an existing queue fails with PRECONDITION_FAILED; create a new queue name instead.
+- On RabbitMQ 4, `nack(requeue=true)` does not count toward a quorum queue's `x-delivery-limit`; `RabbitMQService.subscribe` enforces `DELIVERY_LIMIT` itself from `x-acquired-count`. Do not `nack` with requeue anywhere else, or a failing message loops forever. Test broker behaviour in `test/messaging/rabbitmq.int-test.ts` (real broker, needs `RABBITMQ_URL`); the fake broker does not model redelivery.
+- Service boundaries are enforced by `no-restricted-imports` in `eslint.config.mjs`. A new exchange or queue also needs its name added to the permission regexes in `deploy/k8s/rabbitmq/users.yaml`, or the service fails to start in Kubernetes with ACCESS_REFUSED.
 - `src/tools/telemetry/otel.ts` must stay the first import in `src/main.ts`, or auto-instrumentation misses modules required before it.
 - The WebSocket event names in `src/game/EmitTypes.ts` must stay in sync with `chess_frontend/app/lib/context/SocketContext.tsx`.
 - Prettier: single quotes, trailing commas. Tests live in `test/` and mirror `src/`.

@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { IsBalanceEnough } from '../../src/game/guards';
-import { ClientStore } from '../../src/game/ClientStore';
-import { GameModel } from '../../src/game/model';
+import { IsBalanceEnough } from '../../src/gateway/guards';
+import { ClientStore } from '../../src/gateway/ClientStore';
+import { BalanceModel } from '../../src/gateway/balance.model';
 
 describe('IsBalanceEnough', () => {
   let guard: IsBalanceEnough;
-  let gameModel: GameModel;
+  let gameModel: BalanceModel;
   let mockClient: any;
   let mockExecutionContext: any;
 
@@ -32,7 +32,7 @@ describe('IsBalanceEnough', () => {
           },
         },
         {
-          provide: GameModel,
+          provide: BalanceModel,
           useValue: {
             getUserBalance: jest.fn(),
           },
@@ -41,7 +41,7 @@ describe('IsBalanceEnough', () => {
     }).compile();
 
     guard = module.get<IsBalanceEnough>(IsBalanceEnough);
-    gameModel = module.get<GameModel>(GameModel);
+    gameModel = module.get<BalanceModel>(BalanceModel);
   });
 
   it('should be defined', () => {

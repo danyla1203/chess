@@ -28,6 +28,32 @@ services:
       lgtm:
         condition: service_started
 
+  game-svc:
+    networks:
+      - chesser_net
+    build: .
+    command: ['npm', 'run', 'start:game-svc']
+    env_file:
+      - .env.docker
+    environment:
+      OTEL_SERVICE_NAME: chess-game-svc
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      RABBITMQ_URL: amqp://chess:chess@rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+      HEALTH_PORT: 9300
+    volumes:
+      - ./src:/usr/src/app/src
+      - /usr/src/app/node_modules
+      - ./package.json:/usr/src/app/package.json
+    container_name: chess-game-svc
+    depends_on:
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      lgtm:
+        condition: service_started
+
   db:
     image: postgres:17
     container_name: postgres_db

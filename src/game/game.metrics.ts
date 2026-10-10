@@ -7,10 +7,6 @@ import { Game } from './entities/game';
 @Injectable()
 export class GameMetrics {
   private readonly meter = metrics.getMeter('chess.game');
-  private readonly connections = this.meter.createUpDownCounter(
-    'chess.ws.connections',
-    { description: 'Open Socket.IO connections on the /game namespace' },
-  );
   private readonly created = this.meter.createCounter('chess.game.created', {
     description: 'Games created in the lobby',
   });
@@ -60,14 +56,6 @@ export class GameMetrics {
         description: '1 on the instance that runs game clocks',
       })
       .addCallback((result) => result.observe(isLeader() ? 1 : 0));
-  }
-
-  public connectionOpened(): void {
-    this.connections.add(1);
-  }
-
-  public connectionClosed(): void {
-    this.connections.add(-1);
   }
 
   public gameCreated(game: Game): void {

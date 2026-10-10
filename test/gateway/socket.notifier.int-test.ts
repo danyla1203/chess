@@ -3,14 +3,14 @@ import type { AddressInfo } from 'node:net';
 import type { Server, ServerOptions } from 'socket.io';
 import { io, Socket as ClientSocket } from 'socket.io-client';
 import { RedisIoAdapter } from '../../src/tools/redis-io.adapter';
-import { GameNotifier, userRoom } from '../../src/game/game.notifier';
+import { SocketNotifier, userRoom } from '../../src/gateway/socket.notifier';
 import { Game as GameEvent, GameEnd } from '../../src/game/EmitTypes';
 
 type Node = {
   http: HttpServer;
   io: Server;
   adapter: RedisIoAdapter;
-  notifier: GameNotifier;
+  notifier: SocketNotifier;
   url: string;
 };
 
@@ -25,7 +25,7 @@ const startNode = async (): Promise<Node> => {
   namespace.on('connection', (socket) => {
     void socket.join(userRoom(Number(socket.handshake.query.userId)));
   });
-  const notifier = new GameNotifier();
+  const notifier = new SocketNotifier();
   notifier.bind(namespace);
   await new Promise<void>((resolve) => http.listen(0, resolve));
   const { port } = http.address() as AddressInfo;
@@ -52,7 +52,7 @@ const next = (socket: ClientSocket, event: string) =>
 
 const settle = () => new Promise((r) => setTimeout(r, 100));
 
-describe('GameNotifier across instances (integration, Redis adapter)', () => {
+describe('SocketNotifier across instances (integration, Redis adapter)', () => {
   let a: Node;
   let b: Node;
   let white: ClientSocket;

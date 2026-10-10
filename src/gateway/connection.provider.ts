@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AuthService, TokenService } from '../auth';
 import { Socket } from 'socket.io';
-import { Client } from './entities';
+import { Client } from '../game/entities';
 
 @Injectable()
 export class ConnectionPatchProvider {

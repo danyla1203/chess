@@ -50,12 +50,15 @@ export class AuthModel {
     refreshToken: string,
     deviceId: string,
   ): Promise<Auth> {
-    return this.prisma.auth.create({
-      data: {
-        userId,
-        deviceId,
-        refreshToken,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.auth.deleteMany({ where: { userId, deviceId } });
+      return tx.auth.create({
+        data: {
+          userId,
+          deviceId,
+          refreshToken,
+        },
+      });
     });
   }
   public deleteSession(id: number): Promise<Auth> {

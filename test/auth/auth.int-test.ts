@@ -237,6 +237,25 @@ describe('Auth module (integration)', () => {
       expect(session).toHaveProperty('refreshToken', res.refresh);
     });
   });
+  describe('session per device', () => {
+    it('should replace the session when logging in again on the same device', async () => {
+      const { id, email, password } = await prisma.user.findFirst();
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
+      const deviceId = `relogin-${faker.string.uuid()}`;
+      const first = await service.login({ email, password, deviceId });
+      await new Promise((r) => setTimeout(r, 1100));
+      const second = await service.login({ email, password, deviceId });
+
+      const sessions = await prisma.auth.findMany({
+        where: { userId: id, deviceId },
+      });
+      expect(sessions).toHaveLength(1);
+      expect(sessions[0].refreshToken).toBe(second.refresh);
+      await expect(service.useRefresh(first.refresh)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
   describe('checkoutUserSession', () => {
     it('should throw Unauthorized err if session doesnt exist', async () => {
       await expect(service.checkoutUserSession(-1, 'devId')).rejects.toThrow(

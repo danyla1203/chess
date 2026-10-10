@@ -10,11 +10,17 @@ LOKI_VERSION=7.3.0
 OTEL_COLLECTOR_VERSION=0.175.1
 HEADLAMP_VERSION=0.45.0
 RABBITMQ_OPERATOR_VERSION=v2.23.0
+CERT_MANAGER_VERSION=v1.18.2
+RABBITMQ_TOPOLOGY_OPERATOR_VERSION=v1.17.0
+CNPG_CHART_VERSION=0.26.0
+ENVOY_GATEWAY_VERSION=v1.5.0
 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
 helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
+helm repo add jetstack https://charts.jetstack.io
+helm repo add cnpg https://cloudnative-pg.github.io/charts
 helm repo update
 
 kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
@@ -46,7 +52,24 @@ helm upgrade --install headlamp headlamp/headlamp \
   -f "$VALUES/headlamp.yaml" --wait
 
 kubectl apply -k "$DIR/dashboards"
+kubectl apply -f "$DIR/alerts/chess-alerts.yaml"
+
+helm upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace --version "$CERT_MANAGER_VERSION" \
+  --set crds.enabled=true --wait
+
+helm upgrade --install cnpg cnpg/cloudnative-pg \
+  --namespace cnpg-system --create-namespace --version "$CNPG_CHART_VERSION" --wait
+
+helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
+  --namespace envoy-gateway-system --create-namespace --version "$ENVOY_GATEWAY_VERSION" --wait
+kubectl apply -f "$DIR/gateway/gateway-class.yaml"
 
 kubectl apply -f "https://github.com/rabbitmq/cluster-operator/releases/download/$RABBITMQ_OPERATOR_VERSION/cluster-operator.yml"
 kubectl -n rabbitmq-system rollout status deployment/rabbitmq-cluster-operator --timeout=180s
+kubectl apply -f "https://github.com/rabbitmq/messaging-topology-operator/releases/download/$RABBITMQ_TOPOLOGY_OPERATOR_VERSION/messaging-topology-operator-with-certmanager.yaml"
+kubectl -n rabbitmq-system rollout status deployment/messaging-topology-operator --timeout=180s
 kubectl apply -k "$DIR/../rabbitmq"
+
+kubectl apply -k "$DIR/../postgres"
+kubectl -n chess wait cluster.postgresql.cnpg.io/postgres --for=condition=Ready --timeout=600s

@@ -1,10 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import { RabbitMQService } from './rabbitmq.service';
-import { OutboxRelay } from './outbox.relay';
 
 @Global()
 @Module({
-  providers: [RabbitMQService, OutboxRelay],
+  providers: [RabbitMQService],
   exports: [RabbitMQService],
 })
 export class MessagingModule {}

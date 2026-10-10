@@ -1,0 +1,49 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: core
+  namespace: chess
+spec:
+  rabbitmqClusterReference:
+    name: rabbitmq
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: core
+  namespace: chess
+spec:
+  vhost: /
+  userReference:
+    name: core
+  rabbitmqClusterReference:
+    name: rabbitmq
+  permissions:
+    configure: '^(game\.(lifecycle|commands|notifications)|chess\.(dlx|dead-letter)|core\.game-ended|game-svc\.commands|ws\.notifications)$'
+    write: '^(game\.commands|core\.game-ended|game-svc\.commands|ws\.notifications|chess\.dead-letter)$'
+    read: '^(game\.(lifecycle|commands|notifications)|chess\.(dlx|dead-letter)|core\.game-ended|game-svc\.commands|ws\.notifications)$'
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: game-svc
+  namespace: chess
+spec:
+  rabbitmqClusterReference:
+    name: rabbitmq
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: game-svc
+  namespace: chess
+spec:
+  vhost: /
+  userReference:
+    name: game-svc
+  rabbitmqClusterReference:
+    name: rabbitmq
+  permissions:
+    configure: '^(game\.(lifecycle|commands|notifications)|chess\.(dlx|dead-letter)|core\.game-ended|game-svc\.commands|ws\.notifications)$'
+    write: '^(amq\.default|game\.lifecycle|game\.notifications|core\.game-ended|game-svc\.commands|ws\.notifications|chess\.dead-letter)$'
+    read: '^(game\.(lifecycle|commands|notifications)|chess\.(dlx|dead-letter)|core\.game-ended|game-svc\.commands|ws\.notifications)$'

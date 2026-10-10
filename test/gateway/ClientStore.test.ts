@@ -1,5 +1,5 @@
-import { ClientStore } from '../../src/game/ClientStore';
-import { generateClient, generateSocket } from './generators';
+import { ClientStore } from '../../src/gateway/ClientStore';
+import { generateClient, generateSocket } from '../game/generators';
 
 describe('ClientStore', () => {
   const store = new ClientStore();

@@ -13,6 +13,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "start:game-svc": "nest start --watch --entryFile game-service/main",
+    "start:game-svc:prod": "node dist/game-service/main",
     "lint": "eslint \"{src,test,prisma}/**/*.ts\"",
     "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest --verbose --detectOpenHandles",
     "test:unit:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --verbose --detectOpenHandles",

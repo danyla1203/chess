@@ -4,6 +4,8 @@ export const RedisTestDb = {
   repository: 1,
   clock: 2,
   outbox: 3,
+  split: 4,
+  rabbitmq: 5,
 } as const;
 
 export const testRedis = (db: number) =>

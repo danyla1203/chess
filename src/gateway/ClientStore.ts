@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Socket } from 'socket.io';
-import { Client } from './entities';
+import { Client } from '../game/entities';
 
 @Injectable()
 export class ClientStore {

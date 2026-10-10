@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { AuthService, TokenService } from '../../src/auth';
-import { ConnectionPatchProvider } from '../../src/game/connection.provider';
+import { ConnectionPatchProvider } from '../../src/gateway/connection.provider';
 import { LoggerService } from '../../src/tools/logger';
 
 jest.mock('../../src/auth');
