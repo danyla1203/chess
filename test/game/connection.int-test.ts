@@ -10,7 +10,6 @@ import { AppModule } from '../../src/app.module';
 import { LoggerService } from '../../src/tools/logger';
 import { Game, Lobby, User } from '../../src/game/EmitTypes';
 
-jest.mock('../game.service');
 jest.mock('axios', () => null);
 
 describe('Socket connection (integration)', () => {
@@ -44,6 +43,8 @@ describe('Socket connection (integration)', () => {
     store = moduleRef.get(ClientStore);
     socket = {
       emit: jest.fn(),
+      join: jest.fn().mockResolvedValue(undefined),
+      data: {},
     };
     gateway.server = {
       emit: jest.fn(),
@@ -52,31 +53,29 @@ describe('Socket connection (integration)', () => {
 
   describe('anonymous flow', () => {
     beforeEach(() => {
-      jest.spyOn(gmService, 'getLobby').mockImplementationOnce(() => []);
+      jest.spyOn(gmService, 'getLobby').mockResolvedValueOnce([]);
       socket.id = 'test';
       socket.handshake = {
         query: '',
       };
     });
     it('anonymous connection without temp token', async () => {
-      jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
-        throw new NotFoundException('Game not found');
-      });
+      jest
+        .spyOn(gmService, 'findPendingGame')
+        .mockRejectedValueOnce(new NotFoundException('Game not found'));
       await gateway.handleConnection(socket);
-      const cl = store.getClient('test');
+      const cl = store.getClient(socket);
       expect(cl.name).toEqual('Anonymous');
       expect(cl).toHaveProperty('anonymousTempToken');
       expect(cl).toHaveProperty('userId');
       expect(cl.authorized).toBeFalsy();
     });
     it('anonymous connection without temp token - return pending game', async () => {
-      jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
-        return {
-          id: 12345,
-        } as any;
-      });
+      jest
+        .spyOn(gmService, 'findPendingGame')
+        .mockResolvedValueOnce({ id: 12345 } as any);
       await gateway.handleConnection(socket);
-      const cl = store.getClient('test');
+      const cl = store.getClient(socket);
       expect(cl.name).toEqual('Anonymous');
       expect(cl).toHaveProperty('anonymousTempToken');
       expect(cl).toHaveProperty('userId');
@@ -91,9 +90,9 @@ describe('Socket connection (integration)', () => {
       expect(socket.emit).toHaveBeenNthCalledWith(3, Lobby.update, []);
     });
     it('anonymous connection with temp token', async () => {
-      jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
-        throw new NotFoundException('Game not found');
-      });
+      jest
+        .spyOn(gmService, 'findPendingGame')
+        .mockRejectedValueOnce(new NotFoundException('Game not found'));
       socket.id = 'test';
       socket.handshake = {
         query: {
@@ -101,7 +100,7 @@ describe('Socket connection (integration)', () => {
         },
       };
       await gateway.handleConnection(socket);
-      const cl = store.getClient('test');
+      const cl = store.getClient(socket);
       expect(cl.name).toEqual('Anonymous');
       expect(cl).toHaveProperty('userId');
       expect(cl.authorized).toBeFalsy();
@@ -130,26 +129,24 @@ describe('Socket connection (integration)', () => {
             deviceId: 'string',
           };
         });
-      jest.spyOn(gmService, 'getLobby').mockImplementationOnce(() => []);
+      jest.spyOn(gmService, 'getLobby').mockResolvedValueOnce([]);
     });
     it('authorized conn', async () => {
-      jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
-        throw new NotFoundException('Game not found');
-      });
+      jest
+        .spyOn(gmService, 'findPendingGame')
+        .mockRejectedValueOnce(new NotFoundException('Game not found'));
       await gateway.handleConnection(socket);
-      const cl = store.getClient('test');
+      const cl = store.getClient(socket);
       expect(cl.name).toEqual('Danek');
       expect(cl.userId).toEqual(12345);
       expect(cl.authorized).toBeTruthy();
     });
     it('authorized conn with pending game', async () => {
-      jest.spyOn(gmService, 'findPendingGame').mockImplementationOnce(() => {
-        return {
-          id: 12345,
-        } as any;
-      });
+      jest
+        .spyOn(gmService, 'findPendingGame')
+        .mockResolvedValueOnce({ id: 12345 } as any);
       await gateway.handleConnection(socket);
-      const cl = store.getClient('test');
+      const cl = store.getClient(socket);
       expect(cl.name).toEqual('Danek');
       expect(cl.userId).toEqual(12345);
       expect(cl.authorized).toBeTruthy();

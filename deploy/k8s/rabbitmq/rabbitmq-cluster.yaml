@@ -1,0 +1,19 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+  namespace: chess
+spec:
+  replicas: 3
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      memory: 1Gi
+  persistence:
+    storage: 10Gi
+  rabbitmq:
+    additionalConfig: |
+      prometheus.return_per_object_metrics = true
+      default_vhost = /

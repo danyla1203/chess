@@ -1,9 +1,14 @@
 import { Config, Game } from '../../src/game/entities/game';
 import { ConflictException } from '@nestjs/common';
-import { generateConfig, generateClient } from '../game/generators';
+import {
+  generateConfig,
+  generateClient,
+  startedGame,
+} from '../game/generators';
 import { Client, Player } from '../../src/game/entities';
 import { GameProcess } from '../../src/game/entities/game/process/game.process';
 import { GameChat } from '../../src/game/entities/game/game.chat';
+import { GameEnd } from '../../src/game/EmitTypes';
 
 describe('Game entity (unit)', () => {
   let game: Game;
@@ -12,21 +17,21 @@ describe('Game entity (unit)', () => {
   beforeEach(() => {
     config = generateConfig();
     fClient = generateClient();
-    game = new Game(fClient, config, jest.fn());
+    game = new Game(fClient, config, 42);
   });
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+
   it('constructor', () => {
-    jest.spyOn(Math, 'random').mockImplementation(() => 0.12345);
-    const newGame = new Game(fClient, config, jest.fn());
-    expect(newGame.id).toBe(12345);
+    const newGame = new Game(fClient, config, 7);
+    expect(newGame.id).toBe(7);
+    expect(newGame.matchId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(newGame.status).toBe('lobby');
     expect(newGame.isActive).toBe(false);
-    expect(newGame.players).toContainEqual({
-      client: fClient,
-      side: newGame.players[0].side,
+    expect(newGame.players).toHaveLength(1);
+    expect(newGame.players[0]).toMatchObject({
+      userId: fClient.userId,
+      name: fClient.name,
+      authorized: fClient.authorized,
       time: config.time,
-      turningPlayer: false,
     });
     expect(newGame.config).toStrictEqual(config);
     expect(newGame.process).toBeInstanceOf(GameProcess);
@@ -34,10 +39,7 @@ describe('Game entity (unit)', () => {
     expect(newGame.moves).toHaveLength(0);
     expect(newGame.winner).toBe(null);
     expect(newGame.looser).toBe(null);
-    expect(newGame.draw).toStrictEqual({
-      w: false,
-      b: false,
-    });
+    expect(newGame.draw).toStrictEqual({ w: false, b: false });
   });
   it('setDrawProposeFrom', () => {
     const { side } = game.players[0];
@@ -46,10 +48,7 @@ describe('Game entity (unit)', () => {
   });
   it('rejectDraw', () => {
     game.rejectDraw();
-    expect(game.draw).toStrictEqual({
-      w: false,
-      b: false,
-    });
+    expect(game.draw).toStrictEqual({ w: false, b: false });
   });
   it('addTimeTo', () => {
     const prevTime = game.players[0].time;
@@ -57,7 +56,7 @@ describe('Game entity (unit)', () => {
     expect(game.players[0].time).toEqual(prevTime + 1000);
   });
   describe('addPlayer', () => {
-    it('should add new player to game.players array', () => {
+    it('should add a player on the free side', () => {
       const cl = generateClient();
       const nonPickedSide = game.players[0].side === 'w' ? 'b' : 'w';
       game.addPlayer(cl);
@@ -67,126 +66,129 @@ describe('Game entity (unit)', () => {
     });
   });
   describe('start', () => {
-    it('should set tick rate for white side', () => {
-      const player = generateClient();
-      const pickedSide = Object.values(game.players)[0].side;
-      const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push(new Player(player, side, 100000));
-      jest.spyOn(game, 'changeTickingSide').mockImplementation();
-      const whitePlayer = game.players.find((player) => player.side === 'w');
-      const blackPlayer = game.players.find((player) => player.side === 'b');
-      game.start();
-      expect(game.isActive).toBeTruthy();
-      expect(game.changeTickingSide).toHaveBeenCalledWith(
-        whitePlayer,
-        blackPlayer,
-      );
+    it('should activate the game with white to move', () => {
+      game.addPlayer(generateClient());
+      game.start(1000);
+      expect(game.isActive).toBe(true);
+      expect(game.turnStartedAt).toBe(1000);
+      expect(game.activePlayer().side).toBe('w');
+      expect(game.deadline()).toBe(1000 + config.time);
     });
   });
-  describe('changeTickingSide', () => {
-    it('should change ticking side', () => {
-      const player = generateClient();
-      const pickedSide = Object.values(game.players)[0].side;
-      const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push(new Player(player, side, 100000));
-
-      jest.useFakeTimers();
-      jest.spyOn(global, 'setInterval');
-      jest.spyOn(global, 'clearInterval');
-      const next = game.players[0];
-      const old = game.players[1];
-      const oldTime = old.time;
-      game.changeTickingSide(next, old);
-      expect(clearInterval).toHaveBeenCalled();
-      expect(old.time).toEqual(oldTime + game.config.timeIncrement);
-      expect(next.intervalLabel).toBeDefined();
-
-      jest.runAllTimers();
+  describe('clock', () => {
+    it('should run only the active player clock', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      expect(g.times(1500)).toStrictEqual({
+        w: g.config.time - 1500,
+        b: g.config.time,
+      });
+    });
+    it('should charge the mover, add increment and switch the clock', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      const white = g.activePlayer();
+      g.makeTurn(white.userId, 'pawn4', 'd4', 2000);
+      expect(white.time).toBe(g.config.time - 2000 + g.config.timeIncrement);
+      expect(g.activePlayer().side).toBe('b');
+      expect(g.turnStartedAt).toBe(2000);
+      expect(g.deadline()).toBe(2000 + g.config.time);
+    });
+    it('should report time over once the active clock reaches zero', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      expect(g.isTimeOver(g.config.time - 1)).toBe(false);
+      expect(g.isTimeOver(g.config.time)).toBe(true);
+    });
+    it('should reject a move after the flag fell', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      expect(() =>
+        g.makeTurn(g.activePlayer().userId, 'pawn4', 'd4', g.config.time + 1),
+      ).toThrow(new ConflictException('Time is over'));
     });
   });
-  describe('timerTick', () => {
-    it('should reduce time and emit time updates', () => {
-      const player = generateClient();
-      const pickedSide = Object.values(game.players)[0].side;
-      const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push(new Player(player, side, 100000));
-      const [pl1, pl2] = game.players;
-      const prevPl1Time = pl1.time;
-      game.timerTick(pl1, pl2);
-      expect(pl1.time).toEqual(prevPl1Time - 1000);
-    });
-    it('should end game if time is over', () => {
-      const player = generateClient();
-      const pickedSide = Object.values(game.players)[0].side;
-      const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push(new Player(player, side, 100000));
-      const [pl1, pl2] = game.players;
-      const endGameMock = jest.spyOn(game, 'endGame');
-
-      pl1.time = 1000;
-      game.timerTick(pl1, pl2);
-      expect(pl1.time).toEqual(0);
-      expect(endGameMock).toHaveBeenCalledWith(pl2, pl1);
+  describe('endByTimeout', () => {
+    it('should make the active player lose', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      const white = g.activePlayer();
+      const { winner, looser } = g.endByTimeout(g.config.time + 10);
+      expect(looser).toBe(white);
+      expect(winner.side).toBe('b');
+      expect(white.time).toBe(0);
+      expect(g.status).toBe('ended');
+      expect(g.endReason).toBe(GameEnd.timeout);
+      expect(g.deadline()).toBeNull();
     });
   });
   describe('endGameByDraw', () => {
-    it('should clear interval and save game', () => {
-      const player = generateClient();
-      const pickedSide = Object.values(game.players)[0].side;
-      const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push(new Player(player, side, 100000));
-
-      jest.useFakeTimers();
-      jest.spyOn(global, 'clearInterval');
-      const [pl1, pl2] = game.players;
-
-      pl2.intervalLabel = setInterval(() => {}, 1000);
-
-      game.endGameByDraw();
-      expect(clearInterval).toHaveBeenCalledWith(pl1.intervalLabel);
-      expect(clearInterval).toHaveBeenCalledWith(pl2.intervalLabel);
-      expect(game.isActive).toBeFalsy();
+    it('should freeze clocks and end the game', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      g.endGameByDraw(500);
+      expect(g.isActive).toBe(false);
+      expect(g.endReason).toBe(GameEnd.draw);
+      expect(g.times()).toStrictEqual({
+        w: g.config.time - 500,
+        b: g.config.time,
+      });
     });
   });
   describe('endGame (with winner)', () => {
-    it('should clear intervals, and save game', () => {
-      const player = generateClient();
-      const pickedSide = Object.values(game.players)[0].side;
-      const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push(new Player(player, side, 100000));
-
-      jest.useFakeTimers();
-      jest.spyOn(global, 'clearInterval');
-      const [pl1, pl2] = game.players;
-
-      pl2.intervalLabel = setInterval(() => {}, 1000);
-
-      game.endGame(pl1, pl2);
-      expect(clearInterval).toHaveBeenCalledWith(pl1.intervalLabel);
-      expect(clearInterval).toHaveBeenCalledWith(pl2.intervalLabel);
-      expect(game.isActive).toBeFalsy();
-      expect(game.winner).toStrictEqual(pl1);
-      expect(game.looser).toStrictEqual(pl2);
+    it('should set winner, looser and reason', () => {
+      const g = startedGame();
+      const [pl1, pl2] = g.players;
+      g.endGame(pl1, pl2, GameEnd.surrender);
+      expect(g.isActive).toBe(false);
+      expect(g.status).toBe('ended');
+      expect(g.winner).toBe(pl1);
+      expect(g.looser).toBe(pl2);
+      expect(g.endReason).toBe(GameEnd.surrender);
     });
   });
   describe('makeTurn', () => {
     it('should throw Conflict err if game is not active', () => {
-      game.isActive = false;
       expect(() => game.makeTurn(0, 'pawn4', 'd3')).toThrow(
         new ConflictException('Game is not active'),
       );
     });
     it('should throw Conflict err if waiting player make a turn', () => {
-      game.isActive = true;
-      const player = generateClient();
-      const pickedSide = Object.values(game.players)[0].side;
-      const side = pickedSide === 'w' ? 'b' : 'w';
-      game.players.push(new Player(player, side, 100000));
-
-      const { userId } = side === 'w' ? game.players[0] : game.players[1];
-      expect(() => game.makeTurn(userId, 'pawn4', 'd5')).toThrow(
+      const g = startedGame();
+      const black = g.players.find((pl) => pl.side === 'b');
+      expect(() => g.makeTurn(black.userId, 'pawn4', 'd5')).toThrow(
         new ConflictException('Not your turn'),
       );
+    });
+    it('should not touch clocks when the move is illegal', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      const white = g.activePlayer();
+      expect(() => g.makeTurn(white.userId, 'pawn4', 'd6', 100)).toThrow();
+      expect(white.time).toBe(g.config.time);
+      expect(g.turnStartedAt).toBe(0);
+    });
+  });
+  describe('snapshot', () => {
+    it('should survive a JSON round trip', () => {
+      const g = startedGame(generateConfig('w', 50), 0);
+      const white = g.activePlayer();
+      g.makeTurn(white.userId, 'pawn5', 'e4', 1000);
+      g.chat.addMessage('gl hf', white);
+      g.setDrawProposeFrom('b');
+
+      const restored = Game.fromSnapshot(
+        JSON.parse(JSON.stringify(g.toSnapshot())),
+      );
+
+      expect(restored.toSnapshot()).toStrictEqual(g.toSnapshot());
+      expect(restored.process.turnSide).toBe('b');
+      expect(restored.chat.messages[0].date).toBeInstanceOf(Date);
+      const black = restored.activePlayer();
+      expect(() =>
+        restored.makeTurn(black.userId, 'pawn5', 'e5', 2000),
+      ).not.toThrow();
+    });
+    it('should restore winner and looser as players of the game', () => {
+      const g = startedGame();
+      const [pl1, pl2] = g.players;
+      g.endGame(pl1, pl2, GameEnd.mate);
+      const restored = Game.fromSnapshot(g.toSnapshot());
+      expect(restored.winner).toBe(restored.players[0]);
+      expect(restored.looser).toBe(restored.players[1]);
     });
   });
 });

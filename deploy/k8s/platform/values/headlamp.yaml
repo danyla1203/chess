@@ -1,0 +1,6 @@
+clusterRoleBinding:
+  create: false
+
+serviceAccount:
+  create: true
+  name: headlamp

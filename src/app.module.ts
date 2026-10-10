@@ -8,6 +8,11 @@ import { MailService } from './mail/mail.service';
 import { LoggerModule } from './tools/logger';
 import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis from '@keyv/redis';
+import { TelemetryModule } from './tools/telemetry';
+import { MessagingModule } from './messaging';
+import { RedisModule } from './redis';
+import { GameHistoryModule } from './game-history/game-history.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -21,10 +26,15 @@ import KeyvRedis from '@keyv/redis';
       inject: [ConfigService],
     }),
     LoggerModule,
+    TelemetryModule,
+    RedisModule,
+    MessagingModule,
+    HealthModule,
     AuthModule,
     GameModule,
     PaymentsModule,
     UserModule,
+    GameHistoryModule,
   ],
   controllers: [],
   providers: [MailService],

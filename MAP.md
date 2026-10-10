@@ -1,13 +1,14 @@
 # Backend map
 
-NestJS 12 app. Entry: `src/main.ts` starts OpenTelemetry (`src/tools/tracing.ts`), then creates `AppModule` with a global `ValidationPipe` and `LoggerFilter`, and listens on `PORT` (9200 in dev). CORS allows `http://localhost:3000` when `ENV=dev`.
+NestJS 12 app. Entry: `src/main.ts` imports `src/tools/telemetry/otel.ts` first (starts the OTel SDK before anything else is required), then creates `AppModule` with a global `ValidationPipe` and `LoggerFilter`, and listens on `PORT` (9200 in dev). CORS allows `http://localhost:3000` when `ENV=dev`.
 
 ## Layout
 
 ```
 src/
 ├── main.ts                    bootstrap, CORS, global pipe/filter
-├── app.module.ts              Config (global), Redis cache (global), Logger, Auth, Game, Payments, User
+├── main.ts                    (also installs RedisIoAdapter: Socket.IO rooms and emits shared across instances)
+├── app.module.ts              Config (global), Redis cache (global), Logger, Telemetry, Redis, Messaging, Health, Auth, Game, Payments, User, GameHistory
 ├── prisma.service.ts          PrismaClient + pg adapter; each module provides its own instance
 ├── auth/                      @Global module, exports AuthService + TokenModule
 │   ├── auth.controller.ts     /auth/* routes
@@ -22,19 +23,23 @@ src/
 │   └── entities/              response shapes + prismaSelectUserProfile
 ├── game/                      real-time chess over Socket.IO, namespace /game
 │   ├── game.gateway.ts        @SubscribeMessage handlers, room broadcast
-│   ├── game.service.ts        orchestrates create/join/move/draw/surrender/leave, persists results
-│   ├── game.list.ts           in-memory lobby[] (waiting) and games[] (running)
-│   ├── ClientStore.ts         socket.id -> Client map; reconnect keeps the same Client by userId
+│   ├── game.service.ts        orchestrates create/join/move/draw/surrender/leave, publishes game.ended
+│   ├── game.repository.ts     Redis game store: versioned snapshot per game, Lua compare-and-set save that also updates indexes and writes the outbox
+│   ├── game.notifier.ts       all server -> client emits, addressed to `user:<id>` / `game:<id>` rooms so they work across instances
+│   ├── game.clock.ts          leader-elected (Redis lock) 1 s loop: `game:time` ticks and timeouts from the deadline index
+│   ├── game.events.ts         Game -> GameEndedEvent / outbox message
+│   ├── game.metrics.ts        OTel metrics: ws connections, moves, move latency, games created/ended, bet volume
+│   ├── ClientStore.ts         Client identity kept on `socket.data.client`
 │   ├── connection.provider.ts handshake: JWT -> authorized Client, otherwise anonymous temp token
-│   ├── model.ts               saves finished games; winner/loser balance changes in one serializable tx
-│   ├── guards/                IsPlayer (socket belongs to game), IsBalanceEnough (bet <= balance)
+│   ├── model.ts               user balance lookup for IsBalanceEnough
+│   ├── guards/                IsPlayer (socket's user is a player of the game), IsBalanceEnough (bet <= balance)
 │   ├── EmitTypes.ts           server -> client event names (shared contract with frontend)
 │   ├── dto/                   CreateGame, Turn, ChatMessage + payload types
 │   └── entities/
-│       ├── Client.ts          wraps a socket + identity; lobby/pending/created emitters
-│       ├── Player.ts          Client + side + clock; game-end/time-tick/init emitters
+│       ├── Client.ts          identity: userId, name, authorized, anonymous temp token
+│       ├── Player.ts          identity + side + remaining time; snapshot (de)serialization
 │       └── game/
-│           ├── game.ts        Game aggregate: players, config, clocks (setInterval), moves, draw flags
+│           ├── game.ts        Game aggregate: status, players, clocks (turnStartedAt + remaining ms), moves, chat, draw flags; toSnapshot/fromSnapshot
 │           ├── game.chat.ts   per-game chat log
 │           ├── game.adapter.ts  Game -> DTOs (plain board, init data, result)
 │           └── process/
@@ -44,11 +49,15 @@ src/
 │   ├── payments.controller.ts /payments/* routes
 │   ├── payments.service.ts    checkout session, webhook -> balance top-up
 │   └── stripe/                StripeService (lazy client, fixed price id)
+├── redis/                     RedisModule (ioredis client, token REDIS) and RedisKeys
+├── game-history/              consumes game.ended (queue core.game-ended); saves game + balance changes in one serializable tx, idempotent on matchId
+├── messaging/                 RabbitMQ (amqp-connection-manager): topology.ts (exchanges, queues, DLX), contracts.ts (event payloads), RabbitMQService (confirmed publish, ack/nack consumers)
+├── health/                    GET /health/live, GET /health/ready (Postgres + RabbitMQ)
 ├── mail/mail.service.ts       SendGrid wrapper; sending is commented out
 └── tools/
     ├── logger/                winston LoggerService (console + logs/log.json), global LoggerFilter
     ├── WsValidationFilter.ts  maps 400/404/409 HttpExceptions to WsException
-    └── tracing.ts             OTel NodeSDK: OTLP traces/metrics, auto + Prisma instrumentation
+    └── telemetry/             otel.ts: NodeSDK with OTLP traces, metrics and logs, auto + Prisma instrumentation; TelemetryModule flushes on shutdown
 prisma/
 ├── schema.prisma              models below
 ├── migrations/                SQL migrations (Aug 2023 – Aug 2024)
@@ -56,7 +65,8 @@ prisma/
 prisma.config.ts               schema path, migrations path, seed command, DATABASE_URL
 test/                          mirrors src; *.test.ts (unit), *.int-test.ts (DB), *.e2e-test.ts (HTTP)
 postman/, .postman/            Postman collection for the REST API
-docker.compose.yml             app + postgres:17 + redis + jaeger + prometheus + grafana
+docker.compose.yml             app + postgres:17 + redis + rabbitmq + grafana/otel-lgtm (Grafana on :3001)
+deploy/k8s/                    platform install (kube-prometheus-stack, Tempo, Loki, OTel Collector, Headlamp, RabbitMQ operator) + Grafana dashboard
 ```
 
 ## REST routes
@@ -78,6 +88,8 @@ docker.compose.yml             app + postgres:17 + redis + jaeger + prometheus +
 | GET    | `/user/payment/history`        | Auth             | `{total, invoices}`                                                       |
 | GET    | `/payments/checkout-session`   | Auth             | Stripe checkout URL                                                       |
 | POST   | `/payments/webhook`            | Stripe signature | `checkout.session.completed` → `UserService.topUpBalance`                 |
+| GET    | `/health/live`                 | –                | liveness probe                                                            |
+| GET    | `/health/ready`                | –                | readiness: Postgres `SELECT 1` + RabbitMQ connection, 503 when down       |
 
 `AuthGuard` parses `Authorization: Bearer <jwt>` (payload `{id, deviceId}`), checks the DB session, and sets `req.user = {id, name, deviceId}`.
 
@@ -90,7 +102,7 @@ Client → server (`@SubscribeMessage`):
 | Event                                          | Body                                                             | Guard           | Effect                                                                                                |
 | ---------------------------------------------- | ---------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- |
 | `create`                                       | `{side: 'w'\|'b'\|'rand', time, timeIncrement, bet}` (ms, cents) | IsBalanceEnough | new Game in lobby; `game:created` to creator, `lobby:update` to all                                   |
-| `join`                                         | `{gameId}`                                                       | IsBalanceEnough | second player joins; `game:init-data` to each, `game:start` to room, clocks start                     |
+| `join`                                         | `{gameId}`                                                       | IsBalanceEnough | second player joins; `game:init-data` to each, `game:start` to both players, clocks start             |
 | `rejoin`                                       | –                                                                | –               | re-sends `game:init-data`; `game:player-reconnected` to room                                          |
 | `leave`                                        | –                                                                | –               | leaver loses; `game:end` (`playerLeave`)                                                              |
 | `move`                                         | `{gameId, figure, cell}`                                         | IsPlayer        | validate + apply; `game:board-update {effect:{strike,shah,mate}, update:{figure,cell,prevCell,side}}` |
@@ -99,7 +111,29 @@ Client → server (`@SubscribeMessage`):
 | `draw_propose` / `draw_accept` / `draw_reject` | `{gameId}`                                                       | IsPlayer        | `game:draw_propose` / `game:end` (`draw`) / `game:draw_rejected`                                      |
 | `add_time`                                     | `{gameId}`                                                       | IsPlayer        | adds `timeIncrement` to the opponent; `game:add-time`                                                 |
 
-Server → client (from `EmitTypes.ts`): `lobby:update`, `user:anon-token`, `game:pending-one`, `game:created`, `game:init-data`, `game:start`, `game:time` (every 1 s), `game:board-update`, `game:chat-message`, `game:draw_propose`, `game:draw_rejected`, `game:add-time`, `game:end`, `game:opponent-disconnected`, `game:player-reconnected`. Rooms are named `game:<id>`.
+Server → client (from `EmitTypes.ts`): `lobby:update`, `user:anon-token`, `game:pending-one`, `game:created`, `game:init-data`, `game:start`, `game:time` (every 1 s), `game:board-update`, `game:chat-message`, `game:draw_propose`, `game:draw_rejected`, `game:add-time`, `game:end`, `game:opponent-disconnected`, `game:player-reconnected`. Rooms: `game:<id>` (both players) and `user:<id>` (every socket of a user, joined on connect). `game:time` comes from the clock leader, whichever instance holds `{chess}:clock:leader`.
+
+## Messaging (RabbitMQ)
+
+| Exchange         | Type  | Routing key     | Queue                                                         | Consumer               |
+| ---------------- | ----- | --------------- | ------------------------------------------------------------- | ---------------------- |
+| `game.lifecycle` | topic | `game.v1.ended` | `core.game-ended` (quorum, delivery limit 5, DLX `chess.dlx`) | `GameHistoryConsumer`  |
+| `chess.dlx`      | topic | `#`             | `chess.dead-letter` (quorum)                                  | none, inspect manually |
+
+Game end goes through a transactional outbox: the Lua save that marks a game `ended` also `XADD`s the event to `{chess}:outbox`. `OutboxRelay` (consumer group `relay`) publishes with confirms (`messageId` = `matchId`), then `XACK`+`XDEL`s. Unconfirmed entries are reclaimed after 30 s idle. Results are persisted only when both players are authorized.
+
+## Redis keys (hash tag `{chess}`)
+
+| Key                          | Type   | Content                                                                                   |
+| ---------------------------- | ------ | ----------------------------------------------------------------------------------------- |
+| `{chess}:game:<id>`          | hash   | `data` (GameSnapshot JSON), `version`. Expires 10 min after the game ends or is cancelled |
+| `{chess}:game:seq`           | string | game id counter                                                                           |
+| `{chess}:lobby`              | zset   | lobby game ids by createdAt                                                               |
+| `{chess}:active`             | set    | active game ids                                                                           |
+| `{chess}:deadlines`          | zset   | active game id -> ms when the side to move runs out of time                               |
+| `{chess}:user-game:<userId>` | string | the user's lobby or active game id                                                        |
+| `{chess}:outbox`             | stream | pending broker messages                                                                   |
+| `{chess}:clock:leader`       | string | instance id of the clock leader, 3 s lease                                                |
 
 ## Game engine glossary
 
@@ -109,16 +143,14 @@ Figure ids in `GameProcess.initBoard()`: `pawn1..8`, `R1/R2` rook, `K1/K2` **kni
 
 - `User` (unique `name`, `email`; bcrypt `password`; `balance` and `winningBalance` in cents) 1–1 `Confirmation`, 1–n `Auth` sessions, 1–n `Payment`, n–m `Game` via `UserInGame`, 1–n `LobbyMessage` (unused).
 - `Auth`: one refresh token per (user, deviceId); expires after ~17 days (DB default).
-- `Game`: config (`maxTime`, `timeIncrement`, `sideSelecting`, `bet`), `isDraw`, `moves` JSON.
+- `Game`: `matchId` (uuid, unique; the live game's `matchId`, used for idempotent saves), config (`maxTime`, `timeIncrement`, `sideSelecting`, `bet`), `isDraw`, `moves` JSON.
 - `UserInGame`: side, `isWinner`, `balanceChange`.
 
 ## Env
 
-`.env.sample`: `ENV, PORT, JWT_SECRET, JWT_ACCESS_EXPIRES, JWT_REFRESH_EXPIRES, DATABASE_URL, REDIS_URL, OTEL_METRIC_EXPORTER_URL, OTEL_TRACE_EXPORTER_URL, STRIPE_KEY, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET, STRIPE_CHECKOUT_SESSION_SUCCESS_URL, STRIPE_CHECKOUT_SESSION_CANCEL_URL, SG_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_SECRET, GOOGLE_REDIRECT_URL`.
+`.env.sample`: `ENV, PORT, JWT_SECRET, JWT_ACCESS_EXPIRES, JWT_REFRESH_EXPIRES, DATABASE_URL, REDIS_URL, RABBITMQ_URL, OTEL_SERVICE_NAME, OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_METRIC_EXPORT_INTERVAL, OTEL_SDK_DISABLED, OTEL_SEMCONV_STABILITY_OPT_IN, STRIPE_KEY, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET, STRIPE_CHECKOUT_SESSION_SUCCESS_URL, STRIPE_CHECKOUT_SESSION_CANCEL_URL, SG_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_SECRET, GOOGLE_REDIRECT_URL`.
 
 ## Known issues (seen while mapping, not fixed)
 
-- `IsBalanceEnough` calls `clientStore.getClient(socket)` with the socket object instead of `socket.id`. The lookup returns `undefined`, so any `create` with `bet > 0` throws.
-- `GameService.injectableGameEndCallback` (timeout) calls `winner.gameEndEvent` twice, so the loser never gets `game:end`.
 - `ConnectionPatchProvider.withToken` reads `payload.userId`, but user JWTs carry `id`. The session lookup works only because Prisma ignores the `undefined` filter and matches on `deviceId` alone.
 - The Stripe price id is hard-coded in `stripe.service.ts`, and outgoing email is disabled.

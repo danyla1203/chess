@@ -1,5 +1,13 @@
 import { ConflictException } from '@nestjs/common';
-import { Figures, FiguresCellState, Cell, Figure, Board, CellUpdate } from '..';
+import {
+  Figures,
+  FiguresCellState,
+  Cell,
+  Figure,
+  Board,
+  CellUpdate,
+  GameStateSnapshot,
+} from '..';
 import { GameState } from './game.state';
 import { CompletedMove, MateData, ShahData, StrikedData } from '../../../dto';
 
@@ -95,6 +103,12 @@ export class GameProcess {
     const { white, black } = this.initBoard();
     this.store = new GameState(white, black);
     this.Letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  }
+
+  public static fromSnapshot(snapshot: GameStateSnapshot): GameProcess {
+    const process = new GameProcess();
+    process.store = GameState.fromSnapshot(snapshot);
+    return process;
   }
   public findNextLetter(center: string): string[] {
     const result = [];

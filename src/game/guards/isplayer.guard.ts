@@ -1,17 +1,22 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { GameService } from '../game.service';
+import { ClientStore } from '../ClientStore';
 
 @Injectable()
 export class IsPlayer implements CanActivate {
-  constructor(private readonly service: GameService) {}
+  constructor(
+    private readonly service: GameService,
+    private readonly clientStore: ClientStore,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const wsContext = context.switchToWs();
-    const socket = wsContext.getClient();
+    const client = this.clientStore.getClient(wsContext.getClient());
     const gameId = wsContext.getData().gameId;
+    if (!client) return false;
 
-    const game = this.service.findGameById(gameId);
+    const game = await this.service.findGameById(gameId);
 
-    return !!game.players.find((pl) => pl.client.socket.id === socket.id);
+    return !!game.findPlayer(client.userId);
   }
 }

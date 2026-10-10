@@ -1,303 +1,251 @@
 import { Test } from '@nestjs/testing';
-import { faker } from '@faker-js/faker';
 import { GameGateway } from '../../src/game/game.gateway';
 import { GameService } from '../../src/game/game.service';
-import { AuthService, TokenService } from '../../src/auth';
-import { LoggerService } from '../../src/tools/logger';
 import { ConnectionPatchProvider } from '../../src/game/connection.provider';
 import { ClientStore } from '../../src/game/ClientStore';
-import { GameModel } from '../../src/game/model';
-import { PrismaService } from '../../src/prisma.service';
-import { GameAdapter } from '../../src/game/entities/game';
-import { Game, Lobby, room } from '../../src/game/EmitTypes';
-import { Player } from '../../src/game/entities';
-import { generateConfig, generatePlayer } from './generators';
-
-jest.mock('../../src/game/game.service');
-jest.mock('../../src/auth');
-jest.mock('../../src/game/game.service');
+import { GameMetrics } from '../../src/game/game.metrics';
+import { GameNotifier, userRoom } from '../../src/game/game.notifier';
+import { IsBalanceEnough, IsPlayer } from '../../src/game/guards';
+import { Game, GameEnd, Lobby, User, room } from '../../src/game/EmitTypes';
+import { Client } from '../../src/game/entities';
+import {
+  generateClient,
+  generateConfig,
+  generateSocket,
+  startedGame,
+} from './generators';
+import { fakeMetrics, fakeNotifier } from './fakes';
 
 describe('GameGateway (unit)', () => {
   let gateway: GameGateway;
-  let service: GameService;
+  let service: Record<string, jest.Mock>;
+  let notifier: ReturnType<typeof fakeNotifier>;
+  let metrics: ReturnType<typeof fakeMetrics>;
+  let connService: { processClient: jest.Mock };
+  let fetchSockets: jest.Mock;
+  let client: Client;
+  let socket: any;
+
   beforeEach(async () => {
+    service = {
+      getLobby: jest.fn().mockResolvedValue([]),
+      findPendingGame: jest.fn().mockRejectedValue(new Error('none')),
+      removeInitedGamesBy: jest.fn().mockResolvedValue(undefined),
+      findCurrentOpponent: jest.fn().mockResolvedValue(null),
+      createGame: jest.fn(),
+      connectToGame: jest.fn(),
+      leaveGame: jest.fn(),
+      makeTurn: jest.fn(),
+      pushMessage: jest.fn(),
+      surrender: jest.fn(),
+      proposeDraw: jest.fn(),
+      acceptDraw: jest.fn(),
+      rejectDraw: jest.fn(),
+      addTimeToAnotherPlayer: jest.fn(),
+      getInitedGameData: jest.fn((userId: number) => ({ userId })),
+    };
+    notifier = fakeNotifier();
+    metrics = fakeMetrics();
+    connService = { processClient: jest.fn() };
     const moduleRef = await Test.createTestingModule({
       providers: [
         GameGateway,
-        GameService,
-        AuthService,
-        TokenService,
-        LoggerService,
-        ConnectionPatchProvider,
         ClientStore,
-        GameModel,
-        PrismaService,
-        {
-          provide: 'GameAdapterI',
-          useClass: GameAdapter,
-        },
+        { provide: GameService, useValue: service },
+        { provide: GameNotifier, useValue: notifier },
+        { provide: GameMetrics, useValue: metrics },
+        { provide: ConnectionPatchProvider, useValue: connService },
       ],
     })
-      .overrideProvider(PrismaService)
-      .useValue({})
-      .overrideProvider(LoggerService)
-      .useValue({ log: jest.fn() })
+      .overrideGuard(IsBalanceEnough)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(IsPlayer)
+      .useValue({ canActivate: () => true })
       .compile();
-    service = moduleRef.get(GameService);
     gateway = moduleRef.get(GameGateway);
-    const emit = jest.fn();
-    gateway.server = {
-      emit,
-      to: jest.fn(() => {
-        return {
-          emit,
-        };
-      }),
-    } as any;
+    fetchSockets = jest.fn().mockResolvedValue([]);
+    gateway.server = { in: jest.fn(() => ({ fetchSockets })) } as any;
+
+    client = generateClient(true, 1);
+    socket = generateSocket(client);
   });
-  it('should be defined', () => {
-    expect(gateway).toBeDefined();
+
+  it('afterInit should bind the notifier to the namespace', () => {
+    const server = {} as any;
+    gateway.afterInit(server);
+    expect(notifier.bind).toHaveBeenCalledWith(server);
   });
-  it('handleDisconnect', () => {
-    const stubClient = {};
-    jest
-      .spyOn(gateway['clientStore'], 'getClient')
-      .mockReturnValue(stubClient as any);
-    jest.spyOn(service, 'getLobby').mockImplementationOnce(() => []);
-    gateway.handleDisconnect(stubClient as any);
-    expect(service.removeInitedGamesBy).toHaveBeenCalledWith(stubClient);
-    expect(gateway.server.emit).toHaveBeenCalledWith(Lobby.update, []);
+
+  describe('handleConnection', () => {
+    it('should register the client, join the user room and send the lobby', async () => {
+      const fresh = generateSocket();
+      connService.processClient.mockResolvedValue(client);
+      service.getLobby.mockResolvedValue([{ id: 3 }]);
+
+      await gateway.handleConnection(fresh);
+
+      expect(fresh.data.client).toBe(client);
+      expect(fresh.join).toHaveBeenCalledWith(userRoom(1));
+      expect(fresh.emit).toHaveBeenCalledWith(Lobby.update, [{ id: 3 }]);
+      expect(metrics.connectionOpened).toHaveBeenCalled();
+    });
+    it('should send an anonymous token and the pending game', async () => {
+      const anon = generateClient(false, 77);
+      anon.anonymousTempToken = 'temp';
+      const fresh = generateSocket();
+      connService.processClient.mockResolvedValue(anon);
+      service.findPendingGame.mockResolvedValue({ id: 9 });
+
+      await gateway.handleConnection(fresh);
+
+      expect(fresh.emit).toHaveBeenNthCalledWith(1, User.anonymousToken, {
+        tempToken: 'temp',
+        userId: 77,
+      });
+      expect(fresh.join).toHaveBeenCalledWith(room(9));
+      expect(fresh.emit).toHaveBeenNthCalledWith(2, Game.pendingGame, {
+        gameId: 9,
+      });
+    });
   });
+
+  describe('handleDisconnect', () => {
+    it('should cancel lobby games and warn the opponent when the last socket leaves', async () => {
+      service.findCurrentOpponent.mockResolvedValue({ userId: 2 });
+      await gateway.handleDisconnect(socket);
+      expect(service.removeInitedGamesBy).toHaveBeenCalledWith(client);
+      expect(notifier.opponentDisconnected).toHaveBeenCalledWith(2);
+      expect(notifier.lobbyUpdate).toHaveBeenCalledWith([]);
+      expect(metrics.connectionClosed).toHaveBeenCalled();
+    });
+    it('should keep games when the user has another tab open', async () => {
+      fetchSockets.mockResolvedValue([{ id: 'other' }]);
+      await gateway.handleDisconnect(socket);
+      expect(service.removeInitedGamesBy).not.toHaveBeenCalled();
+    });
+    it('should not touch games while the pod shuts down', async () => {
+      gateway.beforeApplicationShutdown();
+      await gateway.handleDisconnect(socket);
+      expect(fetchSockets).not.toHaveBeenCalled();
+      expect(service.removeInitedGamesBy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('message handlers', () => {
-    let player: Player;
-    let player2: Player;
-    let game: any;
-    beforeEach(() => {
-      player = generatePlayer('w');
-      player2 = generatePlayer('b');
-      game = {
-        id: faker.number.int(5),
-        players: [player, player2],
-        start: jest.fn(),
-        getInitedGameData: jest.fn().mockReturnValue({}),
-        makeTurn: jest.fn().mockImplementation(() => {
-          return {
-            result: {
-              shah: null,
-              mate: null,
-              strike: null,
-            },
-            prevCell: '',
-            side: '',
-          };
-        }),
-      };
-      jest.spyOn(service, 'getLobby').mockImplementationOnce(() => []);
-    });
     it('create game', async () => {
-      const gameId = faker.number.int(5);
-      jest.spyOn(service, 'createGame').mockImplementationOnce((): any => {
-        return { id: gameId };
-      });
-      jest
-        .spyOn(gateway['clientStore'], 'getClient')
-        .mockReturnValue(player.client);
-      const cnf = generateConfig();
-      await gateway.createGame(player.client.socket, cnf);
-      expect(service.createGame).toHaveBeenCalledWith(player.client, cnf);
-      expect(player.client.join).toHaveBeenCalledWith(gameId);
-      expect(player.client.gameCreatedEvent).toHaveBeenCalled();
-      expect(gateway.server.emit).toHaveBeenCalledWith(Lobby.update, []);
+      const config = generateConfig('w', 0);
+      service.createGame.mockResolvedValue({ id: 5, matchId: 'm' });
+      await gateway.createGame(socket, config);
+      expect(service.createGame).toHaveBeenCalledWith(client, config);
+      expect(notifier.joinGame).toHaveBeenCalledWith(1, 5);
+      expect(socket.emit).toHaveBeenCalledWith(Game.created, { gameId: 5 });
+      expect(notifier.lobbyUpdate).toHaveBeenCalled();
     });
-    it('rejoin', () => {
-      jest.spyOn(service, 'findPendingGame').mockImplementationOnce(() => {
-        return {
-          id: 12345,
-          getInitedGameData: jest.fn(() => {
-            return {
-              id: 12345,
-            };
-          }),
-          players: [player, player2],
-        } as any;
+    it('rejoin', async () => {
+      service.findPendingGame.mockResolvedValue({ id: 5 });
+      await gateway.rejoinGame(socket);
+      expect(socket.join).toHaveBeenCalledWith(room(5));
+      expect(socket.emit).toHaveBeenCalledWith(Game.init, { userId: 1 });
+      expect(notifier.toGame).toHaveBeenCalledWith(5, Game.playerReconected, {
+        opponent: { id: 1, name: client.name },
       });
-      jest
-        .spyOn(gateway['clientStore'], 'getClient')
-        .mockReturnValue(player.client);
-      console.log(player.userId, player.client.userId);
-      gateway.rejoinGame(player.client.socket);
-      expect(player.client.join).toHaveBeenCalledWith(12345);
-      expect(player.initedGameDataEvent).toHaveBeenCalled();
-      expect(gateway.server.to).toHaveBeenCalledWith(room(12345));
     });
     it('join', async () => {
-      jest.spyOn(service, 'connectToGame').mockImplementationOnce((): any => {
-        return game;
-      });
-      jest
-        .spyOn(gateway['clientStore'], 'getClient')
-        .mockReturnValue(player2.client);
-
-      await gateway.joinGame(player2.client.socket, { gameId: game.id });
-      expect(service.connectToGame).toHaveBeenCalled();
-      expect(player2.client.join).toHaveBeenCalledWith(game.id);
-
-      expect(player2.initedGameDataEvent).toHaveBeenCalled();
-      expect(player.initedGameDataEvent).toHaveBeenCalled();
-
-      expect(gateway.server.to).toHaveBeenCalledWith(room(game.id));
-      expect(game.start).toHaveBeenCalled();
-      expect(gateway.server.emit).toHaveBeenCalledWith(Lobby.update, []);
+      const game = startedGame();
+      service.connectToGame.mockResolvedValue(game);
+      await gateway.joinGame(socket, { gameId: game.id });
+      const ids = game.players.map((pl) => pl.userId);
+      for (const id of ids) {
+        expect(notifier.joinGame).toHaveBeenCalledWith(id, game.id);
+        expect(notifier.initData).toHaveBeenCalledWith(id, { userId: id });
+      }
+      expect(notifier.gameStart).toHaveBeenCalledWith(ids);
+      expect(notifier.lobbyUpdate).toHaveBeenCalled();
     });
     it('move', async () => {
-      const turnBody = { gameId: game.id, figure: 'B1', cell: 'a4' };
-      jest.spyOn(service, 'findGameById').mockImplementationOnce((): any => {
-        return game;
+      const result = { shah: null, mate: null, strike: null };
+      service.makeTurn.mockResolvedValue({ result, prevCell: 'd2', side: 'w' });
+      const turn = { gameId: 5, figure: 'pawn4', cell: 'd4' };
+      await gateway.move(socket, turn);
+      expect(metrics.trackMove).toHaveBeenCalled();
+      expect(service.makeTurn).toHaveBeenCalledWith(5, 1, turn);
+      expect(notifier.toGame).toHaveBeenCalledWith(5, Game.boardUpdate, {
+        effect: result,
+        update: { figure: 'pawn4', cell: 'd4', prevCell: 'd2', side: 'w' },
       });
-      jest.spyOn(service, 'makeTurn').mockImplementationOnce((): any => {
-        return {
-          result: { shah: null, mate: null, strike: null },
-          prevCell: '',
-          side: '',
-        };
-      });
-      jest
-        .spyOn(gateway['clientStore'], 'getClient')
-        .mockReturnValue(player.client);
-      await gateway.move(player.client.socket, turnBody);
-      expect(service.makeTurn).toHaveBeenCalledWith(
-        game.id,
-        player.client.userId,
-        turnBody,
-      );
-
-      expect(gateway.server.to).toHaveBeenCalledWith(room(game.id));
-      expect(gateway.server.to(room(game.id)).emit).toHaveBeenCalledWith(
-        Game.boardUpdate,
-        {
-          effect: { shah: null, mate: null, strike: null },
-          update: { figure: 'B1', cell: 'a4', prevCell: '', side: '' },
-        },
-      );
     });
-    it('send message in game chat', () => {
-      jest.spyOn(service, 'findGameById').mockImplementationOnce((): any => {
-        return game;
+    it('send message in game chat', async () => {
+      service.pushMessage.mockResolvedValue({ text: 'hi' });
+      await gateway.chatMessage(socket, { gameId: 5, text: 'hi' });
+      expect(notifier.toGame).toHaveBeenCalledWith(5, Game.message, {
+        text: 'hi',
       });
-      const message = {};
-      jest.spyOn(service, 'pushMessage').mockImplementationOnce((): any => {
-        return message;
-      });
-      jest
-        .spyOn(gateway['clientStore'], 'getClient')
-        .mockReturnValue(player.client);
-      gateway.chatMessage(player.client.socket, {
-        gameId: game.id,
-        text: 'some text',
-      });
-      expect(service.pushMessage).toHaveBeenCalledWith(
-        game.id,
-        'some text',
-        player.client,
-      );
-      expect(gateway.server.to).toHaveBeenCalledWith(room(game.id));
-      expect(gateway.server.to(room(game.id)).emit).toHaveBeenCalledWith(
-        Game.message,
-        message,
-      );
     });
     it('surrender', async () => {
-      game.winner = player;
-      game.looser = player2;
-      jest.spyOn(service, 'surrender').mockImplementationOnce(async () => {
-        return {
-          winner: game.winner,
-          looser: game.looser,
-          gameDto: { id: 111 },
-        } as any;
+      service.surrender.mockResolvedValue({
+        winner: { userId: 2 },
+        looser: { userId: 1 },
+        gameDto: { id: 5 },
       });
-      await gateway.surrender(player2.client.socket, { gameId: game.id });
-      expect(game.winner.gameEndEvent).toHaveBeenCalledWith(
+      await gateway.surrender(socket, { gameId: 5 });
+      expect(notifier.gameEnd).toHaveBeenCalledWith(
+        2,
         true,
-        { id: 111 },
-        'surrender',
+        { id: 5 },
+        GameEnd.surrender,
       );
-      expect(game.looser.gameEndEvent).toHaveBeenCalledWith(
+      expect(notifier.gameEnd).toHaveBeenCalledWith(
+        1,
         false,
-        { id: 111 },
-        'surrender',
-      );
-    });
-    it('set draw propose', () => {
-      const stubDraw: any = {};
-      jest.spyOn(service, 'proposeDraw').mockImplementationOnce(() => {
-        return stubDraw;
-      });
-      gateway.drawPropose(player.client.socket, { gameId: game.id });
-      expect(gateway.server.to(room(game.id)).emit).toHaveBeenCalledWith(
-        Game.drawPropose,
-        stubDraw,
-      );
-    });
-    it('accept draw', async () => {
-      const stubDraw: any = {};
-      jest.spyOn(service, 'acceptDraw').mockImplementationOnce(() => {
-        return stubDraw;
-      });
-      await gateway.acceptPropose(player.client.socket, { gameId: game.id });
-      expect(gateway.server.to(room(game.id)).emit).toHaveBeenCalledWith(
-        Game.end,
-        {
-          reason: 'draw',
-          game: {},
-        },
+        { id: 5 },
+        GameEnd.surrender,
       );
     });
     it('player leave', async () => {
-      game.winner = player;
-      game.looser = player2;
-      jest.spyOn(service, 'leaveGame').mockImplementationOnce(async () => {
-        return {
-          winner: game.winner,
-          looser: game.looser,
-          gameDto: { id: 111 },
-        } as any;
+      service.leaveGame.mockResolvedValue({
+        winner: { userId: 2 },
+        looser: { userId: 1 },
+        gameDto: { id: 5 },
       });
-      await gateway.leaveGame(player2.client.socket);
-      expect(game.winner.gameEndEvent).toHaveBeenCalledWith(
-        true,
-        { id: 111 },
-        'playerLeave',
-      );
-      expect(game.looser.gameEndEvent).toHaveBeenCalledWith(
+      await gateway.leaveGame(socket);
+      expect(notifier.gameEnd).toHaveBeenCalledWith(
+        1,
         false,
-        { id: 111 },
-        'playerLeave',
+        { id: 5 },
+        GameEnd.playerLeave,
       );
     });
-    it('reject draw', () => {
-      const stubDraw: any = {};
-      jest.spyOn(service, 'rejectDraw').mockImplementationOnce(() => {
-        return stubDraw;
+    it('set draw propose', async () => {
+      service.proposeDraw.mockResolvedValue({ w: true, b: false });
+      await gateway.drawPropose(socket, { gameId: 5 });
+      expect(notifier.toGame).toHaveBeenCalledWith(5, Game.drawPropose, {
+        w: true,
+        b: false,
       });
-      gateway.rejectPropose({ gameId: game.id });
-      expect(gateway.server.to(room(game.id)).emit).toHaveBeenCalledWith(
-        Game.rejectDraw,
-        stubDraw,
-      );
     });
-    it('add time to another player', () => {
-      const result = {};
-      jest
-        .spyOn(service, 'addTimeToAnotherPlayer')
-        .mockImplementationOnce(() => {
-          return result;
-        });
-      gateway.addTime(player.client.socket, { gameId: game.id });
-      expect(gateway.server.to(room(game.id)).emit).toHaveBeenCalledWith(
-        Game.addTime,
-        result,
-      );
+    it('accept draw', async () => {
+      service.acceptDraw.mockResolvedValue({ id: 5 });
+      await gateway.acceptPropose(socket, { gameId: 5 });
+      expect(notifier.toGame).toHaveBeenCalledWith(5, Game.end, {
+        reason: GameEnd.draw,
+        game: { id: 5 },
+      });
+    });
+    it('reject draw', async () => {
+      service.rejectDraw.mockResolvedValue({ w: false, b: false });
+      await gateway.rejectPropose({ gameId: 5 });
+      expect(notifier.toGame).toHaveBeenCalledWith(5, Game.rejectDraw, {
+        w: false,
+        b: false,
+      });
+    });
+    it('add time to another player', async () => {
+      service.addTimeToAnotherPlayer.mockResolvedValue({ w: 1, b: 2 });
+      await gateway.addTime(socket, { gameId: 5 });
+      expect(notifier.toGame).toHaveBeenCalledWith(5, Game.addTime, {
+        w: 1,
+        b: 2,
+      });
     });
   });
 });

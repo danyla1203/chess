@@ -1,5 +1,5 @@
 import { ShahData } from '../../../dto';
-import { Figures, Figure, Cell, FiguresSet } from '..';
+import { Figures, Figure, Cell, FiguresSet, GameStateSnapshot } from '..';
 
 export class GameState {
   blackBoard: Figures;
@@ -84,5 +84,40 @@ export class GameState {
       this.possibleShahes['w'].delete(figure);
       this.strikeAroundKn['w'].delete(figure);
     }
+  }
+
+  public toSnapshot(): GameStateSnapshot {
+    return {
+      white: [...this.whiteBoard.entries()],
+      black: [...this.blackBoard.entries()],
+      sideToTurn: this.sideToTurn,
+      shahData: this.shahData,
+      possibleShahes: {
+        w: [...this.possibleShahes.w],
+        b: [...this.possibleShahes.b],
+      },
+      strikeAroundKn: {
+        w: [...this.strikeAroundKn.w],
+        b: [...this.strikeAroundKn.b],
+      },
+    };
+  }
+
+  public static fromSnapshot(snapshot: GameStateSnapshot): GameState {
+    const state = new GameState(
+      new Map(snapshot.white),
+      new Map(snapshot.black),
+    );
+    state.sideToTurn = snapshot.sideToTurn;
+    state.shahData = snapshot.shahData;
+    state.possibleShahes = {
+      w: new Set(snapshot.possibleShahes.w),
+      b: new Set(snapshot.possibleShahes.b),
+    };
+    state.strikeAroundKn = {
+      w: new Set(snapshot.strikeAroundKn.w),
+      b: new Set(snapshot.strikeAroundKn.b),
+    };
+    return state;
   }
 }

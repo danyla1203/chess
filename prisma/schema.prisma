@@ -25,6 +25,7 @@ model Confirmation {
 
 model Game {
   id            Int          @id @default(autoincrement())
+  matchId       String?      @unique @db.Uuid
   maxTime       Int
   timeIncrement Int
   sideSelecting String       @db.VarChar

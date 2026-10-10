@@ -1,346 +1,292 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GameService } from '../../src/game/game.service';
-import { GameList } from '../../src/game/game.list';
-import { GameModel } from '../../src/game/model';
-import { PrismaService } from '../../src/prisma.service';
-import {
-  generateClient,
-  generateConfig,
-  generateGameResult,
-  generateGameWithWinner,
-  generatePlayer,
-  getFigureCellState,
-} from './generators';
-import { Config, Game, GameAdapter } from '../../src/game/entities/game';
-import { faker } from '@faker-js/faker';
-import { Client, Player } from '../../src/game/entities';
-import { TokenService } from '../../src/auth';
-import { ConnectionPatchProvider } from '../../src/game/connection.provider';
-import { LoggerService } from '../../src//tools/logger';
-
-jest.mock('../../src/auth');
-jest.mock('../../src/game/connection.provider');
+import { GameRepository } from '../../src/game/game.repository';
+import { GameMetrics } from '../../src/game/game.metrics';
+import { GameNotifier } from '../../src/game/game.notifier';
+import { GameAdapter } from '../../src/game/entities/game';
+import { GameProcess } from '../../src/game/entities/game/process/game.process';
+import { GameEnd } from '../../src/game/EmitTypes';
+import { Client } from '../../src/game/entities';
+import { Exchange, RoutingKey } from '../../src/messaging';
+import { generateClient, generateConfig } from './generators';
+import { InMemoryGameRepository, fakeMetrics, fakeNotifier } from './fakes';
 
 describe('GameService (unit)', () => {
   let service: GameService;
-  let model: GameModel;
-  let list: GameList;
+  let repo: InMemoryGameRepository;
+  let notifier: ReturnType<typeof fakeNotifier>;
+  let metrics: ReturnType<typeof fakeMetrics>;
   let cl1: Client;
   let cl2: Client;
-  let pl1: Player;
-  let pl2: Player;
-  let cnf: Config;
-  let gm: Game;
+
   beforeEach(async () => {
+    repo = new InMemoryGameRepository();
+    notifier = fakeNotifier();
+    metrics = fakeMetrics();
     const moduleRef = await Test.createTestingModule({
       providers: [
-        GameList,
         GameService,
-        GameModel,
-        PrismaService,
-        TokenService,
-        LoggerService,
-        ConnectionPatchProvider,
-        {
-          provide: 'GameAdapterI',
-          useClass: GameAdapter,
-        },
+        { provide: GameRepository, useValue: repo },
+        { provide: GameNotifier, useValue: notifier },
+        { provide: GameMetrics, useValue: metrics },
+        { provide: 'GameAdapterI', useClass: GameAdapter },
       ],
-    })
-      .overrideProvider(PrismaService)
-      .useValue({})
-      .compile();
+    }).compile();
     service = moduleRef.get(GameService);
-    model = moduleRef.get(GameModel);
-    list = moduleRef.get(GameList);
-
-    cl1 = generateClient(true, faker.number.int());
-    cl2 = generateClient(true, faker.number.int());
-    cnf = generateConfig('w');
-
-    gm = new Game(cl1, cnf, jest.fn());
-    gm.addPlayer(cl2);
-    pl1 = gm.players[0];
-    pl2 = gm.players[1];
+    cl1 = generateClient(true, 1);
+    cl2 = generateClient(true, 2);
   });
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-  it('removeInitedGamesBy - should call list.removeInitedGames', () => {
-    const cl = generateClient();
-    const mock = jest.spyOn(list, 'removeInitedGames');
-    service.removeInitedGamesBy(cl);
-    expect(mock).toHaveBeenCalledWith(cl);
-  });
-  describe('save game', () => {
-    let saveDrawMock;
-    let saveGameWithWinnerMock;
-    beforeEach(() => {
-      saveDrawMock = jest.spyOn(model, 'saveDraw').mockImplementation();
-      saveGameWithWinnerMock = jest
-        .spyOn(model, 'saveGameWithWinner')
-        .mockImplementation();
-    });
-    it('shouldnt save game if one of the players is unauthorized', () => {
-      const pl1 = generatePlayer('w', false);
-      const pl2 = generatePlayer('b', true);
-      const result = generateGameResult();
-      expect(service['saveGame'](pl1, pl2, result)).resolves.toBeNull();
-      expect(service['saveGame'](pl1, pl2, result, true)).resolves.toBeNull();
 
-      pl2.client.authorized = false;
-      expect(service['saveGame'](pl1, pl2, result)).resolves.toBeNull();
-      expect(service['saveGame'](pl1, pl2, result, true)).resolves.toBeNull();
+  const startGame = async (bet = 0) => {
+    const created = await service.createGame(cl1, generateConfig('w', bet));
+    return service.connectToGame(cl2, created.id);
+  };
 
-      pl1.client.authorized = true;
-      expect(service['saveGame'](pl1, pl2, result)).resolves.toBeNull();
-      expect(service['saveGame'](pl1, pl2, result, true)).resolves.toBeNull();
-    });
-    it('if saving with winner method should call model.saveGameWithWinner', () => {
-      const pl1 = generatePlayer('w', true);
-      const pl2 = generatePlayer('b', true);
-      const result = generateGameResult();
-      service['saveGame'](pl1, pl2, result, true);
-
-      expect(saveGameWithWinnerMock).toHaveBeenCalledWith({
-        ...result,
-        winner: pl1,
-        looser: pl2,
-      });
-    });
-    it('if saving draw method should call model.saveDraw', () => {
-      const pl1 = generatePlayer('w', true);
-      const pl2 = generatePlayer('b', true);
-      const result = generateGameResult();
-      service['saveGame'](pl1, pl2, result);
-
-      expect(saveDrawMock).toHaveBeenCalledWith({
-        ...result,
-        pl1,
-        pl2,
-      });
-    });
-  });
   describe('createGame', () => {
-    it('should create and return game entity, add it to lobby', async () => {
-      const pl = generateClient();
-      const cnf = generateConfig('w', 0);
-      const addGameToLobbyMock = jest
-        .spyOn(list, 'addGameToLobby')
-        .mockImplementation();
-      const gm = await service.createGame(pl, cnf);
-      expect(gm).toBeInstanceOf(Game);
-      expect(addGameToLobbyMock).toHaveBeenCalledWith(gm);
+    it('should store a lobby game and record it', async () => {
+      const game = await service.createGame(cl1, generateConfig('w', 0));
+      expect(game.id).toBe(1);
+      expect(game.status).toBe('lobby');
+      expect(await service.getLobby()).toHaveLength(1);
+      expect(metrics.gameCreated).toHaveBeenCalledWith(game);
+    });
+    it('should replace the previous lobby game of the same user', async () => {
+      const first = await service.createGame(cl1, generateConfig('w', 0));
+      const second = await service.createGame(cl1, generateConfig('b', 0));
+      const lobby = await service.getLobby();
+      expect(lobby.map((g) => g.id)).toStrictEqual([second.id]);
+      expect((await repo.get(first.id)).status).toBe('cancelled');
+    });
+    it('should refuse while the user plays an active game', async () => {
+      await startGame();
+      await expect(
+        service.createGame(cl1, generateConfig('w', 0)),
+      ).rejects.toThrow(new ConflictException('You are already in game'));
     });
   });
+
   describe('connectToGame', () => {
-    it('should throw not found if game isnt in lobby', () => {
-      const cl = generateClient();
-      jest.spyOn(list, 'findInLobby').mockImplementation(() => null);
-      expect(service.connectToGame(cl, -1)).rejects.toThrow(
+    it('should throw NotFound for an unknown game', async () => {
+      await expect(service.connectToGame(cl2, 999)).rejects.toThrow(
         new NotFoundException('Game not found'),
       );
     });
-    it('should throw err if client already in game', () => {
-      jest.spyOn(list, 'findInLobby').mockImplementation(() => gm);
-      expect(service.connectToGame(cl1, gm.id)).rejects.toThrow(
+    it('should not let the creator join own game', async () => {
+      const game = await service.createGame(cl1, generateConfig('w', 0));
+      await expect(service.connectToGame(cl1, game.id)).rejects.toThrow(
         new ConflictException('You are already in game'),
       );
     });
-    it('should add player and remove game from lobby on successfull connect', async () => {
-      gm.addPlayer = jest.fn();
-      jest.spyOn(list, 'findInLobby').mockImplementation(() => gm);
-      const remove = jest
-        .spyOn(list, 'pushToStartedGames')
-        .mockImplementation();
-      const result = await service.connectToGame(cl2, gm.id);
-      expect(result).toStrictEqual(gm);
-      expect(gm.addPlayer).toHaveBeenCalledWith(cl2);
-      expect(remove).toHaveBeenCalledWith(gm.id);
+    it('should add the second player and start the game', async () => {
+      const game = await startGame();
+      expect(game.isActive).toBe(true);
+      expect(game.players.map((pl) => pl.userId)).toStrictEqual([1, 2]);
+      expect(await service.getLobby()).toHaveLength(0);
+    });
+    it('should cancel the lobby game the joiner had open', async () => {
+      const own = await service.createGame(cl2, generateConfig('w', 0));
+      const target = await service.createGame(cl1, generateConfig('w', 0));
+      await service.connectToGame(cl2, target.id);
+      expect((await repo.get(own.id)).status).toBe('cancelled');
     });
   });
-  describe('findGameById', () => {
-    afterEach(() => {
-      list.games = [];
-    });
-    it('should throw not found err if game not found', () => {
-      expect(() => service.findGameById(-1)).toThrow(
-        new NotFoundException('Game not found'),
-      );
-    });
-    it('should return game', () => {
-      list.games.push(gm);
-      expect(service.findGameById(gm.id)).toStrictEqual(gm);
-    });
-  });
-  describe('getActualGameState', () => {
-    it('should return game of state in plain object format', () => {
-      expect(service.getActualGameState(gm)).toStrictEqual(
-        getFigureCellState(),
-      );
-    });
-  });
-  describe('surrender', () => {
-    it('should call game.end with winner and return result', async () => {
-      gm.winner = pl2;
-      gm.looser = pl1;
-      jest.spyOn(gm, 'endGame').mockImplementationOnce(() => gm);
-      jest.spyOn(service as any, 'saveGame').mockImplementation();
-      jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-      const gmResult = generateGameWithWinner(gm);
 
-      const expected = {
-        gameDto: gmResult,
-        winner: gm.winner,
-        looser: gm.looser,
-      };
-      expect(service.surrender(gm.id, cl1)).resolves.toStrictEqual(expected);
-      expect(gm.endGame).toHaveBeenCalledWith(pl2, pl1);
+  describe('lookups', () => {
+    it('findPendingGame should return the active game of the user', async () => {
+      const game = await startGame();
+      expect((await service.findPendingGame(cl2)).id).toBe(game.id);
     });
-  });
-  describe('proposeDraw', () => {
-    beforeEach(() => {
-      jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-    });
-    afterEach(() => {
-      gm.draw = {
-        w: false,
-        b: false,
-      };
-    });
-    it('should throw Conflict err if draw already set by user', () => {
-      gm.draw = {
-        w: true,
-        b: false,
-      };
-      expect(() => service.proposeDraw(gm.id, cl1)).toThrow(
-        new ConflictException('Propose already set'),
+    it('findPendingGame should throw when the user only has a lobby game', async () => {
+      await service.createGame(cl1, generateConfig('w', 0));
+      await expect(service.findPendingGame(cl1)).rejects.toThrow(
+        NotFoundException,
       );
     });
-    it('propose draw from client (white side)', () => {
-      expect(service.proposeDraw(gm.id, cl1)).toStrictEqual({
-        w: true,
-        b: false,
+    it('findCurrentOpponent should return the other player', async () => {
+      await startGame();
+      expect((await service.findCurrentOpponent(cl1)).userId).toBe(2);
+    });
+    it('removeInitedGamesBy should cancel a lobby game', async () => {
+      const game = await service.createGame(cl1, generateConfig('w', 0));
+      await service.removeInitedGamesBy(cl1);
+      expect((await repo.get(game.id)).status).toBe('cancelled');
+    });
+    it('findGameById should hide cancelled games', async () => {
+      const game = await service.createGame(cl1, generateConfig('w', 0));
+      await service.removeInitedGamesBy(cl1);
+      await expect(service.findGameById(game.id)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('game end', () => {
+    it('surrender should end the game and write game.ended to the outbox', async () => {
+      const game = await startGame(50);
+      const { winner, looser, gameDto } = await service.surrender(game.id, cl1);
+      expect(winner.userId).toBe(2);
+      expect(looser.userId).toBe(1);
+      expect(gameDto.id).toBe(game.id);
+      expect(repo.outbox).toHaveLength(1);
+      expect(repo.outbox[0]).toMatchObject({
+        exchange: Exchange.GameLifecycle,
+        routingKey: RoutingKey.GameEnded,
+        messageId: game.matchId,
+        payload: { reason: GameEnd.surrender, isDraw: false },
+      });
+      expect(metrics.gameEnded).toHaveBeenCalled();
+      expect(await repo.findUserGame(1)).toBeNull();
+    });
+    it('surrender twice should fail and not write a second event', async () => {
+      const game = await startGame();
+      await service.surrender(game.id, cl1);
+      await expect(service.surrender(game.id, cl2)).rejects.toThrow(
+        new ConflictException('Game is not active'),
+      );
+      expect(repo.outbox).toHaveLength(1);
+    });
+    it('leaveGame should make the leaver lose', async () => {
+      await startGame();
+      const { winner, looser } = await service.leaveGame(cl2);
+      expect(winner.userId).toBe(1);
+      expect(looser.userId).toBe(2);
+      expect(repo.outbox[0].payload).toMatchObject({
+        reason: GameEnd.playerLeave,
       });
     });
-    it('propose draw from client (black side)', () => {
-      expect(service.proposeDraw(gm.id, cl2)).toStrictEqual({
+    it('makeTurn should end the game on mate', async () => {
+      const game = await startGame();
+      const mate = { matedSide: 'b' as const, byFigure: 'Q' };
+      jest
+        .spyOn(GameProcess.prototype, 'makeTurn')
+        .mockReturnValueOnce({ shah: null, strike: null, mate });
+
+      const move = await service.makeTurn(game.id, 1, {
+        gameId: game.id,
+        figure: 'Q',
+        cell: 'h5',
+      });
+
+      expect(move.result.mate).toStrictEqual(mate);
+      const stored = await repo.get(game.id);
+      expect(stored.status).toBe('ended');
+      expect(stored.winner.userId).toBe(1);
+      expect(repo.outbox[0].payload).toMatchObject({ reason: GameEnd.mate });
+    });
+  });
+
+  describe('moves', () => {
+    it('should apply a legal move and persist it', async () => {
+      const game = await startGame();
+      const move = await service.makeTurn(game.id, 1, {
+        gameId: game.id,
+        figure: 'pawn4',
+        cell: 'd4',
+      });
+      expect(move).toMatchObject({ prevCell: 'd2', side: 'w' });
+      const stored = await repo.get(game.id);
+      expect(stored.moves).toHaveLength(1);
+      expect(stored.process.turnSide).toBe('b');
+    });
+    it('should reject a move out of turn', async () => {
+      const game = await startGame();
+      await expect(
+        service.makeTurn(game.id, 2, {
+          gameId: game.id,
+          figure: 'pawn4',
+          cell: 'd5',
+        }),
+      ).rejects.toThrow(new ConflictException('Not your turn'));
+    });
+  });
+
+  describe('draw', () => {
+    it('proposeDraw should set the proposer side', async () => {
+      const game = await startGame();
+      expect(await service.proposeDraw(game.id, cl2)).toStrictEqual({
         w: false,
         b: true,
       });
     });
-  });
-  describe('acceptDraw', () => {
-    it('should throw Conflict err if draw propose wasnt send', async () => {
-      gm.draw = { w: false, b: false };
-      jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-      expect(service.acceptDraw(gm.id, cl2)).rejects.toThrow(
+    it('proposeDraw twice should conflict', async () => {
+      const game = await startGame();
+      await service.proposeDraw(game.id, cl1);
+      await expect(service.proposeDraw(game.id, cl1)).rejects.toThrow(
+        new ConflictException('Propose already set'),
+      );
+    });
+    it('acceptDraw without a proposal should conflict', async () => {
+      const game = await startGame();
+      await expect(service.acceptDraw(game.id, cl2)).rejects.toThrow(
         new ConflictException('Draw propose wasnt set'),
       );
     });
-    it('should set draw propose and end the game', async () => {
-      gm.draw = { w: true, b: false };
-      jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-      jest.spyOn(gm, 'setDrawProposeFrom').mockImplementation();
-      jest.spyOn(service as any, 'saveGame').mockImplementation();
-      jest
-        .spyOn(service['adapter'], 'gameWithDrawDto')
-        .mockImplementation(() => {
-          return { id: gm.id } as any;
-        });
-      expect(service.acceptDraw(gm.id, cl1)).resolves.toStrictEqual({
-        id: gm.id,
+    it('acceptDraw should end the game as a draw', async () => {
+      const game = await startGame();
+      await service.proposeDraw(game.id, cl1);
+      const dto = await service.acceptDraw(game.id, cl2);
+      expect(dto.id).toBe(game.id);
+      expect(repo.outbox[0].payload).toMatchObject({
+        isDraw: true,
+        reason: GameEnd.draw,
       });
     });
-  });
-  describe('reject draw', () => {
-    it('should throw conflict err if draw propose wasnt set', () => {
-      jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-      expect(() => service.rejectDraw(gm.id)).toThrow(
-        new ConflictException('Draw propose wasnt set'),
-      );
-    });
-    it('should reject draw and sent result', () => {
-      jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-      jest.spyOn(gm, 'rejectDraw').mockImplementation();
-      gm.draw = {
-        w: true,
-        b: false,
-      };
-      expect(service.rejectDraw(gm.id)).toStrictEqual({
+    it('rejectDraw should clear proposals', async () => {
+      const game = await startGame();
+      await service.proposeDraw(game.id, cl1);
+      expect(await service.rejectDraw(game.id)).toStrictEqual({
         w: false,
         b: false,
       });
-      expect(gm.rejectDraw).toHaveBeenCalled();
-    });
-  });
-  describe('addTime', () => {
-    beforeEach(() => {
-      jest.spyOn(service, 'findGameById').mockImplementationOnce(() => gm);
-    });
-    it('should add time and return updated times', () => {
-      const pl1Copy = { ...pl1 };
-      const pl2Copy = { ...pl2 };
-      expect(service.addTimeToAnotherPlayer(gm.id, cl1)).toStrictEqual({
-        [pl1.side]: pl1Copy.time,
-        [pl2.side]: pl2Copy.time + gm.config.timeIncrement,
+      expect((await repo.get(game.id)).draw).toStrictEqual({
+        w: false,
+        b: false,
       });
     });
   });
-  describe('makeTurn', () => {
-    it('should return completed move', async () => {
-      const completedMove = {
-        result: { shah: null, mate: null, strike: null },
-        prevCell: 'b5',
-        side: 'w',
-      };
-      jest.spyOn(gm, 'makeTurn').mockReturnValue(completedMove as any);
-      jest.spyOn(service, 'findGameById').mockReturnValueOnce(gm);
-      const result = await service.makeTurn(gm.id, 1, {
-        figure: 'Q',
-        cell: 'b5',
-        gameId: gm.id,
-      });
-      expect(result).toStrictEqual(completedMove);
+
+  describe('misc', () => {
+    it('addTimeToAnotherPlayer should add increment to the opponent', async () => {
+      const game = await startGame();
+      const times = await service.addTimeToAnotherPlayer(game.id, cl1);
+      expect(times.b).toBe(game.config.time + game.config.timeIncrement);
     });
-    it('should call gm.endGame and GameService.saveGame in case of mate', async () => {
-      const completedMove = {
-        result: {
-          shah: null,
-          mate: { matedSide: 'b', byFigure: 'Q' },
-          strike: null,
-        },
-        prevCell: 'b5',
-        side: 'w',
-      };
-      jest.spyOn(gm, 'makeTurn').mockReturnValue(completedMove as any);
-      jest.spyOn(gm, 'endGame').mockImplementation();
-      jest.spyOn(service as any, 'saveGame').mockImplementation(jest.fn());
-      jest
-        .spyOn(service['adapter'], 'gameWithWinnerDto')
-        .mockImplementation(() => {
-          return { id: gm.id } as any;
-        });
-      jest.spyOn(service['list'], 'gameEnd').mockImplementation(jest.fn());
-      jest.spyOn(service, 'findGameById').mockReturnValueOnce(gm);
-      const result = await service.makeTurn(gm.id, gm.players[0].userId, {
-        figure: 'Q',
-        cell: 'b5',
-        gameId: gm.id,
-      });
-      expect(result).toStrictEqual(completedMove);
-      expect(gm.endGame).toHaveBeenCalledWith(gm.players[0], gm.players[1]);
-      expect(service['list'].gameEnd).toHaveBeenCalledWith(gm.id);
-      expect(service['saveGame']).toHaveBeenCalledWith(
-        gm.players[0],
-        gm.players[1],
-        { id: gm.id },
+    it('pushMessage should store chat messages', async () => {
+      const game = await startGame();
+      const message = await service.pushMessage(game.id, 'hi', cl1);
+      expect(message).toMatchObject({ text: 'hi', author: { id: 1 } });
+      expect((await repo.get(game.id)).chat.messages).toHaveLength(1);
+    });
+  });
+
+  describe('endByTimeout', () => {
+    it('should do nothing while time remains', async () => {
+      const game = await startGame();
+      await service.endByTimeout(game.id, game.turnStartedAt + 10);
+      expect((await repo.get(game.id)).isActive).toBe(true);
+      expect(notifier.gameEnd).not.toHaveBeenCalled();
+    });
+    it('should end the game, notify both players and write the outbox', async () => {
+      const game = await startGame();
+      await service.endByTimeout(game.id, game.deadline() + 1);
+      expect((await repo.get(game.id)).endReason).toBe(GameEnd.timeout);
+      expect(notifier.gameEnd).toHaveBeenCalledWith(
+        2,
         true,
+        expect.anything(),
+        GameEnd.timeout,
       );
+      expect(notifier.gameEnd).toHaveBeenCalledWith(
+        1,
+        false,
+        expect.anything(),
+        GameEnd.timeout,
+      );
+      expect(repo.outbox).toHaveLength(1);
     });
   });
 });

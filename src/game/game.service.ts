@@ -13,200 +13,203 @@ import {
   CompletedMove,
   InitedGameData,
 } from './dto';
-import { GameList } from './game.list';
 import { Client, Player } from './entities';
 import {
   Game,
   GameData,
   Message,
-  GameResult,
   GameWithWinner,
   DrawGame,
   Cell,
 } from './entities/game';
 import { GameEnd } from './EmitTypes';
-import { GameModel } from './model';
-import { Game as PrismaGameType } from '@prisma/client';
+import { GameRepository } from './game.repository';
+import { GameMetrics } from './game.metrics';
+import { GameNotifier } from './game.notifier';
 import type { GameAdapterI } from './game.adapter.interface';
+
+type GameEnded = { winner: Player; looser: Player; gameDto: GameWithWinner };
 
 @Injectable()
 export class GameService {
   constructor(
-    private readonly list: GameList,
-    private readonly model: GameModel,
+    private readonly repo: GameRepository,
+    private readonly metrics: GameMetrics,
+    private readonly notifier: GameNotifier,
     @Inject('GameAdapterI') private readonly adapter: GameAdapterI,
   ) {}
 
-  /**
-   * If game ends with winner call function with: pl1 is winner, pl2 is looser, winner = true
-   */
-  private async saveGame(
-    pl1: Player,
-    pl2: Player,
-    result: GameResult,
-    winner = false,
-  ): Promise<PrismaGameType> {
-    if (!pl1.authorized || !pl2.authorized) return null;
-    return winner
-      ? this.model.saveGameWithWinner({
-          ...result,
-          winner: pl1,
-          looser: pl2,
-        })
-      : this.model.saveDraw({ ...result, pl1, pl2 });
+  private requireActive(game: Game): void {
+    if (!game.isActive) throw new ConflictException('Game is not active');
   }
-  //TODO: Rework on-timeout logic implementation
-  private async injectableGameEndCallback(
-    game: Game,
-    winner: Player,
-    looser: Player,
-  ): Promise<void> {
-    const gameDto = this.adapter.gameWithWinnerDto(game);
-    this.list.gameEnd(gameDto.id);
-    await this.saveGame(winner, looser, gameDto, true);
-    winner.gameEndEvent(true, gameDto, GameEnd.timeout);
-    winner.gameEndEvent(false, gameDto, GameEnd.timeout);
+
+  private ended(game: Game): void {
+    this.metrics.gameEnded(game, game.endReason);
+  }
+
+  private async cancelLobbyGameOf(userId: number): Promise<void> {
+    const game = await this.repo.findUserGame(userId);
+    if (game?.status !== 'lobby') return;
+    await this.repo.update(game.id, (g) => {
+      if (g.status === 'lobby') g.cancel();
+    });
   }
 
   public async createGame(
     player: Client,
     config: CreateGameDto,
   ): Promise<Game> {
-    const newGame = new Game(
-      player,
-      config,
-      this.injectableGameEndCallback.bind(this),
-    );
-    this.list.addGameToLobby(newGame);
+    const current = await this.repo.findUserGame(player.userId);
+    if (current?.isActive) {
+      throw new ConflictException('You are already in game');
+    }
+    await this.cancelLobbyGameOf(player.userId);
+
+    const newGame = new Game(player, config, await this.repo.nextId());
+    await this.repo.create(newGame);
+    this.metrics.gameCreated(newGame);
     return newGame;
   }
 
   public async connectToGame(player: Client, gameId: number): Promise<Game> {
-    const game = this.list.findInLobby(gameId);
-    if (!game) throw new NotFoundException('Game not found');
-    const pl1 = game.players[0];
-    if (player.userId && pl1.userId === player.userId) {
+    const lobbyGame = await this.repo.get(gameId);
+    if (lobbyGame?.status !== 'lobby') {
+      throw new NotFoundException('Game not found');
+    }
+    if (lobbyGame.findPlayer(player.userId)) {
       throw new ConflictException('You are already in game');
     }
+    await this.cancelLobbyGameOf(player.userId);
 
-    game.addPlayer(player);
-    this.list.pushToStartedGames(gameId);
-
+    const { game } = await this.repo.update(gameId, (g) => {
+      if (g.status !== 'lobby') throw new NotFoundException('Game not found');
+      g.addPlayer(player);
+      g.start();
+    });
     return game;
   }
 
-  public removeInitedGamesBy(player: Client): void {
-    this.list.removeInitedGames(player);
-  }
-  public findCurrentOpponent(player: Client): Player {
-    const game = this.list.findPendingClientGame(player);
-    if (!game) return;
-
-    return game.players.find((pl) => pl.userId !== player.userId);
+  public async removeInitedGamesBy(player: Client): Promise<void> {
+    await this.cancelLobbyGameOf(player.userId);
   }
 
-  public findPendingGame(client: Client): never | Game {
-    const game = this.list.findPendingClientGame(client);
-    if (!game) throw new NotFoundException('Game not found');
+  public async findCurrentOpponent(player: Client): Promise<Player | null> {
+    const game = await this.repo.findUserGame(player.userId);
+    if (!game?.isActive) return null;
+    return game.opponentOf(player.userId) ?? null;
+  }
+
+  public async findPendingGame(client: Client): Promise<Game> {
+    const game = await this.repo.findUserGame(client.userId);
+    if (!game?.isActive) throw new NotFoundException('Game not found');
     return game;
   }
 
-  public async leaveGame(
-    client: Client,
-  ): Promise<{ winner: Player; looser: Player; gameDto: GameWithWinner }> {
-    const game = this.list.findPendingClientGame(client);
-    if (!game) throw new NotFoundException('Game not found');
-
-    const [pl1, pl2] = game.players;
-    const winner = pl1.userId !== client.userId ? pl1 : pl2;
-    const looser = pl1.userId === client.userId ? pl1 : pl2;
-    game.endGame(winner, looser);
-
-    const gameDto = this.adapter.gameWithWinnerDto(game);
-    this.list.gameEnd(gameDto.id);
-    await this.saveGame(winner, looser, gameDto, true);
-    return { winner, looser, gameDto };
+  public async leaveGame(client: Client): Promise<GameEnded> {
+    const pending = await this.findPendingGame(client);
+    const { game } = await this.repo.update(pending.id, (g) => {
+      this.requireActive(g);
+      g.endGame(
+        g.opponentOf(client.userId),
+        g.findPlayer(client.userId),
+        GameEnd.playerLeave,
+      );
+    });
+    this.ended(game);
+    return {
+      winner: game.winner,
+      looser: game.looser,
+      gameDto: this.adapter.gameWithWinnerDto(game),
+    };
   }
 
-  public getLobby(): GameData[] {
-    return this.list.getLobby();
+  public getLobby(): Promise<GameData[]> {
+    return this.repo.lobby();
   }
-  public findGameById(id: number): Game {
-    const game = this.list.games.find((game) => game.id === id);
-    if (!game) throw new NotFoundException('Game not found');
+
+  public async findGameById(id: number): Promise<Game> {
+    const game = await this.repo.get(id);
+    if (!game || game.status === 'cancelled') {
+      throw new NotFoundException('Game not found');
+    }
     return game;
-  }
-
-  public pendingGameData(game): PlainBoardState {
-    return this.getActualGameState(game);
   }
 
   public getActualGameState(game: Game): PlainBoardState {
     return this.adapter.plainBoardState(game);
   }
 
-  public pushMessage(gameId: number, message: string, client: Client): Message {
-    const game = this.findGameById(gameId);
-    return game.chat.addMessage(message, client);
+  public async pushMessage(
+    gameId: number,
+    message: string,
+    client: Client,
+  ): Promise<Message> {
+    const { result } = await this.repo.update(gameId, (g) =>
+      g.chat.addMessage(message, client),
+    );
+    return result;
   }
 
-  public async surrender(
+  public async surrender(gameId: number, client: Client): Promise<GameEnded> {
+    const { game } = await this.repo.update(gameId, (g) => {
+      this.requireActive(g);
+      g.endGame(
+        g.opponentOf(client.userId),
+        g.findPlayer(client.userId),
+        GameEnd.surrender,
+      );
+    });
+    this.ended(game);
+    return {
+      winner: game.winner,
+      looser: game.looser,
+      gameDto: this.adapter.gameWithWinnerDto(game),
+    };
+  }
+
+  public async proposeDraw(
     gameId: number,
     client: Client,
-  ): Promise<{ winner: Player; looser: Player; gameDto: GameWithWinner }> {
-    const game = this.findGameById(gameId);
-    const [pl1, pl2] = game.players;
-    const winner = pl1.userId !== client.userId ? pl1 : pl2;
-    const looser = pl1.userId === client.userId ? pl1 : pl2;
-    game.endGame(winner, looser);
-    const gameDto = this.adapter.gameWithWinnerDto(game);
-    this.list.gameEnd(gameDto.id);
-    await this.saveGame(winner, looser, gameDto, true);
-    return { winner, looser, gameDto };
-  }
-
-  public proposeDraw(gameId: number, client: Client): DrawAgreement {
-    const game = this.findGameById(gameId);
-    const { side } = game.players.find((pl) => pl.userId === client.userId);
-    if (game.draw[side]) throw new ConflictException('Propose already set');
-    game.setDrawProposeFrom(side);
+  ): Promise<DrawAgreement> {
+    const { game } = await this.repo.update(gameId, (g) => {
+      this.requireActive(g);
+      const { side } = g.findPlayer(client.userId);
+      if (g.draw[side]) throw new ConflictException('Propose already set');
+      g.setDrawProposeFrom(side);
+    });
     return game.draw;
   }
 
   public async acceptDraw(gameId: number, client: Client): Promise<DrawGame> {
-    const game = this.findGameById(gameId);
-    const { w, b } = game.draw;
-    const { side } = game.players.find((pl) => pl.userId === client.userId);
-
-    if (!w && !b) throw new ConflictException('Draw propose wasnt set');
-    game.setDrawProposeFrom(side);
-    game.endGameByDraw();
-    const gameDto = this.adapter.gameWithDrawDto(game);
-    this.list.gameEnd(gameDto.id);
-    await this.saveGame(game.players[0], game.players[1], gameDto);
-    return gameDto;
+    const { game } = await this.repo.update(gameId, (g) => {
+      this.requireActive(g);
+      const { w, b } = g.draw;
+      if (!w && !b) throw new ConflictException('Draw propose wasnt set');
+      g.setDrawProposeFrom(g.findPlayer(client.userId).side);
+      g.endGameByDraw();
+    });
+    this.ended(game);
+    return this.adapter.gameWithDrawDto(game);
   }
 
-  public rejectDraw(gameId: number): DrawAgreement {
-    const game = this.findGameById(gameId);
-    const { w, b } = game.draw;
-
-    if (!w && !b) throw new ConflictException('Draw propose wasnt set');
-
-    game.rejectDraw();
+  public async rejectDraw(gameId: number): Promise<DrawAgreement> {
+    await this.repo.update(gameId, (g) => {
+      const { w, b } = g.draw;
+      if (!w && !b) throw new ConflictException('Draw propose wasnt set');
+      g.rejectDraw();
+    });
     return { w: false, b: false };
   }
 
-  public addTimeToAnotherPlayer(gameId: number, player: Client): TimeUpdate {
-    const game = this.findGameById(gameId);
-    const players = game.players;
-    const toPlayer = players.find((pl) => pl.userId !== player.userId);
-    game.addTimeTo(toPlayer, game.config.timeIncrement);
-
-    return {
-      [players[0].side]: players[0].time,
-      [players[1].side]: players[1].time,
-    };
+  public async addTimeToAnotherPlayer(
+    gameId: number,
+    player: Client,
+  ): Promise<TimeUpdate> {
+    const { game } = await this.repo.update(gameId, (g) => {
+      this.requireActive(g);
+      g.addTimeTo(g.opponentOf(player.userId), g.config.timeIncrement);
+    });
+    return game.times();
   }
 
   public async makeTurn(
@@ -218,19 +221,33 @@ export class GameService {
     prevCell: Cell;
     side: 'w' | 'b';
   }> {
-    const game = this.findGameById(gameId);
-    const completedMove = game.makeTurn(userId, figure, cell);
-    if (completedMove.result.mate) {
-      const [pl1, pl2] = game.players;
-      const winner = pl1.userId === userId ? pl1 : pl2;
-      const looser = pl1.userId !== userId ? pl1 : pl2;
-      game.endGame(winner, looser);
-      const gameDto = this.adapter.gameWithWinnerDto(game);
-      this.list.gameEnd(gameDto.id);
-      await this.saveGame(winner, looser, gameDto, true);
-    }
-    return completedMove;
+    const { game, result } = await this.repo.update(gameId, (g) => {
+      const completedMove = g.makeTurn(userId, figure, cell);
+      if (completedMove.result.mate) {
+        g.endGame(g.findPlayer(userId), g.opponentOf(userId), GameEnd.mate);
+      }
+      return completedMove;
+    });
+    if (game.status === 'ended') this.ended(game);
+    return result;
   }
+
+  public async endByTimeout(gameId: number, now = Date.now()): Promise<void> {
+    const { game, result } = await this.repo.update(gameId, (g) =>
+      g.isTimeOver(now) ? g.endByTimeout(now) : null,
+    );
+    if (!result) return;
+    this.ended(game);
+    const gameDto = this.adapter.gameWithWinnerDto(game);
+    this.notifier.gameEnd(result.winner.userId, true, gameDto, GameEnd.timeout);
+    this.notifier.gameEnd(
+      result.looser.userId,
+      false,
+      gameDto,
+      GameEnd.timeout,
+    );
+  }
+
   public getInitedGameData(userId: number, game: Game): InitedGameData {
     return this.adapter.initedGameDataDto(userId, game);
   }

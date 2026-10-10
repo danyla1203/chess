@@ -17,37 +17,22 @@ export const generateGameResult = (
   };
 };
 export const generateGameWithWinner = (gm?: GameEntity) => {
-  gm = gm ? gm : new GameEntity(generateClient(), generateConfig(), jest.fn());
-  const res = generateGameResult(gm?.config, gm?.id);
+  const game =
+    gm ??
+    new GameEntity(generateClient(), generateConfig(), faker.number.int());
+  const res = generateGameResult(game.config, game.id);
   return {
     ...res,
+    moves: game.moves,
     looser: {
-      userId: gm?.looser.userId,
-      side: gm?.looser.side,
-      name: gm?.looser.name,
+      userId: game.looser?.userId,
+      side: game.looser?.side,
+      name: game.looser?.name,
     },
     winner: {
-      userId: gm?.winner.userId,
-      side: gm?.winner.side,
-      name: gm?.winner.name,
-    },
-  };
-};
-export const generateGameWithDraw = (gm?: GameEntity) => {
-  console.log(gm.players);
-  gm = gm ? gm : new GameEntity(generateClient(), generateConfig(), jest.fn());
-  const res = generateGameResult(gm?.config, gm?.id);
-  return {
-    ...res,
-    pl1: {
-      userId: gm?.players[0].client.userId,
-      side: gm?.players[0].side,
-      name: gm?.players[0].name,
-    },
-    pl2: {
-      userId: gm?.players[1].client.userId,
-      side: gm?.players[1].side,
-      name: gm?.players[1].name,
+      userId: game.winner?.userId,
+      side: game.winner?.side,
+      name: game.winner?.name,
     },
   };
 };
@@ -58,27 +43,45 @@ export const generatePlayer = (
   userId = faker.number.int({ max: 99999, min: 1 }),
 ): Player => {
   const cl = generateClient(authorized, userId);
-  const pl = new Player(cl, side, 10000);
-  pl.gameEndEvent = jest.fn();
-  pl.initedGameDataEvent = jest.fn();
-  pl.timeTickEvent = jest.fn();
-  return pl;
+  return new Player(cl, side, 10000);
 };
 
 export const generateClient = (
   authorized = true,
   userId = faker.number.int({ max: 99999, min: 1 }),
 ): Client => {
-  const socket = { emit: jest.fn() } as any;
-  const client = new Client(socket);
-  client.join = jest.fn();
-  client.gameCreatedEvent = jest.fn();
-  client.pendingGameEvent = jest.fn();
-  client.lobbyUpdateEvent = jest.fn();
+  const client = new Client();
   client.authorized = authorized;
   client.userId = userId;
+  client.name = faker.person.firstName();
   return client;
 };
+
+export const generateSocket = (client?: Client, id = faker.string.uuid()) =>
+  ({
+    id,
+    data: client ? { client } : {},
+    emit: jest.fn(),
+    join: jest.fn().mockResolvedValue(undefined),
+    handshake: { query: {} },
+  }) as any;
+
+export const startedGame = (
+  config = generateConfig('w', 0),
+  now = Date.now(),
+): GameEntity => {
+  const game = new GameEntity(
+    generateClient(true, faker.number.int({ min: 1, max: 1000 })),
+    config,
+    faker.number.int({ min: 1, max: 100000 }),
+  );
+  game.addPlayer(
+    generateClient(true, faker.number.int({ min: 1001, max: 2000 })),
+  );
+  game.start(now);
+  return game;
+};
+
 export const generateConfig = (
   side: 'w' | 'b' | 'rand' = 'w',
   bet?: number,

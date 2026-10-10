@@ -1,67 +1,37 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
 import { IsPlayer } from '../../src/game/guards';
+import { ClientStore } from '../../src/game/ClientStore';
 import { GameService } from '../../src/game/game.service';
-import { Game } from '../../src/game/entities/game';
+import { generateClient, generateSocket, startedGame } from './generators';
 
 describe('IsPlayer (unit)', () => {
-  let guard: IsPlayer;
-  let gameService: GameService;
+  const game = startedGame();
+  const service = {
+    findGameById: jest.fn().mockResolvedValue(game),
+  } as unknown as GameService;
+  const guard = new IsPlayer(service, new ClientStore());
 
-  beforeEach(async () => {
-    const gameServiceMock = {
-      findGameById: jest.fn(),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        IsPlayer,
-        {
-          provide: GameService,
-          useValue: gameServiceMock,
-        },
-      ],
-    }).compile();
-
-    guard = module.get<IsPlayer>(IsPlayer);
-    gameService = module.get<GameService>(GameService);
-  });
-
-  it('should be defined', () => {
-    expect(guard).toBeDefined();
-  });
-
-  it('should allow access when the player is in the game', () => {
-    const wsContextMock: ExecutionContext = {
-      switchToWs: jest.fn().mockReturnValue({
-        getClient: jest.fn().mockReturnValue({ id: '11' }),
-        getData: jest.fn().mockReturnValue({ gameId: 'gameId' }),
+  const context = (socket: unknown): ExecutionContext =>
+    ({
+      switchToWs: () => ({
+        getClient: () => socket,
+        getData: () => ({ gameId: game.id }),
       }),
-    } as unknown as ExecutionContext;
+    }) as unknown as ExecutionContext;
 
-    jest.spyOn(gameService, 'findGameById').mockReturnValue({
-      id: 1,
-      players: [{ client: { socket: { id: '11' } } } as any],
-    } as Game);
-
-    const result = guard.canActivate(wsContextMock);
-    expect(result).toBe(true);
+  it('should allow a player of the game', async () => {
+    const socket = generateSocket(generateClient(true, game.players[1].userId));
+    await expect(guard.canActivate(context(socket))).resolves.toBe(true);
   });
 
-  it('should deny access when the player is not in the game', () => {
-    const wsContextMock: ExecutionContext = {
-      switchToWs: jest.fn().mockReturnValue({
-        getClient: jest.fn().mockReturnValue({ id: 'id' }),
-        getData: jest.fn().mockReturnValue({ gameId: 'gameId' }),
-      }),
-    } as unknown as ExecutionContext;
+  it('should deny someone outside the game', async () => {
+    const socket = generateSocket(generateClient(true, 999999));
+    await expect(guard.canActivate(context(socket))).resolves.toBe(false);
+  });
 
-    jest.spyOn(gameService, 'findGameById').mockReturnValue({
-      id: 1,
-      players: [{ id: '-1', client: { socket: { id: 'anotherId' } } } as any],
-    } as Game);
-
-    const result = guard.canActivate(wsContextMock);
-    expect(result).toBe(false);
+  it('should deny a socket that was never registered', async () => {
+    await expect(guard.canActivate(context(generateSocket()))).resolves.toBe(
+      false,
+    );
   });
 });

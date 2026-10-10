@@ -42,7 +42,7 @@ export class ConnectionPatchProvider {
 
   public async processClient(socket: Socket): Promise<Client> {
     const authToken = socket.handshake.query['Authorization'];
-    const client = new Client(socket);
+    const client = new Client();
 
     try {
       const payload = await this.tokensService.parseToken(authToken as string);

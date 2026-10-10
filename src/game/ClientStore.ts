@@ -1,27 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import type { Socket } from 'socket.io';
 import { Client } from './entities';
 
 @Injectable()
 export class ClientStore {
-  clients: Map<string, Client>;
-
-  constructor() {
-    this.clients = new Map();
-  }
-
-  setClient(socketId: string, client: Client): Client {
-    for (const [socId, cl] of this.clients.entries()) {
-      if (cl.userId === client.userId) {
-        this.clients.delete(socId);
-        cl.socket = client.socket;
-        this.clients.set(socketId, cl);
-        return cl;
-      }
-    }
-    this.clients.set(socketId, client);
+  setClient(socket: Socket, client: Client): Client {
+    socket.data.client = client;
     return client;
   }
-  getClient(socketId: string): Client {
-    return this.clients.get(socketId);
+
+  getClient(socket: Socket): Client | undefined {
+    return socket.data?.client as Client | undefined;
   }
 }

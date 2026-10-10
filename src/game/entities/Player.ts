@@ -1,40 +1,33 @@
-import { Client } from './Client';
-import { GameEnd, Game as GameEvent } from '../EmitTypes';
-import { InitedGameData } from '../dto';
+import type { PlayerSnapshot } from './game/game.types';
+
+type Identity = { userId: number; name: string; authorized: boolean };
 
 export class Player {
+  userId: number;
+  name: string;
+  authorized: boolean;
   side: 'w' | 'b';
   time: number;
-  intervalLabel?: NodeJS.Timeout;
-  turningPlayer?: boolean;
-  client: Client;
 
-  constructor(client: Client, side: 'w' | 'b', allTime: number) {
-    this.client = client;
+  constructor(identity: Identity, side: 'w' | 'b', allTime: number) {
+    this.userId = identity.userId;
+    this.name = identity.name;
+    this.authorized = identity.authorized;
     this.side = side;
     this.time = allTime;
-    this.turningPlayer = false;
-  }
-  public opponentDisconnectedEvent(): void {
-    this.client.socket.emit(GameEvent.playerDiconnected);
-  }
-  public gameEndEvent(winner: boolean, game, reason: GameEnd): void {
-    this.client.socket.emit(GameEvent.end, { winner, game, reason });
-  }
-  public timeTickEvent(sides: { w: number; b: number }): void {
-    this.client.socket.emit(GameEvent.timeTick, sides);
-  }
-  public initedGameDataEvent(data: InitedGameData): void {
-    this.client.socket.emit(GameEvent.init, data);
   }
 
-  get name(): string {
-    return this.client.name;
+  public toSnapshot(): PlayerSnapshot {
+    return {
+      userId: this.userId,
+      name: this.name,
+      authorized: this.authorized,
+      side: this.side,
+      time: this.time,
+    };
   }
-  get userId(): number {
-    return this.client.userId;
-  }
-  get authorized(): boolean {
-    return this.client.authorized;
+
+  public static fromSnapshot(snapshot: PlayerSnapshot): Player {
+    return new Player(snapshot, snapshot.side, snapshot.time);
   }
 }
