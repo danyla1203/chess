@@ -12,7 +12,7 @@ jest.mock('googleapis', () => {
 });
 jest.mock('axios', () => null);
 import { JwtModule } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { AuthService } from '../../src/auth/auth.service';
@@ -353,14 +353,14 @@ describe('Auth module (integration)', () => {
           id: session.id,
         },
       });
-      await expect(oldSession).toBe(null);
+      expect(oldSession).toBe(null);
       const newSession = await prisma.auth.findFirst({
         where: {
           refreshToken: 'refresh',
           userId: session.userId,
         },
       });
-      await expect(newSession).toBeDefined();
+      expect(newSession).toBeDefined();
     });
   });
   describe('logout', () => {

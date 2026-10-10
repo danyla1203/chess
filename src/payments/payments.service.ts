@@ -51,14 +51,15 @@ export class PaymentsService {
       throw new BadRequestException(err.message);
     }
     switch (event.type) {
-      case 'checkout.session.completed':
-        const completedSession = event.data.object as any;
+      case 'checkout.session.completed': {
+        const completedSession = event.data.object;
         await this.fullfillBalanceTopUp(completedSession.id);
         this.logger.log(
           `Completed session id: ${completedSession.id}`,
           'PaymentsService',
         );
         break;
+      }
       default:
         this.logger.warn(
           `Unhandled event type: ${event.type}`,

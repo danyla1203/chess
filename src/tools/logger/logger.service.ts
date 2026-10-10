@@ -21,13 +21,13 @@ export class LoggerService {
             // Add colors to you logs
             winston.format.colorize(),
             // What the details you need as logs
-            winston.format.printf(
-              ({ timestamp, level, message, context, trace }) => {
-                return `${timestamp} [${context}] ${level}: ${message}${
-                  trace ? `\n${trace}` : ''
-                }`;
-              },
-            ),
+            winston.format.printf((info) => {
+              const { timestamp, level, message, context, trace } =
+                info as Record<string, string>;
+              return `${timestamp} [${context}] ${level}: ${message}${
+                trace ? `\n${trace}` : ''
+              }`;
+            }),
           ),
         }),
       ],

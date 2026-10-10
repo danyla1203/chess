@@ -16,7 +16,8 @@ import {
 } from '@nestjs/common';
 import { WsValidationFilter } from '../tools/WsValidationFilter';
 import { GameService } from './game.service';
-import { ConnectToGameDto, CreateGameDto, TurnBody, ChatMessage } from './dto';
+import { CreateGameDto, TurnBody, ChatMessage } from './dto';
+import type { ConnectToGameDto } from './dto';
 import { Game, GameEnd, Lobby, room } from './EmitTypes';
 import { ConnectionPatchProvider } from './connection.provider';
 import { ClientStore } from './ClientStore';

@@ -195,7 +195,7 @@ describe('GameService (integration)', () => {
       const gameInStartedGames = lobby.games.find((g) => g.id === game.id);
       expect(gameInStartedGames).toBeUndefined();
 
-      expect(service['saveGame']).toBeCalled();
+      expect(service['saveGame']).toHaveBeenCalled();
     });
   });
 
@@ -261,8 +261,8 @@ describe('GameService (integration)', () => {
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
       lobby.pushToStartedGames(game.id);
-      pl1 = game.players.find((pl) => pl.userId == cl1.userId);
-      pl2 = game.players.find((pl) => pl.userId == cl2.userId);
+      pl1 = game.players.find((pl) => pl.userId === cl1.userId);
+      pl2 = game.players.find((pl) => pl.userId === cl2.userId);
       game.start();
     });
     afterAll(() => {
@@ -281,7 +281,7 @@ describe('GameService (integration)', () => {
       });
       it('should throw error if draw propose already sent', () => {
         game.draw[pl1.side] = true;
-        expect(() => service.proposeDraw(game.id, cl1)).toThrowError();
+        expect(() => service.proposeDraw(game.id, cl1)).toThrow();
       });
     });
     describe('accept draw', () => {
@@ -289,13 +289,13 @@ describe('GameService (integration)', () => {
         const spy = jest.spyOn(service as any, 'saveGame');
         service.proposeDraw(game.id, cl1);
         await service.acceptDraw(game.id, cl2);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         expect(game.isActive).toBeFalsy();
         const pendingGame = lobby.games.find((g) => g.id === game.id);
         expect(pendingGame).toBeUndefined();
       });
       it('should throw error with draw propose dont exist', async () => {
-        expect(service.acceptDraw(game.id, cl2)).rejects.toThrowError();
+        expect(service.acceptDraw(game.id, cl2)).rejects.toThrow();
       });
     });
     describe('reject draw', () => {
@@ -306,7 +306,7 @@ describe('GameService (integration)', () => {
         expect(game.draw).toStrictEqual({ w: false, b: false });
       });
       it('should throw error with draw propose dont exist', () => {
-        expect(() => service.rejectDraw(game.id)).toThrowError();
+        expect(() => service.rejectDraw(game.id)).toThrow();
       });
     });
   });
@@ -329,7 +329,7 @@ describe('GameService (integration)', () => {
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
       lobby.pushToStartedGames(game.id);
-      pl1 = game.players.find((pl) => pl.userId == cl1.userId);
+      pl1 = game.players.find((pl) => pl.userId === cl1.userId);
       pl2 = game.players.find((pl) => pl.userId === cl2.userId);
       game.start();
     });
@@ -344,7 +344,7 @@ describe('GameService (integration)', () => {
       expect(game.isActive).toBeFalsy();
       const pendingGame = lobby.games.find((g) => g.id === game.id);
       expect(pendingGame).toBeUndefined();
-      expect(spy).toBeCalled();
+      expect(spy).toHaveBeenCalled();
       expect(result).toHaveProperty(['winner'], pl1);
       expect(result).toHaveProperty(['looser'], pl2);
     });
@@ -368,7 +368,7 @@ describe('GameService (integration)', () => {
       cl2 = generateClient(true, userInDb2.id);
       game.addPlayer(cl2);
       lobby.pushToStartedGames(game.id);
-      pl1 = game.players.find((pl) => pl.userId == cl1.userId);
+      pl1 = game.players.find((pl) => pl.userId === cl1.userId);
       pl2 = game.players.find((pl) => pl.userId === cl2.userId);
       game.start();
     });
@@ -382,7 +382,7 @@ describe('GameService (integration)', () => {
       expect(game.isActive).toBeFalsy();
       const pendingGame = lobby.games.find((g) => g.id === game.id);
       expect(pendingGame).toBeUndefined();
-      expect(spy).toBeCalled();
+      expect(spy).toHaveBeenCalled();
       expect(result).toHaveProperty(['winner'], pl1);
       expect(result).toHaveProperty(['looser'], pl2);
     });

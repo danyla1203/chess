@@ -64,7 +64,7 @@ describe('PaymentsService (unit)', () => {
         .spyOn(stripeService, 'constructEventFromWebhook')
         .mockReturnValueOnce({
           type: 'unhandled.event.type',
-        } as Stripe.Event);
+        } as unknown as Stripe.Event);
       expect(service.handleStripeWebhook('t_sign', {})).rejects.toThrow(
         BadRequestException,
       );
@@ -80,7 +80,7 @@ describe('PaymentsService (unit)', () => {
         .spyOn(service as any, 'fullfillBalanceTopUp')
         .mockImplementationOnce(jest.fn());
       await service.handleStripeWebhook('t_sign', {});
-      expect(service['fullfillBalanceTopUp']).toBeCalledWith('t_id');
+      expect(service['fullfillBalanceTopUp']).toHaveBeenCalledWith('t_id');
     });
   });
   describe('fullfillBalanceTopUp', () => {
@@ -99,7 +99,7 @@ describe('PaymentsService (unit)', () => {
         amount_total: 500,
       } as any);
       await service['fullfillBalanceTopUp']('s_test');
-      expect(userService.topUpBalance).toBeCalledWith(1, 500);
+      expect(userService.topUpBalance).toHaveBeenCalledWith(1, 500);
     });
   });
 });

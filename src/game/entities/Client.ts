@@ -28,6 +28,6 @@ export class Client {
     this.socket.emit(GameEvent.created, { gameId: game.id });
   }
   public join(gameId: number): void {
-    this.socket.join(room(gameId));
+    void this.socket.join(room(gameId));
   }
 }

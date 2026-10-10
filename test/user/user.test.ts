@@ -44,7 +44,7 @@ describe('UserService (unit)', () => {
   describe('update user name', () => {
     it('should throw Conflict error if provided name is already taken', async () => {
       jest.spyOn(model, 'findUserByName').mockResolvedValue({ id: 1 });
-      await expect(service.updateUserName(1, 'TestName')).rejects.toThrowError(
+      await expect(service.updateUserName(1, 'TestName')).rejects.toThrow(
         ConflictException,
       );
     });
@@ -54,7 +54,7 @@ describe('UserService (unit)', () => {
         .spyOn(model, 'updateUser')
         .mockImplementation(jest.fn());
       await service.updateUserName(1, 'TestName');
-      expect(spyModel).toBeCalledWith(1, 'TestName');
+      expect(spyModel).toHaveBeenCalledWith(1, 'TestName');
     });
   });
 });

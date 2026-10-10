@@ -1,9 +1,5 @@
-import {
-  Catch,
-  ArgumentsHost,
-  HttpServer,
-  HttpException,
-} from '@nestjs/common';
+import { Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import type { HttpServer } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { LoggerService } from './logger.service';
 

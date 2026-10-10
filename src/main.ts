@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 import { LoggerFilter, LoggerService } from './tools/logger';
 
 async function bootstrap() {
-  await otelSDK.start();
+  otelSDK.start();
   const allowedOrigin =
     process.env.ENV === 'dev' ? 'http://localhost:3000' : '*';
   const app = await NestFactory.create(AppModule, {
@@ -21,4 +21,4 @@ async function bootstrap() {
   app.useGlobalFilters(new LoggerFilter(new LoggerService(), httpAdapter));
   await app.listen(process.env.PORT);
 }
-bootstrap();
+void bootstrap();

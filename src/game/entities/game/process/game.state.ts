@@ -20,9 +20,11 @@ export class GameState {
   }
 
   public updateBoard(figure: Figure, cell: Cell): void {
-    this.sideToTurn == 'w'
-      ? this.whiteBoard.set(figure, cell)
-      : this.blackBoard.set(figure, cell);
+    if (this.sideToTurn === 'w') {
+      this.whiteBoard.set(figure, cell);
+    } else {
+      this.blackBoard.set(figure, cell);
+    }
   }
 
   public removeShah(): void {
@@ -42,7 +44,7 @@ export class GameState {
     return this.sideToTurn;
   }
   setNextTurnSide() {
-    this.sideToTurn = this.sideToTurn == 'w' ? 'b' : 'w';
+    this.sideToTurn = this.sideToTurn === 'w' ? 'b' : 'w';
   }
   set turnSide(side: 'w' | 'b') {
     this.sideToTurn = side;

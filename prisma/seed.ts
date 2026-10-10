@@ -1,8 +1,11 @@
 import { parseArgs } from 'node:util';
 import { faker } from '@faker-js/faker';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+});
 
 const options: { env: { type: 'string' | 'boolean' } } = {
   env: { type: 'string' },
@@ -15,7 +18,7 @@ async function generateData() {
     const user = await prisma.user.create({
       data: {
         email,
-        name: faker.internet.userName(),
+        name: faker.internet.username(),
         password: faker.internet.password(),
         confirmation: {
           create: {
@@ -46,7 +49,7 @@ async function generateData() {
     });
 
     //For some user records create sessions and games
-    if (i % 2 == 0) {
+    if (i % 2 === 0) {
       await prisma.auth.createMany({
         data: [
           {
@@ -118,4 +121,4 @@ async function main() {
       break;
   }
 }
-main();
+void main();

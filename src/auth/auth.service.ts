@@ -4,11 +4,11 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { EmailLoginDto, NameLoginDto } from './dto';
 import { AuthModel } from './auth.model';
 import { TokenService } from './tokens/token.service';
-import { InternalAuthorizedUserFields } from 'src/user/entities/user.entity';
+import { InternalAuthorizedUserFields } from '../user/entities/user.entity';
 import { Tokens } from './tokens/token.entities';
 import { ConfigService } from '@nestjs/config';
 
@@ -140,8 +140,8 @@ export class AuthService {
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
 
     const options = {
-      redirect_uri: this.config.get('GOOGLE_REDIRECT_URL') as string,
-      client_id: this.config.get('GOOGLE_CLIENT_ID') as string,
+      redirect_uri: this.config.get<string>('GOOGLE_REDIRECT_URL'),
+      client_id: this.config.get<string>('GOOGLE_CLIENT_ID'),
       access_type: 'offline',
       response_type: 'code',
       prompt: 'consent',

@@ -38,7 +38,7 @@ describe('UserService', () => {
       const dto = {
         email: 'no@gmail.com',
         password: faker.internet.password(),
-        name: faker.internet.userName(),
+        name: faker.internet.username(),
         deviceId: faker.string.nanoid(8),
       };
       expect(service.create(dto)).rejects.toThrow(
@@ -52,7 +52,7 @@ describe('UserService', () => {
       const dto = {
         email,
         password: faker.internet.password(),
-        name: faker.internet.userName(),
+        name: faker.internet.username(),
         deviceId: faker.string.nanoid(8),
       };
       expect(service.create(dto)).rejects.toThrow(
@@ -70,7 +70,7 @@ describe('UserService', () => {
       });
       const newUser = {
         email,
-        name: faker.internet.userName(),
+        name: faker.internet.username(),
         password: faker.internet.password(),
         deviceId: faker.string.nanoid(5),
       };

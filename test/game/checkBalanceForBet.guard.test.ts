@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { ExecutionContext } from '@nestjs/common';
 import { IsBalanceEnough } from '../../src/game/guards';
 import { ClientStore } from '../../src/game/ClientStore';
 import { GameModel } from '../../src/game/model';
@@ -22,7 +21,7 @@ describe('IsBalanceEnough', () => {
         getClient: jest.fn().mockReturnValue(mockClient.socket),
         getData: jest.fn().mockReturnValue({ bet: 100 }),
       }),
-    } as unknown as ExecutionContext;
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IsBalanceEnough,

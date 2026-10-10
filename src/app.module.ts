@@ -7,17 +7,15 @@ import { UserModule } from './user/user.module';
 import { MailService } from './mail/mail.service';
 import { LoggerModule } from './tools/logger';
 import { CacheModule } from '@nestjs/cache-manager';
-import { RedisClientOptions } from 'redis';
-import * as redisStore from 'cache-manager-redis-store';
+import KeyvRedis from '@keyv/redis';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    CacheModule.registerAsync<RedisClientOptions>({
+    CacheModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService) => ({
-        store: redisStore as any,
-        url: configService.get('REDIS_URL'),
+      useFactory: async (configService: ConfigService) => ({
+        stores: [new KeyvRedis(configService.get<string>('REDIS_URL'))],
       }),
       isGlobal: true,
       inject: [ConfigService],

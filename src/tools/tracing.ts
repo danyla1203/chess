@@ -1,8 +1,7 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import * as process from 'process';
-import { dockerCGroupV1Detector } from '@opentelemetry/resource-detector-docker';
+import { containerDetector } from '@opentelemetry/resource-detector-container';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
@@ -30,9 +29,9 @@ const instrumentations = [
 export const otelSDK = new NodeSDK({
   serviceName: 'chesser',
   traceExporter,
-  metricReader,
+  metricReaders: [metricReader],
   instrumentations,
-  resourceDetectors: [dockerCGroupV1Detector],
+  resourceDetectors: [containerDetector],
 });
 
 process.on('SIGTERM', () => {

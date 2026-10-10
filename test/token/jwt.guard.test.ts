@@ -65,7 +65,7 @@ describe('AuthGuard', () => {
       }),
     };
 
-    await expect(guard.canActivate(mockContext as any)).rejects.toThrowError(
+    await expect(guard.canActivate(mockContext as any)).rejects.toThrow(
       BadRequestException,
     );
   });

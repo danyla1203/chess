@@ -20,7 +20,11 @@ export class Game {
     w: boolean;
     b: boolean;
   } = { w: false, b: false };
-  endGameByTimeoutCb: (game: Game, winer: Player, looser: Player) => void;
+  endGameByTimeoutCb: (
+    game: Game,
+    winer: Player,
+    looser: Player,
+  ) => Promise<void>;
 
   constructor(creator: Client, config: Config, gameEndCallback) {
     this.endGameByTimeoutCb = gameEndCallback;

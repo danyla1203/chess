@@ -3,8 +3,8 @@ import {
   INestApplication,
   UnauthorizedException,
 } from '@nestjs/common';
-import * as req from 'supertest';
-import * as bcrypt from 'bcrypt';
+import req from 'supertest';
+import bcrypt from 'bcrypt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma.service';
@@ -65,7 +65,7 @@ describe('Auth e2e', () => {
     });
     it('should return tokens', async () => {
       const { email } = await prisma.user.findFirst();
-      bcrypt.compare.mockResolvedValue(true);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       const { body } = await req(server).post('/auth/login/email').send({
         email,
         password: 'correctPassword',
@@ -77,7 +77,7 @@ describe('Auth e2e', () => {
     });
     it('login with name', async () => {
       const { name } = await prisma.user.findFirst();
-      bcrypt.compare.mockResolvedValue(true);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       const { body } = await req(server).post('/auth/login/name').send({
         name,
         password: 'correctPassword',
@@ -135,7 +135,7 @@ describe('Auth e2e', () => {
           },
         },
       });
-      const { body } = await await req(server).put('/auth/use-refresh').send({
+      const { body } = await req(server).put('/auth/use-refresh').send({
         refreshToken: auth.refreshToken,
       });
 

@@ -12,13 +12,12 @@ import {
   generatePlayer,
   getFigureCellState,
 } from './generators';
-import { Config, Game } from '../../src/game/entities/game';
+import { Config, Game, GameAdapter } from '../../src/game/entities/game';
 import { faker } from '@faker-js/faker';
 import { Client, Player } from '../../src/game/entities';
 import { TokenService } from '../../src/auth';
 import { ConnectionPatchProvider } from '../../src/game/connection.provider';
 import { LoggerService } from '../../src//tools/logger';
-import { GameAdapter } from '../../src/game/entities/game';
 
 jest.mock('../../src/auth');
 jest.mock('../../src/game/connection.provider');
@@ -59,7 +58,7 @@ describe('GameService (unit)', () => {
     cl1 = generateClient(true, faker.number.int());
     cl2 = generateClient(true, faker.number.int());
     cnf = generateConfig('w');
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     gm = new Game(cl1, cnf, jest.fn());
     gm.addPlayer(cl2);
     pl1 = gm.players[0];
@@ -75,7 +74,7 @@ describe('GameService (unit)', () => {
     const cl = generateClient();
     const mock = jest.spyOn(list, 'removeInitedGames');
     service.removeInitedGamesBy(cl);
-    expect(mock).toBeCalledWith(cl);
+    expect(mock).toHaveBeenCalledWith(cl);
   });
   describe('save game', () => {
     let saveDrawMock;
@@ -107,7 +106,7 @@ describe('GameService (unit)', () => {
       const result = generateGameResult();
       service['saveGame'](pl1, pl2, result, true);
 
-      expect(saveGameWithWinnerMock).toBeCalledWith({
+      expect(saveGameWithWinnerMock).toHaveBeenCalledWith({
         ...result,
         winner: pl1,
         looser: pl2,
@@ -119,7 +118,7 @@ describe('GameService (unit)', () => {
       const result = generateGameResult();
       service['saveGame'](pl1, pl2, result);
 
-      expect(saveDrawMock).toBeCalledWith({
+      expect(saveDrawMock).toHaveBeenCalledWith({
         ...result,
         pl1,
         pl2,
@@ -135,7 +134,7 @@ describe('GameService (unit)', () => {
         .mockImplementation();
       const gm = await service.createGame(pl, cnf);
       expect(gm).toBeInstanceOf(Game);
-      expect(addGameToLobbyMock).toBeCalledWith(gm);
+      expect(addGameToLobbyMock).toHaveBeenCalledWith(gm);
     });
   });
   describe('connectToGame', () => {
@@ -160,8 +159,8 @@ describe('GameService (unit)', () => {
         .mockImplementation();
       const result = await service.connectToGame(cl2, gm.id);
       expect(result).toStrictEqual(gm);
-      expect(gm.addPlayer).toBeCalledWith(cl2);
-      expect(remove).toBeCalledWith(gm.id);
+      expect(gm.addPlayer).toHaveBeenCalledWith(cl2);
+      expect(remove).toHaveBeenCalledWith(gm.id);
     });
   });
   describe('findGameById', () => {
@@ -200,7 +199,7 @@ describe('GameService (unit)', () => {
         looser: gm.looser,
       };
       expect(service.surrender(gm.id, cl1)).resolves.toStrictEqual(expected);
-      expect(gm.endGame).toBeCalledWith(pl2, pl1);
+      expect(gm.endGame).toHaveBeenCalledWith(pl2, pl1);
     });
   });
   describe('proposeDraw', () => {
@@ -276,7 +275,7 @@ describe('GameService (unit)', () => {
         w: false,
         b: false,
       });
-      expect(gm.rejectDraw).toBeCalled();
+      expect(gm.rejectDraw).toHaveBeenCalled();
     });
   });
   describe('addTime', () => {
@@ -334,9 +333,9 @@ describe('GameService (unit)', () => {
         gameId: gm.id,
       });
       expect(result).toStrictEqual(completedMove);
-      expect(gm.endGame).toBeCalledWith(gm.players[0], gm.players[1]);
-      expect(service['list'].gameEnd).toBeCalledWith(gm.id);
-      expect(service['saveGame']).toBeCalledWith(
+      expect(gm.endGame).toHaveBeenCalledWith(gm.players[0], gm.players[1]);
+      expect(service['list'].gameEnd).toHaveBeenCalledWith(gm.id);
+      expect(service['saveGame']).toHaveBeenCalledWith(
         gm.players[0],
         gm.players[1],
         { id: gm.id },

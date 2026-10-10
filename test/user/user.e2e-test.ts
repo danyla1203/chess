@@ -3,7 +3,7 @@ import { ConflictException, INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { faker } from '@faker-js/faker';
-import * as req from 'supertest';
+import req from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma.service';
 import { checkTokens } from '../utils/checkTokens';
@@ -47,7 +47,7 @@ describe('User e2e', () => {
       req(server)
         .post('/user/signup')
         .send({
-          name: faker.internet.userName(),
+          name: faker.internet.username(),
           email: faker.internet.email(),
           password: faker.internet.password(),
           deviceId: 'test1',
@@ -60,7 +60,7 @@ describe('User e2e', () => {
       await req(server)
         .post('/user/signup')
         .send({
-          name: faker.internet.userName(),
+          name: faker.internet.username(),
           email: user.email,
           password: faker.internet.password(),
           deviceId: 'test1',
@@ -82,7 +82,7 @@ describe('User e2e', () => {
       const { body } = await req(server)
         .post('/user/signup')
         .send({
-          name: faker.internet.userName(),
+          name: faker.internet.username(),
           email: confirmation.email,
           password: faker.internet.password(),
           deviceId: 'test1',
@@ -202,8 +202,8 @@ describe('User e2e', () => {
         const result = g.isDraw
           ? { pl1, pl2 }
           : pl1.winner
-          ? { winner: pl1, looser: pl2 }
-          : { winner: pl2, looser: pl1 };
+            ? { winner: pl1, looser: pl2 }
+            : { winner: pl2, looser: pl1 };
         return {
           id: g.id,
           key: g.id,

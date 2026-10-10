@@ -1,8 +1,7 @@
-import { Game } from '../../src/game/entities/game';
+import { Config, Game } from '../../src/game/entities/game';
 import { ConflictException } from '@nestjs/common';
 import { generateConfig, generateClient } from '../game/generators';
 import { Client, Player } from '../../src/game/entities';
-import { Config } from '../../src/game/entities/game';
 import { GameProcess } from '../../src/game/entities/game/process/game.process';
 import { GameChat } from '../../src/game/entities/game/game.chat';
 
@@ -127,7 +126,7 @@ describe('Game entity (unit)', () => {
       pl1.time = 1000;
       game.timerTick(pl1, pl2);
       expect(pl1.time).toEqual(0);
-      expect(endGameMock).toBeCalledWith(pl2, pl1);
+      expect(endGameMock).toHaveBeenCalledWith(pl2, pl1);
     });
   });
   describe('endGameByDraw', () => {
@@ -140,12 +139,12 @@ describe('Game entity (unit)', () => {
       jest.useFakeTimers();
       jest.spyOn(global, 'clearInterval');
       const [pl1, pl2] = game.players;
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
+
       pl2.intervalLabel = setInterval(() => {}, 1000);
 
       game.endGameByDraw();
-      expect(clearInterval).toBeCalledWith(pl1.intervalLabel);
-      expect(clearInterval).toBeCalledWith(pl2.intervalLabel);
+      expect(clearInterval).toHaveBeenCalledWith(pl1.intervalLabel);
+      expect(clearInterval).toHaveBeenCalledWith(pl2.intervalLabel);
       expect(game.isActive).toBeFalsy();
     });
   });
@@ -159,12 +158,12 @@ describe('Game entity (unit)', () => {
       jest.useFakeTimers();
       jest.spyOn(global, 'clearInterval');
       const [pl1, pl2] = game.players;
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
+
       pl2.intervalLabel = setInterval(() => {}, 1000);
 
       game.endGame(pl1, pl2);
-      expect(clearInterval).toBeCalledWith(pl1.intervalLabel);
-      expect(clearInterval).toBeCalledWith(pl2.intervalLabel);
+      expect(clearInterval).toHaveBeenCalledWith(pl1.intervalLabel);
+      expect(clearInterval).toHaveBeenCalledWith(pl2.intervalLabel);
       expect(game.isActive).toBeFalsy();
       expect(game.winner).toStrictEqual(pl1);
       expect(game.looser).toStrictEqual(pl2);

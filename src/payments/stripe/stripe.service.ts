@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Stripe } from 'stripe';
+import Stripe from 'stripe';
 
 @Injectable()
 export class StripeService {
-  stripe: Stripe;
+  private client?: Stripe;
   webhookSecret: string;
   success_url: string;
   cancel_url: string;
@@ -16,9 +16,13 @@ export class StripeService {
     this.cancel_url = this.configService.get(
       'STRIPE_CHECKOUT_SESSION_CANCEL_URL',
     );
-    this.stripe = new Stripe(configService.get('STRIPE_SECRET'), {
-      apiVersion: '2022-11-15',
+  }
+
+  get stripe(): Stripe {
+    this.client ??= new Stripe(this.configService.get('STRIPE_SECRET'), {
+      apiVersion: '2022-11-15' as Stripe.LatestApiVersion,
     });
+    return this.client;
   }
 
   public updateBalanceCheckoutSession(clientId: number) {

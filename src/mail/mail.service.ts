@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as SendGrid from '@sendgrid/mail';
+import SendGrid from '@sendgrid/mail';
 
 @Injectable()
 export class MailService {
@@ -10,7 +10,7 @@ export class MailService {
 
   private async send(mail: SendGrid.MailDataRequired) {
     const transport = await SendGrid.send(mail);
-    console.log(`E-Mail sent to ${mail.to}`);
+    console.log(`E-Mail sent to ${JSON.stringify(mail.to)}`);
     return transport;
   }
 

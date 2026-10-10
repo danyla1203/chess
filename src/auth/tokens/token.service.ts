@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { google } from 'googleapis';
 import { Tokens } from './token.entities';
 
@@ -8,8 +8,8 @@ import { Tokens } from './token.entities';
 export class TokenService {
   oauthGoogle: any;
   jwtSecret: string;
-  accessExp: string;
-  refreshExp: string;
+  accessExp: JwtSignOptions['expiresIn'];
+  refreshExp: JwtSignOptions['expiresIn'];
   constructor(
     private readonly jwt: JwtService,
     private readonly config: ConfigService,

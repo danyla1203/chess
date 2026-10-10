@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto';
 import { UserModel } from './model';
 import { AuthService, Tokens } from '../auth';
@@ -51,8 +51,8 @@ export class UserService {
       const result = g.isDraw
         ? { pl1, pl2 }
         : pl1.winner
-        ? { winner: pl1, looser: pl2 }
-        : { winner: pl2, looser: pl1 };
+          ? { winner: pl1, looser: pl2 }
+          : { winner: pl2, looser: pl1 };
       return {
         id: g.id,
         key: g.id,

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
-import * as req from 'supertest';
+import req from 'supertest';
 import { AuthService } from '../../src/auth';
 import { faker } from '@faker-js/faker';
 import { PrismaService } from '../../src/prisma.service';
@@ -136,7 +136,7 @@ describe('AuthController unit', () => {
           })
           .expect(201);
 
-        expect(service.login).toBeCalled();
+        expect(service.login).toHaveBeenCalled();
       },
     );
     test.each(cases)(
@@ -150,7 +150,7 @@ describe('AuthController unit', () => {
             deviceId: faker.string.nanoid(7),
           })
           .expect(201);
-        expect(service.login).toBeCalled();
+        expect(service.login).toHaveBeenCalled();
       },
     );
   });
@@ -171,7 +171,7 @@ describe('AuthController unit', () => {
       await req(server).put('/auth/use-refresh').send({
         refreshToken: faker.string.uuid(),
       });
-      expect(service.useRefresh).toBeCalled();
+      expect(service.useRefresh).toHaveBeenCalled();
     });
   });
   describe('send verification mail with inccorect data', () => {
@@ -197,7 +197,7 @@ describe('AuthController unit', () => {
       await req(server).post('/auth/send-verification-mail').send({
         email: faker.internet.email(),
       });
-      expect(service.sendVerificationMail).toBeCalled();
+      expect(service.sendVerificationMail).toHaveBeenCalled();
     });
   });
   describe('verify email with incorrect data', () => {
@@ -227,7 +227,7 @@ describe('AuthController unit', () => {
           email: faker.internet.email(),
           code: faker.string.nanoid(7),
         });
-      expect(service.verifyEmail).toBeCalled();
+      expect(service.verifyEmail).toHaveBeenCalled();
     });
   });
 });

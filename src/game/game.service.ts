@@ -27,7 +27,7 @@ import {
 import { GameEnd } from './EmitTypes';
 import { GameModel } from './model';
 import { Game as PrismaGameType } from '@prisma/client';
-import { GameAdapterI } from './game.adapter.interface';
+import type { GameAdapterI } from './game.adapter.interface';
 
 @Injectable()
 export class GameService {
@@ -48,12 +48,12 @@ export class GameService {
   ): Promise<PrismaGameType> {
     if (!pl1.authorized || !pl2.authorized) return null;
     return winner
-      ? await this.model.saveGameWithWinner({
+      ? this.model.saveGameWithWinner({
           ...result,
           winner: pl1,
           looser: pl2,
         })
-      : await this.model.saveDraw({ ...result, pl1, pl2 });
+      : this.model.saveDraw({ ...result, pl1, pl2 });
   }
   //TODO: Rework on-timeout logic implementation
   private async injectableGameEndCallback(

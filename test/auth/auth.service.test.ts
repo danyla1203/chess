@@ -1,9 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
-import { AuthService } from '../../src/auth';
+import bcrypt from 'bcrypt';
+import { AuthService, TokenService } from '../../src/auth';
 import { AuthModel } from '../../src/auth/auth.model';
-import { TokenService } from '../../src/auth';
 import { PrismaService } from '../../src/prisma.service';
 import { TestTokenModule } from '../utils/TestTokenModule';
 

@@ -67,31 +67,31 @@ describe('Game entity (integration)', () => {
 
       jest.advanceTimersByTime(1000);
       expect(white.time).toEqual(game.config.time - 1000);
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 1000,
         b: game.config.time,
       });
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 1000,
         b: game.config.time,
       });
       jest.advanceTimersByTime(1000);
       expect(white.time).toEqual(game.config.time - 2000);
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 2000,
         b: game.config.time,
       });
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 2000,
         b: game.config.time,
       });
       jest.advanceTimersByTime(1000);
       expect(white.time).toEqual(game.config.time - 3000);
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 3000,
         b: game.config.time,
       });
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 3000,
         b: game.config.time,
       });
@@ -105,11 +105,11 @@ describe('Game entity (integration)', () => {
 
       jest.advanceTimersByTime(1000);
       expect(white.time).toEqual(game.config.time - 1000);
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 1000,
         b: game.config.time,
       });
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 1000,
         b: game.config.time,
       });
@@ -120,11 +120,11 @@ describe('Game entity (integration)', () => {
 
       jest.advanceTimersByTime(1000);
       expect(black.time).toEqual(game.config.time - 1000);
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 1000 + game.config.timeIncrement,
         b: game.config.time - 1000,
       });
-      expect(pl2.client.socket.emit).toBeCalledWith(GameEmits.timeTick, {
+      expect(pl2.client.socket.emit).toHaveBeenCalledWith(GameEmits.timeTick, {
         w: game.config.time - 1000 + game.config.timeIncrement,
         b: game.config.time - 1000,
       });
@@ -144,7 +144,7 @@ describe('Game entity (integration)', () => {
       expect(game.winner).toStrictEqual(black);
       expect(game.looser).toStrictEqual(white);
 
-      expect(service['saveGame']).toBeCalled();
+      expect(service['saveGame']).toHaveBeenCalled();
       const gameInStartedGames = lobby.games.find((g) => g.id === game.id);
       expect(gameInStartedGames).toBeUndefined();
     });

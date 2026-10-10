@@ -41,7 +41,7 @@ describe('Connection provider (unit)', () => {
         });
       const res = await provider.processClient(socket);
       expect(res).toBeDefined();
-      expect(provider['createAnonymousToken']).toBeCalled();
+      expect(provider['createAnonymousToken']).toHaveBeenCalled();
     });
     it('process with correct token', async () => {
       const tokenPayload = {
@@ -56,7 +56,7 @@ describe('Connection provider (unit)', () => {
       });
       const res = await provider.processClient(socket);
       expect(res).toBeDefined();
-      expect(provider['withToken']).toBeCalled();
+      expect(provider['withToken']).toHaveBeenCalled();
     });
     it('createAnonymousToken', () => {
       jest.spyOn(Math, 'random').mockReturnValueOnce(1);

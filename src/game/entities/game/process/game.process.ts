@@ -88,7 +88,7 @@ export class GameProcess {
   }
 
   public getOpponentSide(): 'w' | 'b' {
-    return this.store.side == 'w' ? 'b' : 'w';
+    return this.store.side === 'w' ? 'b' : 'w';
   }
 
   constructor() {
@@ -99,7 +99,7 @@ export class GameProcess {
   public findNextLetter(center: string): string[] {
     const result = [];
     for (let i = 0; i < this.Letters.length; i++) {
-      if (this.Letters[i] == center) {
+      if (this.Letters[i] === center) {
         if (this.Letters[i - 1]) {
           result.push(this.Letters[i - 1]);
         }
@@ -157,7 +157,7 @@ export class GameProcess {
   public getEmptyCellsBetween(knCell: Cell, cell: Cell) {
     const num1 = parseInt(cell[1]);
     const num2 = parseInt(knCell[1]);
-    const index1 = this.Letters.findIndex((lett) => lett == cell[0]);
+    const index1 = this.Letters.findIndex((lett) => lett === cell[0]);
     const index2 = this.Letters.findIndex((lett) => lett === knCell[0]);
     const possibleMoves: string[] = [];
 
@@ -211,7 +211,7 @@ export class GameProcess {
       if (!isCellEmpty) break;
     }
 
-    const letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
+    const letterIndex = this.Letters.findIndex((lett) => lett === prevLetter);
     for (let i = letterIndex + 1; i < this.Letters.length; i++) {
       const cell = `${this.Letters[i]}${prevNum}`;
       const isCellEmpty = this.checkIsCellEmpty(board, cell);
@@ -266,10 +266,10 @@ export class GameProcess {
 
     let cell;
     let pathCell;
-    if (this.store.side === 'w' && prevNum == 2) {
+    if (this.store.side === 'w' && prevNum === 2) {
       cell = `${prevLetter}${prevNum + 2}`;
       pathCell = `${prevLetter}${prevNum + 1}`;
-    } else if (this.store.side === 'b' && prevNum == 7) {
+    } else if (this.store.side === 'b' && prevNum === 7) {
       cell = `${prevLetter}${prevNum - 2}`;
       pathCell = `${prevLetter}${prevNum - 1}`;
     }
@@ -299,7 +299,7 @@ export class GameProcess {
     const nextLetters = this.findNextLetter(prevLetter);
     const nextLetterRight = this.findNextLetter(nextLetters[1])[1];
     let nextLetterLeft = this.findNextLetter(nextLetters[0])[0];
-    nextLetterLeft = nextLetterLeft == prevLetter ? null : nextLetterLeft;
+    nextLetterLeft = nextLetterLeft === prevLetter ? null : nextLetterLeft;
 
     const possibleCells: Cell[] = [
       `${nextLetters[1]}${num + 2}`,
@@ -324,7 +324,7 @@ export class GameProcess {
     const { newCell, prevCell } = cells;
     const [prevLetter, num] = prevCell;
     const prevNum = parseInt(num, 10);
-    const letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
+    const letterIndex = this.Letters.findIndex((lett) => lett === prevLetter);
 
     for (
       let i = letterIndex + 1, nextNum = prevNum + 1;

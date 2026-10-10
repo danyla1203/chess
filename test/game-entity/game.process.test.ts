@@ -86,8 +86,8 @@ describe('GameProcess (unit)', () => {
 
     process.store.setStrikeAroundKn = jest.fn();
     process.setFigureStrikeAroundKn('B1', 'f5');
-    expect(process.store.setStrikeAroundKn).toBeCalled();
-    expect(process.store.setStrikeAroundKn).toBeCalledWith('b', 'B1');
+    expect(process.store.setStrikeAroundKn).toHaveBeenCalled();
+    expect(process.store.setStrikeAroundKn).toHaveBeenCalledWith('b', 'B1');
   });
   describe('getCellsAround', () => {
     const cases = [
@@ -559,8 +559,8 @@ describe('GameProcess (unit)', () => {
         };
       };
       process.setPossibleShah('R1', 'd5');
-      expect(process.store.setPossibleShah).toBeCalledTimes(1);
-      expect(process.store.setPossibleShah).toBeCalledWith('b', 'R1');
+      expect(process.store.setPossibleShah).toHaveBeenCalledTimes(1);
+      expect(process.store.setPossibleShah).toHaveBeenCalledWith('b', 'R1');
     });
     it('setShah', () => {
       process.store.sideToTurn = 'w';
@@ -577,8 +577,8 @@ describe('GameProcess (unit)', () => {
       };
       process.store.shahData = expected;
       expect(process.setShah('pawn3')).toEqual(expected);
-      expect(process.store.setShahData).toBeCalled();
-      expect(process.store.setShahData).toBeCalledWith('b', 'pawn3');
+      expect(process.store.setShahData).toHaveBeenCalled();
+      expect(process.store.setShahData).toHaveBeenCalledWith('b', 'pawn3');
     });
   });
   describe('mate logic', () => {
