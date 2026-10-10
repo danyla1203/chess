@@ -1,5 +1,5 @@
-import { Button, Input } from '@nextui-org/react';
-import { Profile, useUserState } from '../lib/context/UserContext';
+import { Button, Input } from '@heroui/react';
+import { type Profile, useUserState } from '../lib/context/UserContext';
 import { useState } from 'react';
 import { updateUserName } from '../lib/request/updateUserName';
 

@@ -1,4 +1,6 @@
-import { Spinner } from '@nextui-org/react';
+'use client';
+
+import { Spinner } from '@heroui/react';
 
 export function Loader() {
   return (

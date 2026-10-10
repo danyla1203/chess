@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Cell, Figure } from './types';
+import { type Cell, type Figure } from './types';
 
 interface CellProps {
   highlighted: boolean;
@@ -25,9 +25,9 @@ export function CellItem({
   let classbase = 'figure size-20 flex justify-center items-center';
 
   if (highlighted) classbase += ` bg-slate-400`;
-  else if (shached)
+  else if (shached) {
     classbase += ' bg-red-500 shadow-lg shadow-inner shadow-red-950';
-  else classbase += ` ${color}`;
+  } else classbase += ` ${color}`;
 
   if (figure) classbase += ` ${figure.replace(/\d/, '')} ${side}`;
   return (

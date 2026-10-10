@@ -1,5 +1,5 @@
 import { Game, useWebSocket } from '@/context/SocketContext';
-import { OpponentLeavePayload } from '../types';
+import { type OpponentLeavePayload } from '../types';
 import { useState, useEffect, createContext, useContext } from 'react';
 
 const PlayerConnectionCtx = createContext({

@@ -1,4 +1,4 @@
-import { Card, CardBody, CardHeader, Chip } from '@nextui-org/react';
+import { Card, CardBody, CardHeader, Chip } from '@heroui/react';
 import { useConfigContext } from '../context';
 import { usePlayerConnection } from '../context/PlayerConnection';
 import { useStrikedFigures } from '../context/Striked';
@@ -34,7 +34,7 @@ export function RightMenu() {
       className={`mr-1 w-4 h-4 ${
         online ? 'bg-blue-500' : 'bg-red-500'
       } rounded-full`}
-    ></div>
+    />
   );
 
   return (

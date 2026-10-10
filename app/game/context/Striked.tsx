@@ -1,5 +1,5 @@
 import { Game, useWebSocket } from '@/context/SocketContext';
-import { Figure, StrikeData } from '../types';
+import { type Figure, type StrikeData } from '../types';
 
 import { useState, useEffect, createContext, useContext } from 'react';
 

@@ -7,14 +7,15 @@ import {
   TableRow,
   TableCell,
   Chip,
-} from '@nextui-org/react';
+} from '@heroui/react';
+import type { Key } from 'react';
 import moment from 'moment';
-import { Profile } from '@/context/UserContext';
-import { RestructedGameResult } from '../game/types';
+import { type Profile } from '@/context/UserContext';
+import { type RestructedGameResult } from '../game/types';
 
 export function GamesTable({ profile }: { profile: Profile }) {
-  const renderCells = (game: RestructedGameResult, columnKey: string) => {
-    const cellValue = game[columnKey];
+  const renderCells = (game: RestructedGameResult, columnKey: Key) => {
+    const cellValue = (game as Record<string, any>)[String(columnKey)];
     switch (columnKey) {
       case 'result':
         if (cellValue.winner) {
@@ -44,7 +45,7 @@ export function GamesTable({ profile }: { profile: Profile }) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M5 12h14M12 5l7 7-7 7"></path>
+                <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
 
               <User
@@ -55,7 +56,7 @@ export function GamesTable({ profile }: { profile: Profile }) {
                     : cellValue.looser.name
                 }
                 description={cellValue.looser.name}
-              ></User>
+              />
             </div>
           );
         }
@@ -106,7 +107,7 @@ export function GamesTable({ profile }: { profile: Profile }) {
           Winner - Looser
         </TableColumn>
       </TableHeader>
-      <TableBody items={profile.games} emptyContent={'No games played.'}>
+      <TableBody items={profile.games} emptyContent="No games played.">
         {(item: RestructedGameResult) => (
           <TableRow key={item.key}>
             {(columnKey) => (

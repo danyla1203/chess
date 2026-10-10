@@ -5,7 +5,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Button,
-} from '@nextui-org/react';
+} from '@heroui/react';
 
 type Content = { href: string; name: string; onclick?: () => void };
 interface DropdownProps {

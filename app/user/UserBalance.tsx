@@ -1,10 +1,10 @@
-import { Button, Chip } from '@nextui-org/react';
-import { Profile } from '../lib/context/UserContext';
+import { Button, Chip } from '@heroui/react';
+import { type Profile } from '../lib/context/UserContext';
 import { stripeCheckout } from '../lib/request/stripeCheckout';
 
 export function UserBalance({ profile }: { profile: Profile }) {
   const topUpRedirect = () => {
-    stripeCheckout()?.then(({ url }) => {
+    void stripeCheckout()?.then(({ url }) => {
       window.location.href = url;
     });
   };

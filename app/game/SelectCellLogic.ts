@@ -1,4 +1,4 @@
-import { PlainBoardState, Cell, Figure } from './types';
+import { type PlainBoardState, type Cell, type Figure } from './types';
 
 export class HighlightedCels {
   private Board!: PlainBoardState;

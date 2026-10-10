@@ -1,5 +1,5 @@
 import { Emit, Game, useWebSocket } from '@/context/SocketContext';
-import { Message } from '../types';
+import { type Message } from '../types';
 
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useConfigContext } from '.';
@@ -11,7 +11,7 @@ type Chat = {
 
 const ChatContext = createContext<Chat>({
   messages: [],
-  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   addMessage: (message: string) => {},
 });
 

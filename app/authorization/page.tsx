@@ -9,7 +9,7 @@ import {
   CardHeader,
   Divider,
   Link,
-} from '@nextui-org/react';
+} from '@heroui/react';
 
 export default function LoginPage() {
   return (

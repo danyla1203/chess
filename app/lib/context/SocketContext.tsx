@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { Button } from '@heroui/react';
+import { io, type Socket } from 'socket.io-client';
 import { getAnonymousGames } from '../utils';
 import { useUserState } from './UserContext';
 import { Loader } from '@/components';
@@ -57,33 +58,26 @@ export const useWebSocket = (): Socket => {
   return context;
 };
 
+const createSocket = (token: string | null) =>
+  io(`${process.env.NEXT_PUBLIC_WS_HOST}/game?Authorization=${token}`, {
+    transports: ['websocket'],
+    reconnectionAttempts: 5,
+  });
+
 export const WebSocketProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const { updateUser } = useUserState();
 
-  const authConnection = (accessToken: string) => {
-    return io(
-      `${process.env.NEXT_PUBLIC_WS_HOST}/game?Authorization=${accessToken}`,
-      {
-        transports: ['websocket'],
-        retries: 3,
-      },
-    );
-  };
+  const authConnection = (accessToken: string) => createSocket(accessToken);
 
   const anonConnection = () => {
     const anonToken = localStorage.getItem('anon-token');
-    const socket = io(
-      `${process.env.NEXT_PUBLIC_WS_HOST}/game?Authorization=${anonToken}`,
-      {
-        transports: ['websocket'],
-        retries: 3,
-      },
-    );
+    const socket = createSocket(anonToken);
     socket.on(User.anonymousToken, ({ tempToken, userId }) => {
       if (tempToken !== anonToken) {
         localStorage.removeItem('anon-games');
@@ -96,6 +90,7 @@ export const WebSocketProvider = ({
         invoices: [],
         winningBalance: 0,
         isAuthorized: false,
+        createdAt: '',
         ...gamesStats,
       });
       localStorage.setItem('anon-token', tempToken);
@@ -110,18 +105,50 @@ export const WebSocketProvider = ({
     if (!accessToken) newSocket = anonConnection();
     else newSocket = authConnection(accessToken);
 
+    const onConnect = () => setConnectionError(null);
+    const onConnectError = (err: Error) => {
+      console.error('WebSocket connection error:', err);
+      if (!newSocket.active) {
+        setConnectionError(err.message || 'Connection rejected by server');
+      }
+    };
+    const onReconnectFailed = () => {
+      setConnectionError('Unable to reach the game server');
+    };
+
+    newSocket.on('connect', onConnect);
+    newSocket.on('connect_error', onConnectError);
+    newSocket.io.on('reconnect_failed', onReconnectFailed);
+
     setSocket(newSocket);
     return () => {
+      newSocket.off('connect', onConnect);
+      newSocket.off('connect_error', onConnectError);
+      newSocket.io.off('reconnect_failed', onReconnectFailed);
       newSocket.disconnect();
     };
   }, []);
+
+  const retry = () => {
+    setConnectionError(null);
+    socket?.connect();
+  };
+
   if (!socket) {
     return <Loader />;
   }
 
-  socket.io.on('error', (e) => {
-    console.log(e);
-  });
+  if (connectionError) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-4 text-center">
+        <p className="text-lg font-semibold">Connection lost</p>
+        <p className="text-default-500">{connectionError}</p>
+        <Button color="primary" onPress={retry}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <WebSocketContext.Provider value={socket}>

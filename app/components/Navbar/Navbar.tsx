@@ -1,10 +1,12 @@
+'use client';
+
 import {
   Navbar,
   NavbarBrand,
   NavbarContent,
   NavbarItem,
   Link,
-} from '@nextui-org/react';
+} from '@heroui/react';
 
 import { Profile } from './Profile';
 import { PendingGame } from '..';

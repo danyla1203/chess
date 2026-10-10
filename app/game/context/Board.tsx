@@ -1,12 +1,12 @@
 import { Emit, Game, useWebSocket } from '@/context/SocketContext';
 import {
-  Figure,
-  Cell,
-  Move,
-  PlainBoardState,
-  StrikeData,
-  ShahData,
-  MateData,
+  type Figure,
+  type Cell,
+  type Move,
+  type PlainBoardState,
+  type StrikeData,
+  type ShahData,
+  type MateData,
 } from '../types';
 
 import { useState, useEffect, createContext, useContext } from 'react';
@@ -24,7 +24,7 @@ const BoardContext = createContext<Board>({
     w: {},
     b: {},
   },
-  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+
   moveFigure: (_figure: Figure, _cell: Cell) => {},
   shahData: null,
   mateData: null,

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUserState } from '@/context/UserContext';
 import { userLogin, getProfile } from '@/requests';
 import { useNotification } from '@/context/NotificationContext';
-import { Button, Input, Spacer } from '@nextui-org/react';
+import { Button, Input, Spacer } from '@heroui/react';
 
 export function LoginForm() {
   const [emailOrName, setEmailOrName] = useState('');

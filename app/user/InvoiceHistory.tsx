@@ -6,13 +6,14 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-} from '@nextui-org/react';
+} from '@heroui/react';
+import type { Key } from 'react';
 import moment from 'moment';
-import { Invoice, Profile } from '../lib/context/UserContext';
+import { type Invoice, type Profile } from '../lib/context/UserContext';
 
 export default function InvoiceHistory({ profile }: { profile: Profile }) {
-  const renderCells = (invoice: Invoice, columnKey: any) => {
-    const cellValue = invoice[columnKey];
+  const renderCells = (invoice: Invoice, columnKey: Key) => {
+    const cellValue = (invoice as Record<string, any>)[String(columnKey)];
     switch (columnKey) {
       case 'id':
         return <div className="flex justify-center">{cellValue}</div>;
@@ -45,7 +46,7 @@ export default function InvoiceHistory({ profile }: { profile: Profile }) {
           date
         </TableColumn>
       </TableHeader>
-      <TableBody items={profile.invoices} emptyContent={'No invoices.'}>
+      <TableBody items={profile.invoices} emptyContent="No invoices.">
         {(item: Invoice) => (
           <TableRow key={item.key}>
             {(columnKey) => (

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { codeConfirm } from '@/requests';
 import { useNotification } from '@/context/NotificationContext';
-import { Button, Input } from '@nextui-org/react';
+import { Button, Input } from '@heroui/react';
 
 export function ConfirmCodeInput() {
   const [code, setCode] = useState('');
@@ -32,7 +32,7 @@ export function ConfirmCodeInput() {
         Confirm email address
       </Button>
       <div className="flex justify-center items-center">
-        <span className="w-full border border-black"></span>
+        <span className="w-full border border-black" />
       </div>
     </div>
   );

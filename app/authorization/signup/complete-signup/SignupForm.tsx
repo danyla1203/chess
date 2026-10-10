@@ -13,7 +13,7 @@ import {
   CardHeader,
   Chip,
   Input,
-} from '@nextui-org/react';
+} from '@heroui/react';
 
 export function SignupForm() {
   const [userName, setName] = useState('');

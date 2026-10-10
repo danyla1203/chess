@@ -7,7 +7,7 @@ import { NotificationProvider } from '@/context/NotificationContext';
 import { GameListProvider } from '@/context/GameListContext';
 
 import './globals.css';
-import { NextuiProviders } from './nextui.provider';
+import { HeroUIProviders } from './heroui.provider';
 
 export default async function RootLayout({
   children,
@@ -15,9 +15,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html>
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <NextuiProviders>
+        <HeroUIProviders>
           <UserProvider>
             <WebSocketProvider>
               <NotificationProvider>
@@ -29,7 +29,7 @@ export default async function RootLayout({
               </NotificationProvider>
             </WebSocketProvider>
           </UserProvider>
-        </NextuiProviders>
+        </HeroUIProviders>
       </body>
     </html>
   );

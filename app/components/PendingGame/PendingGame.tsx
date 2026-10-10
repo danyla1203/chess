@@ -1,7 +1,7 @@
 'use client';
 
 import { useGameList } from '@/context/GameListContext';
-import { Button, Spinner } from '@nextui-org/react';
+import { Button, Spinner } from '@heroui/react';
 
 export function PendingGame() {
   const { pendingGame, rejoin, leave } = useGameList();
@@ -22,8 +22,8 @@ export function PendingGame() {
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
       </svg>
     </Button>
   );

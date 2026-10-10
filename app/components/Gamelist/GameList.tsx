@@ -1,31 +1,30 @@
 'use client';
 
+import type { Key } from 'react';
 import {
   Divider,
   Table,
   TableHeader,
   TableColumn,
   TableBody,
-  getKeyValue,
   TableRow,
   TableCell,
-} from '@nextui-org/react';
-import { GameData, useGameList } from '@/context/GameListContext';
+} from '@heroui/react';
+import { type GameData, useGameList } from '@/context/GameListContext';
 
 export function GameList() {
   const { connect, games } = useGameList();
 
-  const renderCells = (game: GameData, columnKey) => {
-    const cellValue = game[columnKey];
+  const renderCells = (game: GameData, columnKey: Key) => {
     switch (columnKey) {
       case 'cnf':
         return (
           <div>
-            {cellValue.time}-{cellValue.inc}
+            {game.cnf.time}-{game.cnf.inc}
           </div>
         );
       default:
-        return cellValue;
+        return game[columnKey as Exclude<keyof GameData, 'cnf'>];
     }
   };
 
@@ -42,7 +41,7 @@ export function GameList() {
         <TableColumn key="cnf">Max time - Time increment</TableColumn>
         <TableColumn key="sidepick">Side picking</TableColumn>
       </TableHeader>
-      <TableBody items={games} emptyContent={'No games in lobby.'}>
+      <TableBody items={games} emptyContent="No games in lobby.">
         {(item) => (
           <TableRow onClick={() => connect(item.id)} key={item.key}>
             {(columnKey) => (

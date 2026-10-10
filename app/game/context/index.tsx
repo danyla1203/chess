@@ -1,7 +1,11 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 
 import { useWebSocket, Game, Emit } from '@/context/SocketContext';
-import { DrawGame, GameWithWinner, InitedGameData } from '../types';
+import {
+  type DrawGame,
+  type GameWithWinner,
+  type InitedGameData,
+} from '../types';
 import { useSearchParams } from 'next/navigation';
 import { TimerProvider } from './Timer';
 import { BoardProvider } from './Board';

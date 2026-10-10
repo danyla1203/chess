@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useNotification } from '@/context/NotificationContext';
 import { emailVerification } from '@/requests';
-import { Button, Divider, Input } from '@nextui-org/react';
+import { Button, Divider, Input } from '@heroui/react';
 import { GoogleIcon } from '@/app/components/icons/Google';
 
 export function EmailInput() {

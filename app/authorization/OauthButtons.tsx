@@ -1,5 +1,5 @@
 import { getGooguleOauthLink } from '@/requests';
-import { Button, ButtonGroup } from '@nextui-org/react';
+import { Button, ButtonGroup } from '@heroui/react';
 import { GoogleIcon, GithubIcon } from '@/components';
 
 export function OauthButtons() {

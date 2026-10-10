@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Input, Card, CardBody, Button } from '@nextui-org/react';
+import { Input, Card, CardBody, Button } from '@heroui/react';
 import { useChat } from './context/Chat';
-import { Message } from './types';
+import { type Message } from './types';
 
 function InputBox({ addMessage }: { addMessage: (text: string) => void }) {
   const [val, setVal] = useState<string>('');

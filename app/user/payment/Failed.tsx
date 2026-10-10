@@ -1,4 +1,4 @@
-import { Button, Link } from '@nextui-org/react';
+import { Button, Link } from '@heroui/react';
 
 export function Failed() {
   return (
@@ -19,7 +19,7 @@ export function Failed() {
           x2="73.7071"
           y2="74.2929"
           stroke="#FF0000"
-          stroke-width="2"
+          strokeWidth="2"
         />
         <line
           x1="23.2929"
@@ -27,7 +27,7 @@ export function Failed() {
           x2="72.2929"
           y2="24.2929"
           stroke="#FF0000"
-          stroke-width="2"
+          strokeWidth="2"
         />
       </svg>
 

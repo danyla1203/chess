@@ -7,9 +7,9 @@ import {
   Divider,
   ButtonGroup,
   Button,
-} from '@nextui-org/react';
+  Slider,
+} from '@heroui/react';
 import { Emit, useWebSocket } from '@/context/SocketContext';
-import { Slider } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useUserState } from '@/app/lib/context/UserContext';
@@ -52,7 +52,7 @@ export function CreateGame() {
             aria-label="Max time"
             className="max-w-md"
             value={minutes}
-            onChange={setMinutes}
+            onChange={(value) => setMinutes(value as number)}
           />
           <Slider
             label="Time increment - seconds"
@@ -64,7 +64,7 @@ export function CreateGame() {
             aria-label="Time increment"
             className="max-w-md mt-5"
             value={timeAdd}
-            onChange={setTimeAdd}
+            onChange={(value) => setTimeAdd(value as number)}
           />
           <Slider
             label="Bet"
@@ -77,7 +77,7 @@ export function CreateGame() {
             className="max-w-md mt-5"
             value={bet}
             isDisabled={!profile?.isAuthorized}
-            onChange={setBet}
+            onChange={(value) => setBet(value as number)}
           />
         </CardBody>
         <Divider />

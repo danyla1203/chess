@@ -1,5 +1,10 @@
 import { CellItem } from './Cell';
-import { PlainBoardState, Cell, SelectedCell, ShahData } from './types';
+import {
+  type PlainBoardState,
+  type Cell,
+  type SelectedCell,
+  type ShahData,
+} from './types';
 
 const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 

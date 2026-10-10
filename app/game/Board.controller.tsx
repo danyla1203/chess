@@ -1,6 +1,6 @@
 'use client';
 
-import { Cell, Figure, SelectedCell } from './types';
+import { type Cell, type Figure, type SelectedCell } from './types';
 import { Board } from './Board';
 import { useBoard } from './context/Board';
 import { useConfigContext } from './context';

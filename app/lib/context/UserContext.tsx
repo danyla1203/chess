@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getProfile } from '@/requests';
-import { RestructedGameResult } from '@/app/game/types';
+import { type RestructedGameResult } from '@/app/game/types';
 import { Loader } from '@/app/components';
 
 export type Invoice = {
