@@ -42,6 +42,19 @@ spec:
             - everysec
             - --maxmemory-policy
             - noeviction
+            - --requirepass
+            - $(REDIS_PASSWORD)
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: password
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: password
           ports:
             - name: redis
               containerPort: 6379

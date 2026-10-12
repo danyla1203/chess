@@ -10,7 +10,15 @@ spec:
       port: 80
       allowedRoutes:
         namespaces:
-          from: Same
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - chess
+                  - monitoring
+                  - kube-system
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

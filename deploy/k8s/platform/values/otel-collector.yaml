@@ -7,13 +7,14 @@ presets:
   kubernetesAttributes:
     enabled: true
 
+service:
+  enabled: true
+
 ports:
   otlp:
     enabled: true
-    hostPort: 4317
   otlp-http:
     enabled: true
-    hostPort: 4318
 
 config:
   processors:

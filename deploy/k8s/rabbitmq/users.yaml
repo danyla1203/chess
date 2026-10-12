@@ -4,6 +4,8 @@ metadata:
   name: core
   namespace: chess
 spec:
+  importCredentialsSecret:
+    name: core-user-credentials
   rabbitmqClusterReference:
     name: rabbitmq
 ---
@@ -20,7 +22,7 @@ spec:
     name: rabbitmq
   permissions:
     configure: '^(game\.(lifecycle|commands|notifications)|chess\.(dlx|dead-letter)|core\.game-ended|game-svc\.commands|ws\.notifications)$'
-    write: '^(game\.commands|core\.game-ended|game-svc\.commands|ws\.notifications|chess\.dead-letter)$'
+    write: '^(game\.commands|core\.game-ended|game-svc\.commands|ws\.notifications|chess\.(dlx|dead-letter))$'
     read: '^(game\.(lifecycle|commands|notifications)|chess\.(dlx|dead-letter)|core\.game-ended|game-svc\.commands|ws\.notifications)$'
 ---
 apiVersion: rabbitmq.com/v1beta1
@@ -29,6 +31,8 @@ metadata:
   name: game-svc
   namespace: chess
 spec:
+  importCredentialsSecret:
+    name: game-svc-user-credentials
   rabbitmqClusterReference:
     name: rabbitmq
 ---
@@ -45,5 +49,5 @@ spec:
     name: rabbitmq
   permissions:
     configure: '^(game\.(lifecycle|commands|notifications)|chess\.(dlx|dead-letter)|core\.game-ended|game-svc\.commands|ws\.notifications)$'
-    write: '^(amq\.default|game\.lifecycle|game\.notifications|core\.game-ended|game-svc\.commands|ws\.notifications|chess\.dead-letter)$'
+    write: '^(amq\.default|game\.lifecycle|game\.notifications|core\.game-ended|game-svc\.commands|ws\.notifications|chess\.(dlx|dead-letter))$'
     read: '^(game\.(lifecycle|commands|notifications)|chess\.(dlx|dead-letter)|core\.game-ended|game-svc\.commands|ws\.notifications)$'

@@ -1,0 +1,859 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Chess Backend: All Components",
+    "output": ".archify/architecture-chess-components-20261012-134957/chess-components.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/danyla1203/chess_backend.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "eed812e91a6202f512fcf4eb0a725cc29b3b0d67"
+    }
+  },
+  "components": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Browser client",
+      "sublabel": "REST + Socket.IO",
+      "pos": [
+        40,
+        180
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/main.ts",
+          "line": 9,
+          "end_line": 26
+        }
+      ]
+    },
+    {
+      "id": "notifier",
+      "type": "backend",
+      "label": "SocketNotifier",
+      "sublabel": "+ NotificationConsumer",
+      "tag": "core",
+      "pos": [
+        280,
+        320
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/gateway/socket.notifier.ts",
+          "line": 11,
+          "end_line": 62
+        },
+        {
+          "path": "src/gateway/notification.consumer.ts",
+          "line": 15,
+          "end_line": 35
+        },
+        {
+          "path": "src/tools/redis-io.adapter.ts",
+          "line": 20,
+          "end_line": 23,
+          "label": "Redis adapter"
+        }
+      ]
+    },
+    {
+      "id": "gateway",
+      "type": "backend",
+      "label": "GameGateway",
+      "sublabel": "+ GameClient \u00b7 JWT handshake",
+      "tag": "IsBalanceEnough",
+      "pos": [
+        280,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/gateway/game.gateway.ts",
+          "line": 86,
+          "end_line": 240
+        },
+        {
+          "path": "src/gateway/game.client.ts",
+          "line": 19,
+          "end_line": 32
+        },
+        {
+          "path": "src/gateway/connection.provider.ts",
+          "line": 7,
+          "end_line": 16
+        }
+      ]
+    },
+    {
+      "id": "notifq",
+      "type": "messagebus",
+      "label": "game.notifications",
+      "sublabel": "\u2192 ws.notifications",
+      "pos": [
+        520,
+        320
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/messaging/topology.ts",
+          "line": 75,
+          "end_line": 87
+        }
+      ]
+    },
+    {
+      "id": "cmdq",
+      "type": "messagebus",
+      "label": "game.commands",
+      "sublabel": "\u2192 game-svc.commands",
+      "tag": "14 commands",
+      "pos": [
+        520,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/game/game.contract.ts",
+          "line": 32,
+          "end_line": 59
+        },
+        {
+          "path": "src/messaging/rabbitmq.service.ts",
+          "line": 232,
+          "end_line": 269
+        },
+        {
+          "path": "src/messaging/topology.ts",
+          "line": 61,
+          "end_line": 73
+        }
+      ]
+    },
+    {
+      "id": "amqpnotifier",
+      "type": "backend",
+      "label": "AmqpGameNotifier",
+      "sublabel": "timeTick \u00b7 gameEnd",
+      "pos": [
+        760,
+        320
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/game-service/amqp.notifier.ts",
+          "line": 17,
+          "end_line": 56
+        }
+      ]
+    },
+    {
+      "id": "handler",
+      "type": "backend",
+      "label": "GameCommandHandler",
+      "sublabel": "routes by type",
+      "tag": "requirePlayer",
+      "pos": [
+        760,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/game-service/game.commands.ts",
+          "line": 32,
+          "end_line": 115
+        }
+      ]
+    },
+    {
+      "id": "service",
+      "type": "backend",
+      "label": "GameService",
+      "sublabel": "create \u00b7 join \u00b7 move \u00b7 draw",
+      "pos": [
+        1000,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/game/game.service.ts",
+          "line": 33,
+          "end_line": 60
+        },
+        {
+          "path": "src/game/game.service.ts",
+          "line": 215,
+          "end_line": 249,
+          "label": "makeTurn, endByTimeout"
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "type": "backend",
+      "label": "GameClock",
+      "sublabel": "1 s loop \u00b7 leader lock",
+      "pos": [
+        1000,
+        460
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/game/game.clock.ts",
+          "line": 45,
+          "end_line": 128
+        }
+      ]
+    },
+    {
+      "id": "events",
+      "type": "backend",
+      "label": "game.events",
+      "sublabel": "GameEndedEvent builder",
+      "pos": [
+        1240,
+        40
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/game/game.events.ts",
+          "line": 6,
+          "end_line": 32
+        }
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "backend",
+      "label": "GameRepository",
+      "sublabel": "optimistic CAS \u00b7 retry \u00d710",
+      "pos": [
+        1240,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/game/game.repository.ts",
+          "line": 93,
+          "end_line": 116
+        },
+        {
+          "path": "src/game/game.repository.ts",
+          "line": 13,
+          "end_line": 43,
+          "label": "Lua save"
+        }
+      ]
+    },
+    {
+      "id": "game",
+      "type": "backend",
+      "label": "Game aggregate",
+      "sublabel": "players \u00b7 clocks \u00b7 chat",
+      "tag": "+ GameAdapter DTOs",
+      "pos": [
+        1240,
+        320
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/game/entities/game/game.ts",
+          "line": 18,
+          "end_line": 225
+        },
+        {
+          "path": "src/game/entities/game/game.adapter.ts",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "process",
+      "type": "backend",
+      "label": "GameProcess",
+      "sublabel": "rules \u00b7 check \u00b7 mate",
+      "tag": "GameState",
+      "pos": [
+        1240,
+        460
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/game/entities/game/process/game.process.ts",
+          "line": 14
+        },
+        {
+          "path": "src/game/entities/game/process/game.state.ts",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "database",
+      "label": "Redis {chess}",
+      "sublabel": "games \u00b7 indexes \u00b7 outbox",
+      "tag": "AOF",
+      "pos": [
+        1480,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/game/game.repository.ts",
+          "line": 13,
+          "end_line": 43
+        }
+      ]
+    },
+    {
+      "id": "relay",
+      "type": "backend",
+      "label": "OutboxRelay",
+      "sublabel": "game-svc \u00b7 confirms",
+      "pos": [
+        1480,
+        320
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/messaging/outbox.relay.ts",
+          "line": 119,
+          "end_line": 167
+        }
+      ]
+    },
+    {
+      "id": "lifeq",
+      "type": "messagebus",
+      "label": "game.lifecycle",
+      "sublabel": "\u2192 core.game-ended",
+      "pos": [
+        1480,
+        460
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/messaging/topology.ts",
+          "line": 47,
+          "end_line": 59
+        },
+        {
+          "path": "src/messaging/contracts.ts",
+          "line": 12,
+          "end_line": 26
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "type": "backend",
+      "label": "GameHistoryConsumer",
+      "sublabel": "core \u00b7 dedupe matchId",
+      "pos": [
+        1480,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/game-history/game-history.consumer.ts",
+          "line": 18,
+          "end_line": 40
+        },
+        {
+          "path": "src/game-history/game-history.model.ts",
+          "line": 18,
+          "end_line": 57
+        }
+      ]
+    },
+    {
+      "id": "rest",
+      "type": "security",
+      "label": "REST controllers",
+      "sublabel": "AuthGuard (JWT + session)",
+      "pos": [
+        280,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/auth/tokens/jwt.guard.ts",
+          "line": 11,
+          "end_line": 15
+        },
+        {
+          "path": "src/auth/auth.controller.ts",
+          "line": 22,
+          "end_line": 24
+        },
+        {
+          "path": "src/user/user.controller.ts",
+          "line": 15,
+          "end_line": 18
+        }
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "backend",
+      "label": "AuthService",
+      "sublabel": "AuthModel \u00b7 TokenService",
+      "tag": "Google OAuth",
+      "pos": [
+        40,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/auth/auth.service.ts",
+          "line": 16,
+          "end_line": 130
+        },
+        {
+          "path": "src/auth/tokens/token.service.ts",
+          "line": 8,
+          "end_line": 30
+        }
+      ]
+    },
+    {
+      "id": "payments",
+      "type": "backend",
+      "label": "PaymentsService",
+      "sublabel": "checkout \u00b7 webhook",
+      "pos": [
+        520,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/payments/payments.service.ts",
+          "line": 8,
+          "end_line": 58
+        },
+        {
+          "path": "src/payments/payments.controller.ts",
+          "line": 13,
+          "end_line": 15
+        }
+      ]
+    },
+    {
+      "id": "stripe",
+      "type": "external",
+      "label": "Stripe",
+      "sublabel": "StripeService (lazy)",
+      "pos": [
+        760,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/payments/stripe/stripe.service.ts",
+          "line": 22,
+          "end_line": 53
+        }
+      ]
+    },
+    {
+      "id": "user",
+      "type": "backend",
+      "label": "UserService",
+      "sublabel": "UserModel \u00b7 Redis cache",
+      "pos": [
+        520,
+        740
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/user/user.service.ts",
+          "line": 9,
+          "end_line": 95
+        },
+        {
+          "path": "src/user/model.ts",
+          "line": 8,
+          "end_line": 43
+        }
+      ]
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "PostgreSQL (Prisma 7)",
+      "sublabel": "User \u00b7 Auth \u00b7 Confirmation \u00b7 Payment \u00b7 Game \u00b7 UserInGame",
+      "pos": [
+        40,
+        880
+      ],
+      "size": [
+        1600,
+        60
+      ],
+      "sources": [
+        {
+          "path": "src/prisma.service.ts",
+          "line": 6
+        },
+        {
+          "path": "prisma/schema.prisma",
+          "line": 1
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "RabbitMQ",
+      "wraps": [
+        "notifq",
+        "cmdq"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "game-svc process",
+      "wraps": [
+        "amqpnotifier",
+        "handler",
+        "service",
+        "clock",
+        "events",
+        "repo",
+        "game",
+        "process"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "core \u00b7 REST modules",
+      "wraps": [
+        "rest",
+        "auth",
+        "payments",
+        "user"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c-client-gw",
+      "from": "client",
+      "to": "gateway",
+      "label": "WS emit",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-gw-cmdq",
+      "from": "gateway",
+      "to": "cmdq",
+      "label": "RPC",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-cmdq-handler",
+      "from": "cmdq",
+      "to": "handler",
+      "label": "serve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-handler-service",
+      "from": "handler",
+      "to": "service",
+      "label": "call",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-service-repo",
+      "from": "service",
+      "to": "repo",
+      "label": "update()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-repo-redis",
+      "from": "repo",
+      "to": "redis",
+      "label": "Lua CAS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-repo-game",
+      "from": "repo",
+      "to": "game",
+      "label": "fromSnapshot"
+    },
+    {
+      "id": "c-service-game",
+      "from": "service",
+      "to": "game",
+      "label": "mutate"
+    },
+    {
+      "id": "c-game-process",
+      "from": "game",
+      "to": "process",
+      "label": "makeTurn"
+    },
+    {
+      "id": "c-repo-events",
+      "from": "repo",
+      "to": "events",
+      "label": "on ended"
+    },
+    {
+      "id": "c-service-notifier",
+      "from": "service",
+      "to": "amqpnotifier",
+      "label": "gameEnd",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-clock-service",
+      "from": "clock",
+      "to": "service",
+      "label": "endByTimeout"
+    },
+    {
+      "id": "c-clock-notifier",
+      "from": "clock",
+      "to": "amqpnotifier",
+      "label": "timeTick",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-amqp-notifq",
+      "from": "amqpnotifier",
+      "to": "notifq",
+      "label": "publish",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-notifq-notifier",
+      "from": "notifq",
+      "to": "notifier",
+      "label": "consume",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-gw-notifier",
+      "from": "gateway",
+      "to": "notifier",
+      "label": "reply \u2192 emit"
+    },
+    {
+      "id": "c-notifier-client",
+      "from": "notifier",
+      "to": "client",
+      "label": "game:*",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-relay-redis",
+      "from": "relay",
+      "to": "redis",
+      "label": "XREADGROUP"
+    },
+    {
+      "id": "c-relay-lifeq",
+      "from": "relay",
+      "to": "lifeq",
+      "label": "game.v1.ended"
+    },
+    {
+      "id": "c-lifeq-history",
+      "from": "lifeq",
+      "to": "history",
+      "label": "consume"
+    },
+    {
+      "id": "c-history-pg",
+      "from": "history",
+      "to": "pg",
+      "label": "serializable tx"
+    },
+    {
+      "id": "c-client-rest",
+      "from": "client",
+      "to": "rest",
+      "label": "HTTPS"
+    },
+    {
+      "id": "c-rest-auth",
+      "from": "rest",
+      "to": "auth",
+      "label": "/auth"
+    },
+    {
+      "id": "c-rest-payments",
+      "from": "rest",
+      "to": "payments",
+      "label": "/payments"
+    },
+    {
+      "id": "c-rest-user",
+      "from": "rest",
+      "to": "user",
+      "label": "/user"
+    },
+    {
+      "id": "c-payments-user",
+      "from": "payments",
+      "to": "user",
+      "label": "topUp"
+    },
+    {
+      "id": "c-payments-stripe",
+      "from": "payments",
+      "to": "stripe",
+      "label": "checkout"
+    },
+    {
+      "id": "c-auth-pg",
+      "from": "auth",
+      "to": "pg",
+      "label": "sessions"
+    },
+    {
+      "id": "c-user-pg",
+      "from": "user",
+      "to": "pg",
+      "label": "profile"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "After a command reaches game-svc",
+      "items": [
+        "GameCommandHandler maps the AMQP type to a GameService method; in-game commands first check the caller is a player",
+        "GameService calls GameRepository.update(id, mutate): load snapshot \u2192 Game.fromSnapshot \u2192 mutate \u2192 Lua CAS save, retried on version conflict",
+        "Mutations run on the Game aggregate; moves go through GameProcess (validation, check, mate)",
+        "GameAdapter turns the Game into DTOs; the reply goes back to core over direct reply-to",
+        "core GameGateway emits the result to user:/game: rooms via SocketNotifier"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Async side effects",
+      "items": [
+        "active \u2192 ended: the same Lua save XADDs a GameEndedEvent to {chess}:outbox",
+        "OutboxRelay publishes it to game.lifecycle; GameHistoryConsumer saves it to Postgres if both players are authorized",
+        "GameClock (leader only) emits timeTick every 1 s and ends timed-out games via endByTimeout"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "core business relations",
+      "items": [
+        "UserService.create \u2192 AuthService.createSession on signup",
+        "Stripe webhook \u2192 PaymentsService \u2192 UserService.topUpBalance",
+        "Socket handshake: ConnectionPatchProvider \u2192 TokenService / AuthService",
+        "IsBalanceEnough guard \u2192 BalanceModel \u2192 Postgres user balance"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Shared infrastructure",
+      "items": [
+        "Redis in core: Socket.IO adapter, HTTP cache (Keyv)",
+        "RabbitMQService: confirmed publish, retry with backoff, 5 attempts then chess.dlx",
+        "OTel SDK (traces, metrics, logs), winston logger, /health/live + /health/ready"
+      ]
+    }
+  ]
+}

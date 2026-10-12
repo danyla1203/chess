@@ -4,7 +4,7 @@ metadata:
   name: postgres
   namespace: chess
 spec:
-  instances: 3
+  instances: 1
   primaryUpdateStrategy: unsupervised
   storage:
     size: 10Gi
@@ -12,6 +12,8 @@ spec:
     initdb:
       database: chess
       owner: chess
+      secret:
+        name: postgres-app
   postgresql:
     parameters:
       max_connections: '200'

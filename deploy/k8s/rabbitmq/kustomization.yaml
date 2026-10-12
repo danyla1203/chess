@@ -5,3 +5,4 @@ resources:
   - rabbitmq-cluster.yaml
   - podmonitor.yaml
   - users.yaml
+  - topology-rbac.yaml

@@ -20,7 +20,7 @@ metadata:
     app.kubernetes.io/name: core
     app.kubernetes.io/part-of: chess
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: core
@@ -71,20 +71,21 @@ spec:
                 secretKeyRef:
                   name: postgres-app
                   key: uri
-            - name: HOST_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://$(HOST_IP):4318
+              value: http://otel-collector-opentelemetry-collector.monitoring:4318
             - name: OTEL_SERVICE_NAME
               value: chess-core
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: service.namespace=chess,k8s.pod.name=$(POD_NAME)
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: uri
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
@@ -147,8 +148,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: core
-  minReplicas: 2
-  maxReplicas: 6
+  minReplicas: 1
+  maxReplicas: 1
   metrics:
     - type: Resource
       resource:
