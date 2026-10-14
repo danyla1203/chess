@@ -82,7 +82,7 @@ describeBroker('core <-> game-svc over a real RabbitMQ (integration)', () => {
     const repo = new GameRepository(redis);
     const notifier = new AmqpGameNotifier(service, logger);
     const games = new GameService(repo, metrics, notifier, new GameAdapter());
-    const clock = new GameClock(redis, repo, games, notifier, logger, metrics);
+    const clock = new GameClock(redis, repo, games, logger, metrics);
     stoppers.push(() => clock.onApplicationShutdown());
     new GameCommandHandler(
       service,

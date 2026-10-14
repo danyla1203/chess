@@ -4,6 +4,14 @@ NestJS 12 API + Socket.IO game server for an online chess app, deployed as two p
 
 See [MAP.md](MAP.md) for the module layout, REST routes, WebSocket events and data model.
 
+## Purpose and review stance
+
+This is an **educational** pet project; the owner is studying system design and DevOps.
+
+- Criticize solutions, existing and proposed: pros, cons, why it is necessary, why not.
+- Always give alternatives (other patterns, tools, trade-offs) so other ways to solve the same task stay in view.
+- Evaluate everything as if the system serves thousands of concurrent players, thousands of open connections and thousands of I/O operations per second: think about throughput, latency, contention, hot keys, fan-out, backpressure, failure modes and horizontal scaling.
+
 ## Commands
 
 ```bash

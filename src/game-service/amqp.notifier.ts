@@ -9,9 +9,6 @@ import { LoggerService } from '../tools/logger';
 import { GameNotifier } from '../game/game.notifier';
 import type { GameNotification } from '../game/game.contract';
 import type { GameEnd } from '../game/EmitTypes';
-import type { TimeUpdate } from '../game/dto';
-
-const TICK_TTL_MS = 2000;
 
 @Injectable()
 export class AmqpGameNotifier extends GameNotifier {
@@ -40,10 +37,6 @@ export class AmqpGameNotifier extends GameNotifier {
           AmqpGameNotifier.name,
         ),
       );
-  }
-
-  timeTick(gameId: number, times: TimeUpdate): void {
-    this.send({ kind: 'timeTick', gameId, times }, false, TICK_TTL_MS);
   }
 
   gameEnd(

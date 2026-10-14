@@ -21,7 +21,6 @@ export enum Game {
   draw = 'game:draw',
   rejectDraw = 'game:draw_rejected',
   addTime = 'game:add-time',
-  timeTick = 'game:time',
   strike = 'game:strike',
   boardUpdate = 'game:board-update',
   message = 'game:chat-message',

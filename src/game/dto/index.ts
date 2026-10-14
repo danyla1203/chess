@@ -4,6 +4,6 @@ export * from './Turn';
 export * from './MoveResult';
 export * from './ChatMessage';
 export * from './PlainBoardState';
-export * from './TimeUpdate';
+export * from './ClockState';
 export * from './DrawAgreement';
 export * from './InitedGameData';

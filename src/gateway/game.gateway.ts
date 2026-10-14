@@ -175,10 +175,14 @@ export class GameGateway
       'chess.game.id': turn.gameId,
       'enduser.id': client.userId,
     });
-    const { result, prevCell, side } = await this.games.move(client, turn);
+    const { result, prevCell, side, clock } = await this.games.move(
+      client,
+      turn,
+    );
     this.notifier.toGame(turn.gameId, Game.boardUpdate, {
       effect: result,
       update: { figure: turn.figure, cell: turn.cell, prevCell, side },
+      clock,
     });
   }
 

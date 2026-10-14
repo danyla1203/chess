@@ -252,8 +252,9 @@ describe('GameService (unit)', () => {
   describe('misc', () => {
     it('addTimeToAnotherPlayer should add increment to the opponent', async () => {
       const game = await startGame();
-      const times = await service.addTimeToAnotherPlayer(game.id, cl1);
-      expect(times.b).toBe(game.config.time + game.config.timeIncrement);
+      const clock = await service.addTimeToAnotherPlayer(game.id, cl1);
+      expect(clock.b).toBe(game.config.time + game.config.timeIncrement);
+      expect(clock.running).toBe('w');
     });
     it('pushMessage should store chat messages', async () => {
       const game = await startGame();

@@ -64,7 +64,7 @@ describe('core <-> game-svc over RabbitMQ (integration, Redis + fake broker)', (
     const repo = new GameRepository(redis);
     const notifier = new AmqpGameNotifier(gameSvcRabbit, logger);
     const service = new GameService(repo, metrics, notifier, new GameAdapter());
-    clock = new GameClock(redis, repo, service, notifier, logger, metrics);
+    clock = new GameClock(redis, repo, service, logger, metrics);
     new GameCommandHandler(
       gameSvcRabbit,
       service,
@@ -127,7 +127,11 @@ describe('core <-> game-svc over RabbitMQ (integration, Redis + fake broker)', (
       figure: 'pawn4',
       cell: 'd4',
     });
-    expect(move).toMatchObject({ prevCell: 'd2', side: 'w' });
+    expect(move).toMatchObject({
+      prevCell: 'd2',
+      side: 'w',
+      clock: { running: 'b' },
+    });
 
     await expect(
       games.move(white, { gameId: id, figure: 'pawn5', cell: 'e4' }),
@@ -150,19 +154,6 @@ describe('core <-> game-svc over RabbitMQ (integration, Redis + fake broker)', (
     expect(result.winner).toStrictEqual({ userId: 2 });
     expect(result.gameDto.id).toBe(id);
     expect(await redis.xlen(RedisKeys.outbox)).toBe(1);
-  });
-
-  it('should deliver clock ticks from game-svc to sockets in core', async () => {
-    const { id } = await startGame();
-    await clock.tick();
-    await waitFor(() =>
-      emitted.some((e) => e.event === (GameEvent.timeTick as string)),
-    );
-    const tick = emitted.find(
-      (e) => e.event === (GameEvent.timeTick as string),
-    );
-    expect(tick.rooms).toStrictEqual([`game:${id}`]);
-    expect(tick.payload).toHaveProperty('w');
   });
 
   it('should notify both players in core when game-svc ends a game on time', async () => {

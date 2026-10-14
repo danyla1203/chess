@@ -92,6 +92,25 @@ describe('Game entity (unit)', () => {
       expect(g.turnStartedAt).toBe(2000);
       expect(g.deadline()).toBe(2000 + g.config.time);
     });
+    it('should anchor clock state on the running side', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      expect(g.clockState(1500)).toStrictEqual({
+        w: g.config.time - 1500,
+        b: g.config.time,
+        running: 'w',
+        serverNow: 1500,
+      });
+    });
+    it('should stop the clock state once the game is over', () => {
+      const g = startedGame(generateConfig('w', 0), 0);
+      g.endGameByDraw(500);
+      expect(g.clockState(900)).toStrictEqual({
+        w: g.config.time - 500,
+        b: g.config.time,
+        running: null,
+        serverNow: 900,
+      });
+    });
     it('should report time over once the active clock reaches zero', () => {
       const g = startedGame(generateConfig('w', 0), 0);
       expect(g.isTimeOver(g.config.time - 1)).toBe(false);

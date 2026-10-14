@@ -24,7 +24,6 @@ describe('GameClock (integration, Redis)', () => {
       redis,
       repo,
       service,
-      notifier as unknown as GameNotifier,
       logger,
       fakeMetrics() as unknown as GameMetrics,
     );
@@ -76,14 +75,12 @@ describe('GameClock (integration, Redis)', () => {
     await b.onApplicationShutdown();
   });
 
-  it('should broadcast remaining time for active games', async () => {
+  it('should leave games before their deadline untouched', async () => {
     const game = await startGame();
     const leader = clock();
     await leader.tick(game.turnStartedAt + 1500);
-    expect(notifier.timeTick).toHaveBeenCalledWith(game.id, {
-      w: game.config.time - 1500,
-      b: game.config.time,
-    });
+    expect((await repo.get(game.id)).isActive).toBe(true);
+    expect(notifier.gameEnd).not.toHaveBeenCalled();
     await leader.onApplicationShutdown();
   });
 
@@ -100,7 +97,6 @@ describe('GameClock (integration, Redis)', () => {
     expect(stored.winner.side).toBe('b');
     expect(notifier.gameEnd).toHaveBeenCalledTimes(2);
     expect(await redis.xlen(RedisKeys.outbox)).toBe(1);
-    expect(notifier.timeTick).not.toHaveBeenCalled();
     await leader.onApplicationShutdown();
   });
 

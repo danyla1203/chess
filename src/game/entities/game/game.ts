@@ -1,6 +1,6 @@
 import { ConflictException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { CompletedMove } from '../../dto';
+import { ClockState, CompletedMove } from '../../dto';
 import { GameEnd } from '../../EmitTypes';
 import { GameProcess } from './process/game.process';
 import { Client } from '../Client';
@@ -92,6 +92,14 @@ export class Game {
       result[pl.side] = Math.max(0, this.remainingTime(pl, now));
     }
     return result;
+  }
+
+  public clockState(now = Date.now()): ClockState {
+    return {
+      ...this.times(now),
+      running: this.isActive ? (this.activePlayer()?.side ?? null) : null,
+      serverNow: now,
+    };
   }
 
   public deadline(): number | null {

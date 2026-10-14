@@ -44,8 +44,8 @@ src/
 │   ├── game.contract.ts       command request/response types and notification union shared by core and game-svc
 │   ├── game.service.ts        create/join/move/draw/surrender/leave/timeout on top of GameRepository
 │   ├── game.repository.ts     Redis game store: versioned snapshot per game, Lua compare-and-set save that also updates indexes and writes the outbox
-│   ├── game.notifier.ts       abstract GameNotifier (timeTick, gameEnd)
-│   ├── game.clock.ts          leader-elected (Redis lock) 1 s loop: `game:time` ticks and timeouts from the deadline index
+│   ├── game.notifier.ts       abstract GameNotifier (gameEnd)
+│   ├── game.clock.ts          leader-elected (Redis lock) 1 s loop: ends timed-out games from the deadline index; no per-second ticks
 │   ├── game.events.ts         Game -> GameEndedEvent / outbox message
 │   ├── game.metrics.ts        OTel metrics: moves, move latency, games created/ended, bet volume, active/lobby, clock leader
 │   ├── EmitTypes.ts           server -> client event names (shared contract with frontend)
@@ -127,7 +127,9 @@ Client → server (`@SubscribeMessage`):
 | `draw_propose` / `draw_accept` / `draw_reject` | `{gameId}`                                                       | IsPlayer        | `game:draw_propose` / `game:end` (`draw`) / `game:draw_rejected`                                      |
 | `add_time`                                     | `{gameId}`                                                       | IsPlayer        | adds `timeIncrement` to the opponent; `game:add-time`                                                 |
 
-Server → client (from `EmitTypes.ts`): `lobby:update`, `user:anon-token`, `game:pending-one`, `game:created`, `game:init-data`, `game:start`, `game:time` (every 1 s), `game:board-update`, `game:chat-message`, `game:draw_propose`, `game:draw_rejected`, `game:add-time`, `game:end`, `game:opponent-disconnected`, `game:player-reconnected`. Rooms: `game:<id>` (both players) and `user:<id>` (every socket of a user, joined on connect). `game:time` comes from the clock leader, whichever instance holds `{chess}:clock:leader`.
+Server → client (from `EmitTypes.ts`): `lobby:update`, `user:anon-token`, `game:pending-one`, `game:created`, `game:init-data`, `game:start`, `game:board-update`, `game:chat-message`, `game:draw_propose`, `game:draw_rejected`, `game:add-time`, `game:end`, `game:opponent-disconnected`, `game:player-reconnected`. Rooms: `game:<id>` (both players) and `user:<id>` (every socket of a user, joined on connect).
+
+Clocks run on the client. `game:init-data`, `game:board-update` and `game:add-time` carry `clock: {w, b, running, serverNow}` (remaining ms at `serverNow`, `running` = side to move or `null`). The client anchors on receipt with `performance.now()` and counts down locally; the server stays authoritative and ends games from `{chess}:deadlines`.
 
 ## Messaging (RabbitMQ)
 

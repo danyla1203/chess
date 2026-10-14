@@ -33,6 +33,7 @@ export class GameAdapter implements GameAdapterI {
       side: game.players.find((pl) => pl.userId === userId).side,
       maxTime: game.config.time,
       timeIncrement: game.config.timeIncrement,
+      clock: game.clockState(),
     };
   }
   public gameWithWinnerDto(game: Game): GameWithWinner {

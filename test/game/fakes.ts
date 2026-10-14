@@ -112,7 +112,6 @@ export const fakeNotifier = () => ({
   gameStart: jest.fn(),
   initData: jest.fn(),
   gameEnd: jest.fn(),
-  timeTick: jest.fn(),
   opponentDisconnected: jest.fn(),
 });
 

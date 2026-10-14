@@ -1,3 +1,4 @@
+import { ClockState } from './ClockState';
 import { PlainBoardState } from './PlainBoardState';
 
 export type InitedGameData = {
@@ -6,4 +7,5 @@ export type InitedGameData = {
   side: 'w' | 'b';
   maxTime: number;
   timeIncrement: number;
+  clock: ClockState;
 };

@@ -7,7 +7,7 @@ import {
 import {
   CreateGameDto,
   PlainBoardState,
-  TimeUpdate,
+  ClockState,
   DrawAgreement,
   TurnBody,
   CompletedMove,
@@ -204,12 +204,12 @@ export class GameService {
   public async addTimeToAnotherPlayer(
     gameId: number,
     player: Client,
-  ): Promise<TimeUpdate> {
+  ): Promise<ClockState> {
     const { game } = await this.repo.update(gameId, (g) => {
       this.requireActive(g);
       g.addTimeTo(g.opponentOf(player.userId), g.config.timeIncrement);
     });
-    return game.times();
+    return game.clockState();
   }
 
   public async makeTurn(
@@ -220,6 +220,7 @@ export class GameService {
     result: CompletedMove;
     prevCell: Cell;
     side: 'w' | 'b';
+    clock: ClockState;
   }> {
     const { game, result } = await this.repo.update(gameId, (g) => {
       const completedMove = g.makeTurn(userId, figure, cell);
@@ -229,7 +230,7 @@ export class GameService {
       return completedMove;
     });
     if (game.status === 'ended') this.ended(game);
-    return result;
+    return { ...result, clock: game.clockState() };
   }
 
   public async endByTimeout(gameId: number, now = Date.now()): Promise<void> {

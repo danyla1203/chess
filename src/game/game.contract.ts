@@ -1,9 +1,9 @@
 import type {
+  ClockState,
   CompletedMove,
   CreateGameDto,
   DrawAgreement,
   InitedGameData,
-  TimeUpdate,
   TurnBody,
 } from './dto';
 import type {
@@ -49,13 +49,18 @@ export type GameCommands = {
   surrender: Command<InGame, GameEndResult>;
   move: Command<
     { client: ClientIdentity; turn: TurnBody },
-    { result: CompletedMove; prevCell: string; side: 'w' | 'b' }
+    {
+      result: CompletedMove;
+      prevCell: string;
+      side: 'w' | 'b';
+      clock: ClockState;
+    }
   >;
   chat: Command<InGame & { text: string }, Message>;
   proposeDraw: Command<InGame, DrawAgreement>;
   acceptDraw: Command<InGame, DrawGame>;
   rejectDraw: Command<InGame, DrawAgreement>;
-  addTime: Command<InGame, TimeUpdate>;
+  addTime: Command<InGame, ClockState>;
 };
 
 export type GameCommandName = keyof GameCommands;
@@ -64,12 +69,10 @@ export type GameCommandRequest<K extends GameCommandName> =
 export type GameCommandResponse<K extends GameCommandName> =
   GameCommands[K]['res'];
 
-export type GameNotification =
-  | { kind: 'timeTick'; gameId: number; times: TimeUpdate }
-  | {
-      kind: 'gameEnd';
-      userId: number;
-      winner: boolean;
-      game: unknown;
-      reason: GameEnd;
-    };
+export type GameNotification = {
+  kind: 'gameEnd';
+  userId: number;
+  winner: boolean;
+  game: unknown;
+  reason: GameEnd;
+};

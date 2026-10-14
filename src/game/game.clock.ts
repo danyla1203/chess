@@ -12,7 +12,6 @@ import { REDIS, RedisKeys } from '../redis';
 import { LoggerService } from '../tools/logger';
 import { GameRepository } from './game.repository';
 import { GameService } from './game.service';
-import { GameNotifier } from './game.notifier';
 import { GameMetrics } from './game.metrics';
 
 const TICK_MS = 1000;
@@ -46,7 +45,6 @@ export class GameClock
     @Inject(REDIS) private readonly redis: Redis,
     private readonly repo: GameRepository,
     private readonly service: GameService,
-    private readonly notifier: GameNotifier,
     private readonly logger: LoggerService,
     metrics: GameMetrics,
   ) {
@@ -78,7 +76,6 @@ export class GameClock
       this.leader = await this.acquireLeadership();
       if (!this.leader) return;
       await this.expireDeadlines(now);
-      await this.broadcastTimes(now);
     } catch (err) {
       this.logger.error(
         `Clock tick failed: ${(err as Error).message}`,
@@ -119,13 +116,6 @@ export class GameClock
           span.end();
         }
       });
-    }
-  }
-
-  private async broadcastTimes(now: number): Promise<void> {
-    const games = await this.repo.loadMany(await this.repo.activeIds());
-    for (const game of games) {
-      if (game.isActive) this.notifier.timeTick(game.id, game.times(now));
     }
   }
 }

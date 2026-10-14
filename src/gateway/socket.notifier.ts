@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Namespace } from 'socket.io';
 import { Game as GameEvent, GameEnd, Lobby, room } from '../game/EmitTypes';
-import { InitedGameData, TimeUpdate } from '../game/dto';
+import { InitedGameData } from '../game/dto';
 import { GameData } from '../game/entities/game';
 import { GameNotifier } from '../game/game.notifier';
 
@@ -52,10 +52,6 @@ export class SocketNotifier extends GameNotifier {
     this.server
       .to(userRoom(userId))
       .emit(GameEvent.end, { winner, game, reason });
-  }
-
-  public timeTick(gameId: number, times: TimeUpdate): void {
-    this.server.to(room(gameId)).emit(GameEvent.timeTick, times);
   }
 
   public opponentDisconnected(userId: number): void {

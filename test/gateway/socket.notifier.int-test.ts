@@ -89,12 +89,13 @@ describe('SocketNotifier across instances (integration, Redis adapter)', () => {
     a.notifier.joinGame(2, 5);
     await settle();
 
-    const toWhite = next(white, GameEvent.timeTick);
-    const toBlack = next(black, GameEvent.timeTick);
-    b.notifier.timeTick(5, { w: 1000, b: 2000 });
+    const clock = { w: 1000, b: 2000, running: 'w', serverNow: 1 };
+    const toWhite = next(white, GameEvent.addTime);
+    const toBlack = next(black, GameEvent.addTime);
+    b.notifier.toGame(5, GameEvent.addTime, clock);
 
-    expect(await toWhite).toStrictEqual({ w: 1000, b: 2000 });
-    expect(await toBlack).toStrictEqual({ w: 1000, b: 2000 });
+    expect(await toWhite).toStrictEqual(clock);
+    expect(await toBlack).toStrictEqual(clock);
   });
 
   it('should start the game for both players wherever they are connected', async () => {

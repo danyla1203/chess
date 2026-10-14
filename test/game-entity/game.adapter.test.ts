@@ -49,8 +49,10 @@ describe('GameAdapter', () => {
 
   describe('initedGameDataDto', () => {
     it('should return initialized game data', () => {
+      const clock = { w: 10, b: 10, running: 'w', serverNow: 5 };
       const mockGame: any = {
         id: 1,
+        clockState: () => clock,
         players: [
           { userId: 1, side: 'w' },
           { userId: 2, side: 'b' },
@@ -88,6 +90,7 @@ describe('GameAdapter', () => {
         side: 'w',
         maxTime: 10,
         timeIncrement: 2,
+        clock: { w: 10, b: 10, running: 'w', serverNow: 5 },
       };
 
       const result = gameAdapter.initedGameDataDto(1, mockGame);

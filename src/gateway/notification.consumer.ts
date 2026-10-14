@@ -28,9 +28,6 @@ export class NotificationConsumer implements OnApplicationBootstrap {
 
   public deliver(notification: GameNotification): void {
     switch (notification.kind) {
-      case 'timeTick':
-        this.notifier.timeTick(notification.gameId, notification.times);
-        break;
       case 'gameEnd':
         this.notifier.gameEnd(
           notification.userId,
