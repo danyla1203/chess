@@ -1,0 +1,15 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  '@bufbuild/buf': true
+  '@heroui/shared-utils': false
+  '@parcel/watcher': true
+  '@prisma/engines': true
+  bcrypt: true
+  esbuild: true
+  prisma: true
+  protobufjs: true
+overrides:
+  '@opentelemetry/api': 1.9.1
+  socket.io: 4.8.3
