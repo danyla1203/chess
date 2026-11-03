@@ -61,6 +61,17 @@ export const useGameList = () => {
   return context;
 };
 
+const toGameData = (g: GameDataPayload): GameData => ({
+  id: String(g.id),
+  key: String(g.id),
+  sidepick: g.config.side,
+  cnf: {
+    inc: Math.floor(g.config.timeIncrement / 1000),
+    time: Math.floor(g.config.time / (1000 * 60)),
+  },
+  opponent: g.players[0].name,
+});
+
 export const GameListProvider = ({
   children,
 }: {
@@ -83,21 +94,14 @@ export const GameListProvider = ({
 
   useEffect(() => {
     socket.on(Lobby.update, (payload: GameDataPayload[]) => {
-      const data = payload.map((g) => {
-        const beautyMaxTime = Math.floor(g.config.time / (1000 * 60));
-        const beautyTimeIncrement = Math.floor(g.config.timeIncrement / 1000);
-        return {
-          id: g.id,
-          key: g.id,
-          sidepick: g.config.side,
-          cnf: {
-            inc: beautyTimeIncrement,
-            time: beautyMaxTime,
-          },
-          opponent: g.players[0].name,
-        };
-      });
-      setGames(data);
+      setGames(payload.map(toGameData));
+    });
+    socket.on(Lobby.added, (payload: GameDataPayload) => {
+      const game = toGameData(payload);
+      setGames((games) => [...games.filter((g) => g.id !== game.id), game]);
+    });
+    socket.on(Lobby.removed, ({ gameId }: { gameId: number }) => {
+      setGames((games) => games.filter((g) => g.id !== String(gameId)));
     });
     socket.on(Game.pendingGame, ({ gameId }: { gameId: number }) => {
       setPendingGame(gameId);
@@ -110,6 +114,8 @@ export const GameListProvider = ({
     });
     return () => {
       socket.off(Lobby.update);
+      socket.off(Lobby.added);
+      socket.off(Lobby.removed);
     };
   }, []);
 

@@ -1,15 +1,13 @@
+const pad = (value: number) => (value < 10 ? `0${value}` : `${value}`);
+
 export function Timer({ time }: { time: number }) {
-  const minutes = Math.floor(time / (1000 * 60));
-  const seconds = Math.round((time - minutes * 1000 * 60) / 1000);
+  const totalSeconds = Math.ceil(time / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
 
-  let beautySeconds;
-  if (seconds === 0) beautySeconds = '00';
-  else beautySeconds = seconds < 10 ? `0${seconds}` : seconds;
-
-  const beautyMinutes = minutes < 10 ? `0${minutes}` : minutes;
   return (
     <div className="text-4xl w-32">
-      {beautyMinutes}:{beautySeconds}
+      {pad(minutes)}:{pad(seconds)}
     </div>
   );
 }

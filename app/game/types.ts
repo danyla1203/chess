@@ -41,12 +41,20 @@ export type StrikeData = {
   cell: Cell;
 };
 
+export type ClockState = {
+  w: number;
+  b: number;
+  running: 'w' | 'b' | null;
+  serverNow: number;
+};
+
 export type InitedGameData = {
   board: PlainBoardState;
   gameId: number;
   side: 'w' | 'b';
   maxTime: number;
   timeIncrement: number;
+  clock: ClockState;
 };
 
 export type SelectedCell = {

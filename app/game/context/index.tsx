@@ -29,6 +29,7 @@ const GameContext = createContext<InitedGameData>({
   side: 'w',
   maxTime: 0,
   timeIncrement: 0,
+  clock: { w: 0, b: 0, running: null, serverNow: 0 },
 });
 
 export const useConfigContext = () => {
@@ -86,7 +87,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       <PlayersGameInteractionProvider>
         <BoardProvider initBoard={initData.board}>
           <StrikedProvider>
-            <TimerProvider maxTime={initData.maxTime}>
+            <TimerProvider initialClock={initData.clock}>
               <ChatProvider>
                 <PlayerConnectionProvider>{children}</PlayerConnectionProvider>
               </ChatProvider>

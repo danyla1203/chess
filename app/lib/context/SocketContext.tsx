@@ -9,6 +9,8 @@ import { Loader } from '@/components';
 
 export enum Lobby {
   update = 'lobby:update',
+  added = 'lobby:added',
+  removed = 'lobby:removed',
 }
 export enum Game {
   pendingGame = 'game:pending-one',
@@ -20,7 +22,6 @@ export enum Game {
   draw = 'game:draw',
   rejectDraw = 'game:draw_rejected',
   addTime = 'game:add-time',
-  timeTick = 'game:time',
   end = 'game:end',
   strike = 'game:strike',
   boardUpdate = 'game:board-update',
@@ -72,7 +73,7 @@ export const WebSocketProvider = ({
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const { updateUser } = useUserState();
-
+  console.warn(process.env.NEXT_PUBLIC_WS_HOST);
   const authConnection = (accessToken: string) => createSocket(accessToken);
 
   const anonConnection = () => {

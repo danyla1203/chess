@@ -58,7 +58,7 @@ app/
 │       PlayersGameInteraction.tsx  surrender, draw propose/accept/reject
 │       Board.tsx             board state, applies game:board-update, check/mate flags
 │       Striked.tsx           captured pieces per side
-│       Timer.tsx             clocks from game:time / game:add-time
+│       Timer.tsx             local countdown anchored on `clock` from game:init-data / game:board-update / game:add-time; freezes on game:end
 │       Chat.tsx              messages from game:chat-message (+ "Game is over" on game:end)
 │       PlayerConnection.tsx  opponent online flag
 ├── lib/
