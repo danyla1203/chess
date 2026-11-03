@@ -8,7 +8,7 @@ import { ClientStore } from '../../src/gateway/ClientStore';
 import { AppModule } from '../../src/app.module';
 import { LoggerService } from '../../src/infrastructure/logger';
 import { EventStream } from '../../src/infrastructure/messaging';
-import { Game, Lobby, User } from '../../src/domain/game/EmitTypes';
+import { Game, Lobby, User } from '@chess/contract';
 
 jest.mock('axios', () => null);
 

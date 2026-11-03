@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InitedGameData, PlainBoardState } from './dto';
+import type { InitedGameData, PlainBoardState } from '@chess/contract';
 import {
   DrawGame,
   FiguresCellState,

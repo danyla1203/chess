@@ -1,4 +1,4 @@
-import { InitedGameData, PlainBoardState } from './dto';
+import type { InitedGameData, PlainBoardState } from '@chess/contract';
 import { DrawGame, Game, GameWithWinner } from '../domain/game/entities/game';
 
 export interface GameAdapterI {

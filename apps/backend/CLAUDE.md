@@ -59,5 +59,5 @@ Single test file: `NODE_OPTIONS=--experimental-vm-modules npx jest test/game/gam
 - Layers: `src/domain` (pure game model), `src/<module>` (application/transport), `src/infrastructure` (Redis, Prisma, gRPC, streams, OTel, Stripe, mail, sockets). `src/domain` must not import infrastructure, generated code or app modules.
 - Service and layer boundaries are enforced by `no-restricted-imports` in `eslint.config.mjs`.
 - `src/infrastructure/telemetry/otel.ts` must stay the first import in `src/main.ts`, or auto-instrumentation misses modules required before it.
-- The WebSocket event names in `src/domain/game/EmitTypes.ts` must stay in sync with `chess_frontend/app/lib/context/SocketContext.tsx`.
+- Socket.IO event names, socket payload types and REST request/response types come from `@chess/contract` (`packages/contract`, owned by backend); never hardcode event strings. `class-validator` DTOs stay here and `implements` the contract type, so drift is a compile error. Contract changes are additive only; rebuild it (`pnpm --filter @chess/contract build`) before typecheck/test when running outside turbo.
 - Prettier: single quotes, trailing commas. Tests live in `test/` and mirror `src/`.

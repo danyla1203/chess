@@ -1,8 +1,6 @@
 import { ConflictException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { ClockState } from '../../ClockState';
-import { CompletedMove } from '../../MoveResult';
-import { GameEnd } from '../../EmitTypes';
+import { ClockState, CompletedMove, GameEnd } from '@chess/contract';
 import { GameProcess } from './process/game.process';
 import { Client } from '../Client';
 import { Player } from '../Player';

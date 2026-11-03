@@ -5,7 +5,7 @@ import { GameService } from '../../src/game/game.service';
 import { GamePublisher } from '../../src/game/game.publisher';
 import { GameMetrics } from '../../src/infrastructure/game/game.metrics';
 import { GameAdapter } from '../../src/game/game.adapter';
-import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { GameEnd } from '@chess/contract';
 import { LoggerService } from '../../src/infrastructure/logger';
 import { RedisKeys } from '../../src/infrastructure/redis';
 import { RedisTestDb, clearChessKeys, testRedis } from '../redis/helpers';

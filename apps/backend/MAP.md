@@ -56,12 +56,9 @@ src/
 │   ├── game.views.ts          Game -> LobbyView
 │   ├── game.adapter.ts        Game -> DTOs (plain board, init data, result)
 │   ├── game.adapter.interface.ts
-│   └── dto/                   CreateGame, Turn, ChatMessage + payload types (re-exports MoveResult/ClockState from domain)
+│   └── dto/                   CreateGame, Turn, ChatMessage validation classes (`implements` the `@chess/contract` payload types)
 ├── domain/                    pure model; lint forbids imports from infrastructure, transport or app modules
 │   └── game/
-│       ├── EmitTypes.ts       server -> client event names (shared contract with frontend)
-│       ├── MoveResult.ts      CompletedMove, Shah/Mate/Striked data
-│       ├── ClockState.ts
 │       └── entities/
 │           ├── Client.ts      identity: userId, name, authorized, anonymous temp token
 │           ├── Player.ts      identity + side + remaining time; snapshot (de)serialization
@@ -150,7 +147,7 @@ Client → server (`@SubscribeMessage`):
 | `draw_propose` / `draw_accept` / `draw_reject` | `{gameId}`                                                       | IsPlayer        | `game:draw_propose` / `game:end` (`draw`) / `game:draw_rejected`                                      |
 | `add_time`                                     | `{gameId}`                                                       | IsPlayer        | adds `timeIncrement` to the opponent; `game:add-time`                                                 |
 
-Server → client (from `EmitTypes.ts`): `lobby:update` (full list, on connect only), `lobby:added`, `lobby:removed` (deltas), `user:anon-token`, `game:pending-one`, `game:created`, `game:init-data`, `game:start`, `game:board-update`, `game:chat-message`, `game:draw_propose`, `game:draw_rejected`, `game:add-time`, `game:end`, `game:opponent-disconnected`, `game:player-reconnected`. Rooms: `game:<id>` (both players) and `user:<id>` (every socket of a user, joined on connect).
+Server → client (names and payload types live in `@chess/contract`, `packages/contract/src/socket`): `lobby:update` (full list, on connect only), `lobby:added`, `lobby:removed` (deltas), `user:anon-token`, `game:pending-one`, `game:created`, `game:init-data`, `game:start`, `game:board-update`, `game:chat-message`, `game:draw_propose`, `game:draw_rejected`, `game:add-time`, `game:end`, `game:opponent-disconnected`, `game:player-reconnected`. Rooms (`infrastructure/socket/rooms.ts`): `game:<id>` (both players) and `user:<id>` (every socket of a user, joined on connect).
 
 ## Reads and writes (CQRS, no event sourcing)
 

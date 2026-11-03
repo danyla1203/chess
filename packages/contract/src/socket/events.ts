@@ -4,14 +4,6 @@ export enum Lobby {
   removed = 'lobby:removed',
 }
 
-export enum GameEnd {
-  surrender = 'surrender',
-  timeout = 'timeout',
-  draw = 'draw',
-  mate = 'mate',
-  playerLeave = 'playerLeave',
-}
-
 export enum Game {
   pendingGame = 'game:pending-one',
   created = 'game:created',
@@ -36,11 +28,24 @@ export enum User {
   anonymousToken = 'user:anon-token',
 }
 
-/**
- *
- * @param id
- * @returns string: game:{id}
- */
-export const room = (id: number) => `game:${id}`;
+export enum Emit {
+  createGame = 'create',
+  gameJoin = 'join',
+  gameRejoin = 'rejoin',
+  figureMove = 'move',
+  pushMessage = 'chat-message',
+  addTime = 'add_time',
+  surrender = 'surrender',
+  drawPropose = 'draw_propose',
+  drawReject = 'draw_reject',
+  drawAccept = 'draw_accept',
+  leave = 'leave',
+}
 
-export const userRoom = (userId: number) => `user:${userId}`;
+export enum GameEnd {
+  surrender = 'surrender',
+  timeout = 'timeout',
+  draw = 'draw',
+  mate = 'mate',
+  playerLeave = 'playerLeave',
+}

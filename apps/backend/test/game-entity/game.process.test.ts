@@ -1,7 +1,7 @@
 import { GameProcess } from '../../src/domain/game/entities/game/process/game.process';
 import { emptyBoard, gameBoardFabric, boardFabric } from './utils';
 import { Board, Cell, Figure } from '../../src/domain/game/entities/game';
-import { ShahData } from '../../src/game/dto';
+import { ShahData } from '@chess/contract';
 
 describe('GameProcess (unit)', () => {
   let process: GameProcess;

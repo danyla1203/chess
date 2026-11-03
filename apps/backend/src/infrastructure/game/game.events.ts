@@ -1,6 +1,6 @@
 import { EventType, integrationEvent } from '../messaging';
 import type { GameEndedEvent, IntegrationEvent } from '../messaging';
-import { GameEnd } from '../../domain/game/EmitTypes';
+import { GameEnd } from '@chess/contract';
 import { Game } from '../../domain/game/entities/game';
 
 export function gameEndedEvent(game: Game): GameEndedEvent {

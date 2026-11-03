@@ -1,12 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Emitter } from '@socket.io/redis-emitter';
-import {
-  Game as GameEvent,
-  GameEnd,
-  Lobby,
-  room,
-  userRoom,
-} from '../domain/game/EmitTypes';
+import { Game as GameEvent, GameEnd, Lobby } from '@chess/contract';
+import { room, userRoom } from '../infrastructure/socket/rooms';
 import type { Game, GameDomainEvent } from '../domain/game/entities/game';
 import type { GameAdapterI } from '../game/game.adapter.interface';
 import { GamePublisher } from '../game/game.publisher';

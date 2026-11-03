@@ -5,14 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
-  CreateGameDto,
-  PlainBoardState,
-  ClockState,
-  DrawAgreement,
-  TurnBody,
-  CompletedMove,
-  InitedGameData,
-} from './dto';
+  GameEnd,
+  type PlainBoardState,
+  type ClockState,
+  type DrawAgreement,
+  type CompletedMove,
+  type InitedGameData,
+} from '@chess/contract';
+import { CreateGameDto, TurnBody } from './dto';
 import { Client, Player } from '../domain/game/entities';
 import {
   Game,
@@ -21,7 +21,6 @@ import {
   DrawGame,
   Cell,
 } from '../domain/game/entities/game';
-import { GameEnd } from '../domain/game/EmitTypes';
 import {
   GameRepository,
   Updated,

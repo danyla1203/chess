@@ -8,7 +8,7 @@ import {
 import { Client, Player } from '../../src/domain/game/entities';
 import { GameProcess } from '../../src/domain/game/entities/game/process/game.process';
 import { GameChat } from '../../src/domain/game/entities/game/game.chat';
-import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { GameEnd } from '@chess/contract';
 
 describe('Game entity (unit)', () => {
   let game: Game;

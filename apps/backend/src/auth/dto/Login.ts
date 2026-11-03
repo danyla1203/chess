@@ -1,4 +1,5 @@
 import { IsEmail, IsString, Length, Matches } from 'class-validator';
+import type { EmailLoginRequest, NameLoginRequest } from '@chess/contract';
 
 class LoginBase {
   @IsString()
@@ -10,12 +11,12 @@ class LoginBase {
   deviceId: string;
 }
 
-export class EmailLoginDto extends LoginBase {
+export class EmailLoginDto extends LoginBase implements EmailLoginRequest {
   @IsEmail()
   email: string;
 }
 
-export class NameLoginDto extends LoginBase {
+export class NameLoginDto extends LoginBase implements NameLoginRequest {
   @IsString()
   @Length(4, 15)
   @Matches(/\w+/)

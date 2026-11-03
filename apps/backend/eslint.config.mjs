@@ -140,7 +140,7 @@ export default tseslint.config(
                 '!**/domain/game/**',
               ],
               message:
-                'core may only use game contracts, DTOs, entities and EmitTypes; game logic runs in game-svc.',
+                'core may only use game contracts, DTOs, entities and @chess/contract; game logic runs in game-svc.',
             },
           ],
         },

@@ -1,7 +1,15 @@
-import { MateData, ShahData, StrikedData } from '../../MoveResult';
+import type { Cell, Figure, ShahData, GameConfig, Move } from '@chess/contract';
 
-export type Cell = string;
-export type Figure = string;
+export type {
+  Cell,
+  Figure,
+  Move,
+  GameData,
+  GameResult,
+  GameWithWinner,
+  DrawGame,
+} from '@chess/contract';
+export type Config = GameConfig;
 export type Figures = Map<Figure, Cell>;
 
 export type FiguresCellState = {
@@ -21,45 +29,6 @@ export type Board = {
 export type CellUpdate = {
   prevCell: Cell;
   newCell: Cell;
-};
-
-export type Config = {
-  side: 'w' | 'b' | 'rand';
-  time: number;
-  timeIncrement: number;
-  bet: number;
-};
-type SimplifiedPlayer = {
-  userId: number;
-  name: string;
-  side: 'w' | 'b';
-};
-export type GameData = {
-  id: number;
-  players: SimplifiedPlayer[];
-  config: Config;
-};
-export type GameResult = {
-  id: number;
-  config: Config;
-  moves: Move[];
-};
-export type GameWithWinner = GameResult & {
-  winner: SimplifiedPlayer;
-  looser: SimplifiedPlayer;
-};
-export type DrawGame = GameResult & {
-  pl1: SimplifiedPlayer;
-  pl2: SimplifiedPlayer;
-};
-export type Move = {
-  side: 'w' | 'b';
-  figure: Figure;
-  from: Cell;
-  to: Cell;
-  strikedData?: StrikedData;
-  shahData?: ShahData;
-  mateData?: MateData;
 };
 
 export type GameStatus = 'lobby' | 'active' | 'ended' | 'cancelled';

@@ -1,7 +1,7 @@
 import Redis from 'ioredis';
 import { GameRepository } from '../../src/infrastructure/game/game.repository';
 import { Game } from '../../src/domain/game/entities/game';
-import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { GameEnd } from '@chess/contract';
 import { GameReadModel } from '../../src/game-read';
 import { rebuildViews } from '../../src/game-service/views.rebuild';
 import { RedisKeys } from '../../src/infrastructure/redis';

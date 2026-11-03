@@ -19,8 +19,9 @@ import {
 } from '@nestjs/common';
 import { WsValidationFilter } from '../infrastructure/socket/WsValidationFilter';
 import { CreateGameDto, TurnBody, ChatMessage } from '../game/dto';
-import type { ConnectToGameDto } from '../game/dto';
-import { Game, Lobby, User, room } from '../domain/game/EmitTypes';
+import { Emit, Game, Lobby, User } from '@chess/contract';
+import type { ConnectToGame } from '@chess/contract';
+import { room } from '../infrastructure/socket/rooms';
 import { GameReadModel } from '../game-read';
 import { annotateActiveSpan } from '../infrastructure/telemetry';
 import { ConnectionPatchProvider } from './connection.provider';
@@ -100,7 +101,7 @@ export class GameGateway
     socket.emit(Lobby.update, await this.views.lobby());
   }
 
-  @SubscribeMessage('create')
+  @SubscribeMessage(Emit.createGame)
   @UseGuards(IsBalanceEnough)
   async createGame(
     @ConnectedSocket() socket: Socket,
@@ -115,7 +116,7 @@ export class GameGateway
     });
   }
 
-  @SubscribeMessage('rejoin')
+  @SubscribeMessage(Emit.gameRejoin)
   async rejoinGame(@ConnectedSocket() socket: Socket): Promise<void> {
     const client = this.clientStore.getClient(socket);
     const pending = await this.games.pendingGame(client);
@@ -130,16 +131,16 @@ export class GameGateway
     });
   }
 
-  @SubscribeMessage('leave')
+  @SubscribeMessage(Emit.leave)
   async leaveGame(@ConnectedSocket() socket: Socket): Promise<void> {
     await this.games.leave(this.clientStore.getClient(socket));
   }
 
-  @SubscribeMessage('join')
+  @SubscribeMessage(Emit.gameJoin)
   @UseGuards(IsBalanceEnough)
   async joinGame(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() { gameId }: ConnectToGameDto,
+    @MessageBody() { gameId }: ConnectToGame,
   ): Promise<void> {
     const client = this.clientStore.getClient(socket);
     annotateActiveSpan({
@@ -149,7 +150,7 @@ export class GameGateway
     await this.games.joinGame(client, gameId);
   }
 
-  @SubscribeMessage('move')
+  @SubscribeMessage(Emit.figureMove)
   async move(
     @ConnectedSocket() socket: Socket,
     @MessageBody() turn: TurnBody,
@@ -162,7 +163,7 @@ export class GameGateway
     await this.games.move(client, turn);
   }
 
-  @SubscribeMessage('chat-message')
+  @SubscribeMessage(Emit.pushMessage)
   async chatMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId, text }: ChatMessage,
@@ -170,7 +171,7 @@ export class GameGateway
     await this.games.chat(this.clientStore.getClient(socket), gameId, text);
   }
 
-  @SubscribeMessage('surrender')
+  @SubscribeMessage(Emit.surrender)
   async surrender(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
@@ -179,7 +180,7 @@ export class GameGateway
     await this.games.surrender(this.clientStore.getClient(socket), gameId);
   }
 
-  @SubscribeMessage('draw_propose')
+  @SubscribeMessage(Emit.drawPropose)
   async drawPropose(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
@@ -187,7 +188,7 @@ export class GameGateway
     await this.games.proposeDraw(this.clientStore.getClient(socket), gameId);
   }
 
-  @SubscribeMessage('draw_accept')
+  @SubscribeMessage(Emit.drawAccept)
   async acceptPropose(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
@@ -195,7 +196,7 @@ export class GameGateway
     await this.games.acceptDraw(this.clientStore.getClient(socket), gameId);
   }
 
-  @SubscribeMessage('draw_reject')
+  @SubscribeMessage(Emit.drawReject)
   async rejectPropose(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
@@ -203,7 +204,7 @@ export class GameGateway
     await this.games.rejectDraw(this.clientStore.getClient(socket), gameId);
   }
 
-  @SubscribeMessage('add_time')
+  @SubscribeMessage(Emit.addTime)
   async addTime(
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },

@@ -15,7 +15,8 @@ import type {
   ClientIdentity,
   GameCommandResponse,
 } from '../game/game.contract';
-import type { CreateGameDto, InitedGameData, TurnBody } from '../game/dto';
+import type { InitedGameData } from '@chess/contract';
+import type { CreateGameDto, TurnBody } from '../game/dto';
 import type { Client } from '../domain/game/entities';
 
 export const GAME_SVC = Symbol('GAME_SVC');

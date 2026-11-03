@@ -4,7 +4,8 @@ import type { Server, ServerOptions } from 'socket.io';
 import { io, Socket as ClientSocket } from 'socket.io-client';
 import { RedisIoAdapter } from '../../src/infrastructure/socket/redis-io.adapter';
 import { SocketNotifier, userRoom } from '../../src/gateway/socket.notifier';
-import { Game as GameEvent, room } from '../../src/domain/game/EmitTypes';
+import { Game as GameEvent } from '@chess/contract';
+import { room } from '../../src/infrastructure/socket/rooms';
 
 type Node = {
   http: HttpServer;

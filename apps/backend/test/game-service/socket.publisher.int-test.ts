@@ -7,12 +7,8 @@ import type { Emitter } from '@socket.io/redis-emitter';
 import { RedisIoAdapter } from '../../src/infrastructure/socket/redis-io.adapter';
 import { SocketEventPublisher } from '../../src/game-service/socket.publisher';
 import { socketEmitterProvider } from '../../src/game-service/socket.emitter';
-import {
-  Game as GameEvent,
-  GameEnd,
-  Lobby,
-  userRoom,
-} from '../../src/domain/game/EmitTypes';
+import { Game as GameEvent, GameEnd, Lobby } from '@chess/contract';
+import { userRoom } from '../../src/infrastructure/socket/rooms';
 import { Game } from '../../src/domain/game/entities/game';
 import { GameAdapter } from '../../src/game/game.adapter';
 import { LoggerService } from '../../src/infrastructure/logger';

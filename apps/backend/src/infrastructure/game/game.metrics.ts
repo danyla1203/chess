@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { metrics } from '@opentelemetry/api';
 import { GameRepository } from './game.repository';
-import { GameEnd } from '../../domain/game/EmitTypes';
+import { GameEnd } from '@chess/contract';
 import { Game } from '../../domain/game/entities/game';
 
 @Injectable()
