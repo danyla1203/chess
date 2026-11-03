@@ -1,5 +1,5 @@
 import type { DrawGame, GameWithWinner } from '@chess/contract';
-import { type RestructedGameResult } from '../game/types';
+import { type RestructedGameResult } from './types';
 
 export const deviceId = () => {
   const userAgent = window.navigator.userAgent;

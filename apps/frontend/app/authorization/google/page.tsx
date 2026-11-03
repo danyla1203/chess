@@ -1,8 +1,7 @@
 'use client';
 
 import { useUserState } from '@/app/lib/context/UserContext';
-import { getProfile } from '@/app/lib/request';
-import { getGoogleProfile } from '@/app/lib/request/getGoogleUser';
+import { getGoogleProfile, getProfile } from '@/requests';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function GoogleOauthConfirmation() {

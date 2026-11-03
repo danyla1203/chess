@@ -1,52 +1,7 @@
-import { useState } from 'react';
-import { Input, Card, CardBody, Button } from '@heroui/react';
+import { Card, CardBody } from '@heroui/react';
 import { useChat } from './context/Chat';
-import type { ChatMessage } from '@chess/contract';
-
-function InputBox({ addMessage }: { addMessage: (text: string) => void }) {
-  const [val, setVal] = useState<string>('');
-
-  const overridedClick = () => {
-    addMessage(val);
-    setVal('');
-  };
-
-  return (
-    <>
-      <Input
-        radius="none"
-        value={val}
-        onValueChange={setVal}
-        type="email"
-        placeholder="Message"
-        size="sm"
-      />
-      <Button radius="none" onClick={overridedClick}>
-        Send message
-      </Button>
-    </>
-  );
-}
-
-function MessageItem({ message }: { message: ChatMessage }) {
-  const outputData = new Date();
-  const minutes = outputData.getMinutes();
-  const hours = outputData.getHours();
-  const beautyMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const beautyHours = hours < 10 ? `0${hours}` : hours;
-  const beautyTime = `${beautyHours}:${beautyMinutes}`;
-  return (
-    <div className="flex justify-between w-full mb-3">
-      <div className="items-center w-5/6">
-        <h5 className="text-lg font-bold text-zinc-400">
-          {message.author.name}
-        </h5>
-        <p className="test-sm">{message.text}</p>
-      </div>
-      <h4 className="text-sm font-bold text-zinc-400">{beautyTime}</h4>
-    </div>
-  );
-}
+import { ChatInputBox } from './ChatInputBox';
+import { ChatMessageItem } from './ChatMessageItem';
 
 export function Chat() {
   const { messages, addMessage } = useChat();
@@ -56,11 +11,11 @@ export function Chat() {
       <CardBody>
         <div className="flex flex-col w-full">
           {messages.map((m) => (
-            <MessageItem key={m.id} message={m} />
+            <ChatMessageItem key={m.id} message={m} />
           ))}
         </div>
       </CardBody>
-      <InputBox addMessage={addMessage} />
+      <ChatInputBox addMessage={addMessage} />
     </Card>
   );
 }

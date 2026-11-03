@@ -1,2 +1,3 @@
-export { RedisModule, REDIS } from './redis.module';
+export { RedisModule } from './redis.module';
+export { REDIS } from './redis.token';
 export { RedisKeys } from './keys';

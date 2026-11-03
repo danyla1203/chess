@@ -1,17 +1,5 @@
-import {
-  Global,
-  Injectable,
-  Module,
-  OnApplicationShutdown,
-} from '@nestjs/common';
-import { shutdownTelemetry } from './otel';
-
-@Injectable()
-export class TelemetryShutdown implements OnApplicationShutdown {
-  async onApplicationShutdown(): Promise<void> {
-    await shutdownTelemetry();
-  }
-}
+import { Global, Module } from '@nestjs/common';
+import { TelemetryShutdown } from './telemetry.shutdown';
 
 @Global()
 @Module({

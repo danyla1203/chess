@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { NavbarMenu, Notifications } from '@/components';
+import { NavbarMenu, Notifications, PendingGame } from '@/components';
 import { UserProvider } from '@/context/UserContext';
 import { WebSocketProvider } from '@/context/SocketContext';
 import { NotificationProvider } from '@/context/NotificationContext';
@@ -23,7 +23,7 @@ export default async function RootLayout({
               <NotificationProvider>
                 <Notifications />
                 <GameListProvider>
-                  <NavbarMenu />
+                  <NavbarMenu actions={<PendingGame />} />
                   {children}
                 </GameListProvider>
               </NotificationProvider>

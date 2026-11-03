@@ -5,7 +5,7 @@ import type {
   UserGamesResponse,
   UserProfileResponse,
 } from '@chess/contract';
-import { type Profile } from '../context/UserContext';
+import { type Profile } from '../types';
 import { req } from './utis';
 
 export const getProfile = async (

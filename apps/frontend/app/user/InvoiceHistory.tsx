@@ -9,7 +9,7 @@ import {
 } from '@heroui/react';
 import type { Key } from 'react';
 import moment from 'moment';
-import { type Invoice, type Profile } from '../lib/context/UserContext';
+import { type Invoice, type Profile } from '@/app/lib/types';
 
 export default function InvoiceHistory({ profile }: { profile: Profile }) {
   const renderCells = (invoice: Invoice, columnKey: Key) => {

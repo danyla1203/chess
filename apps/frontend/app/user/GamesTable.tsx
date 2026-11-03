@@ -10,8 +10,7 @@ import {
 } from '@heroui/react';
 import type { Key } from 'react';
 import moment from 'moment';
-import { type Profile } from '@/context/UserContext';
-import { type RestructedGameResult } from '../game/types';
+import { type Profile, type RestructedGameResult } from '@/app/lib/types';
 
 export function GamesTable({ profile }: { profile: Profile }) {
   const renderCells = (game: RestructedGameResult, columnKey: Key) => {

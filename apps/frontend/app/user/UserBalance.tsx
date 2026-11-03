@@ -1,6 +1,6 @@
 import { Button, Chip } from '@heroui/react';
-import { type Profile } from '../lib/context/UserContext';
-import { stripeCheckout } from '../lib/request/stripeCheckout';
+import { type Profile } from '@/app/lib/types';
+import { stripeCheckout } from '@/requests';
 
 export function UserBalance({ profile }: { profile: Profile }) {
   const topUpRedirect = () => {

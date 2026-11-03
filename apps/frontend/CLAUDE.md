@@ -36,7 +36,20 @@ Env (`.env.local`, see `.env.example`): `NEXT_PUBLIC_API_HOST`, `NEXT_PUBLIC_WS_
 - Every API call is a small function in `app/lib/request/`, built on the `req()` helper in `utis.ts` (sic). Re-export it from `request/index.ts`.
 - Global state is React context in `app/lib/context/`. Per-game state is a stack of providers in `app/game/context/`.
 - Socket event names (`Game`, `Lobby`, `User`, `Emit` enums), socket payload types and REST request/response types come from `@chess/contract` (`packages/contract`). Import them from there; never redefine wire types locally. The socket is typed (`GameSocket` in `app/lib/context/SocketContext.tsx`). Change the contract and the backend together; additive only.
-- `app/game/types.ts` holds UI-only types (`SelectedCell`, `RestructedGameResult`).
+- UI-only types: `app/game/types.ts` (`SelectedCell`, game-only); `app/lib/types.ts` (`Profile`, `Invoice`, `RestructedGameResult`, shared by contexts, requests and features).
 - Auth tokens live in `localStorage` (`accessToken`, `refreshToken`). Anonymous players get `anon-token`, and their finished games are kept in `anon-games`.
 - Chess piece sprites are CSS classes in `app/game/chessPieces.scss`, keyed by figure name without its digit (`pawn`, `R`, `K`, `B`, `Q`, `Kn`) plus side (`w`/`b`).
 - Prettier: single quotes, trailing commas.
+- Import boundaries are enforced by `eslint-plugin-boundaries` in `eslint.config.mjs` (default disallow, last matching policy wins). Elements: `feature` (`app/game`, `app/user`, `app/authorization`, any new `app/*` route folder), `component` (`app/components/*`), `components` (the `app/components/index.ts` barrel), `context` (`app/lib/context`), `request` (`app/lib/request`), `lib` (rest of `app/lib`), `shell` (`app/*.tsx`). Directions: shell/feature -> `@/components`, context, `@/requests`, lib; component -> context, `@/requests`, lib; context -> `@/requests`, lib; request -> lib. Features never import each other; move shared code to `app/lib` or `app/components`. `axios` only in `request`, `socket.io-client` only in `context`, `fetch` only in `app/lib/request`.
+- Boundary rules have no exceptions: no `eslint-disable` for `boundaries/*`, `max-classes-per-file` or `react/no-multi-comp`. If a new rule needs a baseline, use ESLint bulk suppressions (`--suppress-rule`) and prune them as the code gets fixed.
+
+## Single responsibility and SOLID
+
+Lint enforces the structure (boundaries, `react/no-multi-comp`, `max-classes-per-file: 1`). Everything below is on the author; apply it when writing code and call it out when reviewing.
+
+- **S**: a component renders. API calls are one function per endpoint in `app/lib/request`; app-wide state is a context in `app/lib/context`; per-game state is one provider per concern in `app/game/context`. One component per file: extract sub-components into sibling files. Logic-heavy code (like `SelectCellLogic.ts`) is plain TS outside components; stateful logic used by two or more components becomes a hook.
+- **O**: extend by adding: a new route is a new folder, a new API call is a new request file re-exported from `@/requests`, a new socket event is handled in the provider that owns that state.
+- **L**: wrappers around `@chess/ui` / HeroUI components accept and forward the props of what they wrap.
+- **I**: props carry the minimal data a component needs, not a whole context value or DTO. Split a context whose consumers read disjoint halves; it also cuts re-renders.
+- **D**: components depend on hooks (`useUserState`, `useWebSocket`, `useGameList`, ...) and `@/requests`, never on `axios`, `fetch` or `socket.io-client` (lint-enforced).
+- Smells that mean "split it": a component over ~150 lines, more than ~3 `useState`/`useEffect` pairs, props drilled 3+ levels, a context value with 10+ fields, a file over ~250 lines (`authorization/page.tsx` already is).

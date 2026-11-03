@@ -1,6 +1,6 @@
 import type { SignUpRequest, Tokens } from '@chess/contract';
 import { deviceId } from '../utils';
-import { type Profile } from '../context/UserContext';
+import { type Profile } from '../types';
 import { getProfile } from './userProfile';
 import { req } from './utis';
 

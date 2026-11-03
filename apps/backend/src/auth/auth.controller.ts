@@ -10,6 +10,8 @@ import {
   Get,
 } from '@nestjs/common';
 import {
+  EmailLoginDto,
+  NameLoginDto,
   UseRefreshDto,
   VerifyEmail,
   SendVerificationMail,
@@ -17,7 +19,6 @@ import {
 } from './dto';
 import { AuthGuard, AuthService } from './';
 import { LoggerService } from '../infrastructure/logger';
-import { EmailLoginDto, NameLoginDto } from './dto/Login';
 
 @Controller('auth')
 export class AuthController {

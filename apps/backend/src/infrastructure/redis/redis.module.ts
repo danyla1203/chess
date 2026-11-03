@@ -1,23 +1,8 @@
-import {
-  Global,
-  Inject,
-  Injectable,
-  Module,
-  OnApplicationShutdown,
-} from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
-
-export const REDIS = Symbol('REDIS');
-
-@Injectable()
-class RedisShutdown implements OnApplicationShutdown {
-  constructor(@Inject(REDIS) private readonly redis: Redis) {}
-
-  async onApplicationShutdown(): Promise<void> {
-    await this.redis.quit().catch(() => this.redis.disconnect());
-  }
-}
+import { REDIS } from './redis.token';
+import { RedisShutdown } from './redis.shutdown';
 
 @Global()
 @Module({

@@ -50,7 +50,7 @@ app/
 │   ├── Chat.tsx              in-game chat
 │   ├── RightMenu/            captured pieces, clocks (+time), surrender/draw controls
 │   ├── chessPieces.scss      piece sprites as base64 SVG backgrounds
-│   ├── types.ts              UI-only types (selection, restructured results); wire types come from @chess/contract
+│   ├── types.ts              UI-only selection type; shared UI types (Profile, Invoice, restructured results) are in lib/types.ts; wire types come from @chess/contract
 │   └── context/              per-game providers, nested in this order:
 │       index.tsx             GameProvider: config (gameId, side, maxTime) from game:init-data; stores anon results
 │       PlayersGameInteraction.tsx  surrender, draw propose/accept/reject

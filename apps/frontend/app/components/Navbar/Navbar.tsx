@@ -8,10 +8,10 @@ import {
   Link,
 } from '@heroui/react';
 
+import { type ReactNode } from 'react';
 import { Profile } from './Profile';
-import { PendingGame } from '..';
 
-export function NavbarMenu() {
+export function NavbarMenu({ actions }: { actions?: ReactNode }) {
   return (
     <Navbar position="static">
       <NavbarBrand>
@@ -32,9 +32,7 @@ export function NavbarMenu() {
             About
           </Link>
         </NavbarItem>
-        <NavbarItem>
-          <PendingGame />
-        </NavbarItem>
+        <NavbarItem>{actions}</NavbarItem>
       </NavbarContent>
       <NavbarContent justify="end">
         <Profile />

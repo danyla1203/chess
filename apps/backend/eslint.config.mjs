@@ -1,7 +1,19 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
+import boundaries from 'eslint-plugin-boundaries';
 import globals from 'globals';
+
+const GAME_SVC = ['game', 'game-svc', 'game-infra'];
+const PUBLIC_SURFACE = ['index.ts', '*.module.ts', 'dto/**', 'entities/**'];
+const PERSISTENCE = {
+  type: 'infra',
+  captured: { adapter: ['prisma', 'redis'] },
+};
+const DB_CLIENTS = ['ioredis', '@prisma/client', '@prisma/adapter-pg'];
+
+const element = (type, extra = {}) => ({ element: { type, ...extra } });
+const external = (source) => ({ module: { origin: 'external', source } });
 
 export default tseslint.config(
   {
@@ -69,96 +81,188 @@ export default tseslint.config(
       'no-case-declarations': 'error',
       'no-return-assign': 'error',
       'no-param-reassign': ['warn', { props: false }],
-    },
-  },
-  {
-    files: [
-      'src/game/**/*.ts',
-      'src/game-service/**/*.ts',
-      'src/infrastructure/game/**/*.ts',
-    ],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: [
-                '**/gateway',
-                '**/gateway/**',
-                '**/auth',
-                '**/auth/**',
-                '**/user',
-                '**/user/**',
-                '**/payments',
-                '**/payments/**',
-                '**/game-history',
-                '**/game-history/**',
-                '**/prisma.service',
-              ],
-              message:
-                'game-svc runs without core: reach core through gRPC replies, the event stream or socket emits, not imports.',
-            },
-            {
-              regex: 'game-read(?!/views$)',
-              message:
-                'game-svc writes the read models; it may share their types, not read them.',
-            },
-          ],
-        },
-      ],
+      'max-classes-per-file': ['error', 1],
     },
   },
   {
     files: ['src/**/*.ts'],
-    ignores: [
-      'src/game/**',
-      'src/game-service/**',
-      'src/infrastructure/game/**',
-      'src/domain/**',
-    ],
-    rules: {
-      'no-restricted-imports': [
-        'error',
+    plugins: { boundaries },
+    settings: {
+      'import/resolver': {
+        typescript: { project: `${import.meta.dirname}/tsconfig.json` },
+      },
+      'boundaries/root-path': import.meta.dirname,
+      'boundaries/flag-as-external': {
+        customSourcePatterns: ['@chess/*', '@chess/*/**'],
+      },
+      'boundaries/elements': [
+        { type: 'domain', pattern: 'src/domain', partialMatch: false },
+        { type: 'generated', pattern: 'src/generated', partialMatch: false },
         {
-          patterns: [
-            {
-              group: [
-                '**/game-service',
-                '**/game-service/**',
-                '**/infrastructure/game',
-                '**/infrastructure/game/**',
-              ],
-              message: 'core talks to game-svc through GameClient (gRPC) and GameReadModel.',
-            },
-            {
-              group: [
-                '**/game/*',
-                '!**/generated/**',
-                '!**/game/dto',
-                '!**/game/game.contract',
-                '!**/domain/game/**',
-              ],
-              message:
-                'core may only use game contracts, DTOs, entities and @chess/contract; game logic runs in game-svc.',
-            },
-          ],
+          type: 'game-infra',
+          pattern: 'src/infrastructure/game',
+          partialMatch: false,
+        },
+        {
+          type: 'infra',
+          pattern: 'src/infrastructure/*',
+          capture: ['adapter'],
+          partialMatch: false,
+        },
+        { type: 'game', pattern: 'src/game', partialMatch: false },
+        { type: 'game-svc', pattern: 'src/game-service', partialMatch: false },
+        {
+          type: 'module',
+          pattern: 'src/*',
+          capture: ['module'],
+          partialMatch: false,
+        },
+        { type: 'root', pattern: 'src', partialMatch: false },
+      ],
+      'boundaries/files': [
+        {
+          category: 'controller',
+          pattern: ['**/*.controller.ts', '**/*.gateway.ts'],
+        },
+        { category: 'service', pattern: 'src/*/*.service.ts' },
+        {
+          category: 'repository',
+          pattern: ['**/*.model.ts', '**/model.ts', '**/*.repository.ts'],
         },
       ],
     },
-  },
-  {
-    files: ['src/domain/**/*.ts'],
     rules: {
-      'no-restricted-imports': [
+      'boundaries/no-unknown-files': 'error',
+      'boundaries/dependencies': [
         'error',
         {
-          patterns: [
+          default: 'disallow',
+          checkAllOrigins: true,
+          checkUnknownLocals: true,
+          checkInternals: true,
+          message:
+            '{{ from.element.type }} may not depend on {{ to.element.type }} {{ to.element.fileInternalPath }}: see the boundaries policies in eslint.config.mjs.',
+          policies: [
+            { allow: { to: { module: { origin: ['external', 'core'] } } } },
+            { allow: { dependency: { relationship: { to: 'internal' } } } },
             {
-              regex:
-                '(^|/)(infrastructure|generated|dto|game-service|game-read|game-history|gateway|auth|user|payments|health)/|\\.\\./game/|^(ioredis|socket\\.io|@prisma/|@opentelemetry/|@grpc/)',
+              disallow: {
+                to: {
+                  module: { origin: 'local' },
+                  element: { isUnknown: true },
+                },
+              },
+              message:
+                '{{ dependency.source }} is outside the backend architecture: apps never import each other.',
+            },
+            {
+              disallow: {
+                dependency: { source: ['@chess/*/src/**', '@chess/*/dist/**'] },
+              },
+              message:
+                'Import @chess/* packages by their entry, not src/ or dist/.',
+            },
+            {
+              disallow: {
+                to: external(['frontend', 'frontend/**', 'backend']),
+              },
+              message:
+                'Apps never import each other; share code through @chess/contract.',
+            },
+            {
+              from: element('domain'),
+              disallow: {
+                to: external([
+                  'ioredis',
+                  'socket.io',
+                  'socket.io-client',
+                  '@prisma/*',
+                  '@opentelemetry/*',
+                  '@grpc/*',
+                ]),
+              },
               message:
                 'domain is the pure game model: no infrastructure, transport or application-layer imports.',
+            },
+            {
+              from: element('infra'),
+              allow: {
+                to: [element('domain'), element('generated'), element('infra')],
+              },
+            },
+            {
+              from: element(GAME_SVC),
+              allow: {
+                to: [
+                  element('domain'),
+                  element('generated'),
+                  element('infra'),
+                  element(GAME_SVC),
+                  element('module', {
+                    captured: { module: 'game-read' },
+                    fileInternalPath: 'views.ts',
+                  }),
+                  element('module', {
+                    captured: { module: 'health' },
+                    fileInternalPath: PUBLIC_SURFACE,
+                  }),
+                ],
+              },
+            },
+            {
+              from: element(['module', 'root']),
+              allow: {
+                to: [
+                  element('domain'),
+                  element('generated'),
+                  element('infra'),
+                  element('module', { fileInternalPath: PUBLIC_SURFACE }),
+                  element('game', {
+                    fileInternalPath: ['game.contract.ts', 'dto/**'],
+                  }),
+                ],
+              },
+            },
+            {
+              from: element('root'),
+              allow: { to: element('module') },
+            },
+            {
+              from: { file: { categories: 'controller' } },
+              disallow: {
+                to: [
+                  { file: { categories: 'repository' } },
+                  { element: PERSISTENCE },
+                  external(DB_CLIENTS),
+                ],
+              },
+              message:
+                'Controllers and gateways call services; only *.model.ts / *.repository.ts touch Prisma or Redis.',
+            },
+            {
+              from: { file: { path: '**/*health.controller.ts' } },
+              allow: { to: [{ element: PERSISTENCE }, external(DB_CLIENTS)] },
+            },
+            {
+              from: { file: { categories: 'service' } },
+              disallow: { to: { file: { categories: 'controller' } } },
+              message: 'Services must not depend on controllers or gateways.',
+            },
+            {
+              from: { file: { categories: 'repository' } },
+              disallow: {
+                to: { file: { categories: ['service', 'controller'] } },
+              },
+              message:
+                'Repositories are the bottom layer: no services or controllers.',
+            },
+            {
+              from: element(GAME_SVC),
+              disallow: {
+                to: element('infra', { captured: { adapter: 'prisma' } }),
+              },
+              message:
+                'game-svc runs without core: reach core through gRPC replies, the event stream or socket emits, not imports.',
             },
           ],
         },
@@ -168,6 +272,7 @@ export default tseslint.config(
   {
     files: ['test/**/*.ts'],
     rules: {
+      'max-classes-per-file': 'off',
       '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',

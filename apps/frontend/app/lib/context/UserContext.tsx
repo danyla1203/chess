@@ -2,27 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getProfile } from '@/requests';
-import type { PaymentInvoice } from '@chess/contract';
-import { type RestructedGameResult } from '@/app/game/types';
-import { Loader } from '@/app/components';
-
-export type Invoice = Pick<PaymentInvoice, 'id' | 'topUpAmount' | 'date'> & {
-  key: number;
-};
-
-export type Profile = {
-  userId: number;
-  name: string;
-  balance: number;
-  invoices: Invoice[];
-  isAuthorized: boolean;
-  games: RestructedGameResult[];
-  winningBalance: number;
-  wins: number;
-  draws: number;
-  looses: number;
-  createdAt: string;
-};
+import { Loader } from '@chess/ui';
+import { type Profile } from '../types';
 
 export type UserState = {
   profile: Profile | null;

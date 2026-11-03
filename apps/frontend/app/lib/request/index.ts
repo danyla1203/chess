@@ -5,6 +5,9 @@ import { getProfile } from './userProfile';
 import { createUser } from './createUser';
 import { userLogout } from './logout';
 import { getGooguleOauthLink } from './getGoogleOauthLink';
+import { getGoogleProfile } from './getGoogleUser';
+import { updateUserName } from './updateUserName';
+import { stripeCheckout } from './stripeCheckout';
 
 export {
   codeConfirm,
@@ -14,4 +17,7 @@ export {
   createUser,
   userLogout,
   getGooguleOauthLink,
+  getGoogleProfile,
+  updateUserName,
+  stripeCheckout,
 };

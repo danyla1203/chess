@@ -10,7 +10,7 @@ import {
 } from '@chess/contract';
 import { getAnonymousGames } from '../utils';
 import { useUserState } from './UserContext';
-import { Loader } from '@/components';
+import { Loader } from '@chess/ui';
 
 export type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 

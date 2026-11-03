@@ -57,7 +57,20 @@ Single test file: `NODE_OPTIONS=--experimental-vm-modules npx jest test/game/gam
 - `@nestjs/microservices` must match the exact version of `@nestjs/core`; a newer microservices calls core methods that don't exist yet. The gRPC microservice is connected with `deferInitialization: true`, otherwise global filters/interceptors added after `connectMicroservice` are silently ignored.
 - Commands are not idempotent: the client retries only on `UNAVAILABLE` (call never reached a server). Never add `DEADLINE_EXCEEDED` to `retryableStatusCodes`.
 - Layers: `src/domain` (pure game model), `src/<module>` (application/transport), `src/infrastructure` (Redis, Prisma, gRPC, streams, OTel, Stripe, mail, sockets). `src/domain` must not import infrastructure, generated code or app modules.
-- Service and layer boundaries are enforced by `no-restricted-imports` in `eslint.config.mjs`.
+- Service and layer boundaries are enforced by `eslint-plugin-boundaries` in `eslint.config.mjs` (`boundaries/dependencies`, default disallow, last matching policy wins). Elements: `domain`, `generated`, `infra` (`src/infrastructure/*`), `game-infra` (`src/infrastructure/game`), `game`, `game-svc` (`src/game-service`), `module` (every other `src/*`), `root` (`src/*.ts`). File categories: `controller` (`*.controller.ts`, `*.gateway.ts`), `service` (`src/*/*.service.ts`), `repository` (`*.model.ts`, `model.ts`, `*.repository.ts`). A new top-level folder in `src` is a new element: classify it there first.
+- Boundary rules have no exceptions: no `eslint-disable` for `boundaries/*` or `max-classes-per-file`. If a new rule needs a baseline, use ESLint bulk suppressions (`--suppress-rule`) and prune them as the code gets fixed.
 - `src/infrastructure/telemetry/otel.ts` must stay the first import in `src/main.ts`, or auto-instrumentation misses modules required before it.
 - Socket.IO event names, socket payload types and REST request/response types come from `@chess/contract` (`packages/contract`, owned by backend); never hardcode event strings. `class-validator` DTOs stay here and `implements` the contract type, so drift is a compile error. Contract changes are additive only; rebuild it (`pnpm --filter @chess/contract build`) before typecheck/test when running outside turbo.
 - Prettier: single quotes, trailing commas. Tests live in `test/` and mirror `src/`.
+
+## Single responsibility and SOLID
+
+Lint enforces the structure (boundaries, `max-classes-per-file: 1`). Everything below is on the author; apply it when writing code and call it out when reviewing.
+
+- **S**: one reason to change per class. Controller/gateway = transport only (DTO in, one service call, map out). Service = one use-case family of its own module. `*.model.ts` / `*.repository.ts` = persistence only, the only app files that touch Prisma or Redis (health controllers excepted). When a service picks up a second concern (e.g. balance logic inside `UserService` used by `payments`), extract a service and export it from the module's `index.ts`. One class per file; split DTO files instead of grouping classes.
+- **O**: extend by adding, not by growing `switch` chains: a new game command is a `GameCommands` entry + handler, a new domain event is a `GameDomainEvent` variant mapped in `socket.publisher.ts`, a new stream consumer is a new consumer group.
+- **L**: implementations of an abstraction (`GamePublisher`, `GameAdapterI`) are drop-in: same inputs, no new thrown error types, no no-op methods.
+- **I**: inject the narrowest dependency. Do not pass `PrismaService` or the Redis client up through layers; another module gets a small exported service, not the module's internals.
+- **D**: application code (`src/game`, services) depends on abstractions it owns (`GamePublisher`, repositories); infrastructure implements them; `src/domain` depends on nothing. Bind with Nest providers (`{ provide: Abstract, useClass: Impl }`), never `new` a dependency inside a class.
+- Cross-module imports go only through `<module>/index.ts`, `*.module.ts`, `dto/` or `entities/`; everything else in a module is private.
+- Smells that mean "split it": more than ~4 constructor dependencies, a method over ~50 lines or branching on a type/status, a file over ~300 lines (`game.process.ts` already is), names like `*Manager`, `*Utils`, `*Helper`, or "And".

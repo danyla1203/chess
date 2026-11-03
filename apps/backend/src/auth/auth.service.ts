@@ -8,7 +8,7 @@ import bcrypt from 'bcrypt';
 import { EmailLoginDto, NameLoginDto } from './dto';
 import { AuthModel } from './auth.model';
 import { TokenService } from './tokens/token.service';
-import { InternalAuthorizedUserFields } from '../user/entities/user.entity';
+import { InternalAuthorizedUserFields } from '../user/entities';
 import { Tokens } from './tokens/token.entities';
 import { ConfigService } from '@nestjs/config';
 
