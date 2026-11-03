@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: ['main', 'dev']
+  pull_request:
+    branches: ['main', 'dev']
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Lint, typecheck, build and unit tests (affected)
+        if: github.event_name == 'pull_request'
+        run: pnpm turbo run lint typecheck build test:unit --affected
+        env:
+          TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha }}
+          TURBO_SCM_HEAD: ${{ github.event.pull_request.head.sha }}
+          SG_API_KEY: ${{ secrets.SG_API_KEY }}
+      - name: Lint, typecheck, build and unit tests
+        if: github.event_name != 'pull_request'
+        run: pnpm turbo run lint typecheck build test:unit
+        env:
+          SG_API_KEY: ${{ secrets.SG_API_KEY }}
+
+  test_integration:
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: danylo
+          POSTGRES_PASSWORD: root
+          POSTGRES_DB: tests
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:8.10
+        ports:
+          - 6391:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://danylo:root@localhost:5433/tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Build workspace dependencies and generate the Prisma client
+        run: |
+          pnpm turbo run build --filter='backend^...'
+          pnpm turbo run generate --filter=backend
+      - name: Apply migrations
+        run: pnpm --filter backend exec prisma migrate deploy
+      - name: Seed database
+        run: pnpm --filter backend exec prisma db seed -- --env test
+      - name: Run integration tests
+        run: pnpm --filter backend test:integration
+        env:
+          JWT_SECRET: 'secretKey'
+          SG_API_KEY: ${{ secrets.SG_API_KEY }}
+          JWT_ACCESS_EXPIRES: 360s
+          JWT_REFRESH_EXPIRES: 30d
+          REDIS_URL: redis://localhost:6391

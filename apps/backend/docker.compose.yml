@@ -2,7 +2,9 @@ services:
   chesser:
     networks:
       - chesser_net
-    build: .
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
     env_file:
       - .env.docker
     environment:
@@ -12,9 +14,9 @@ services:
       REDIS_URL: redis://redis:6379
       GAME_SVC_GRPC_TARGET: game-svc:50051
     volumes:
-      - ./src:/usr/src/app/src
-      - /usr/src/app/node_modules
-      - ./package.json:/usr/src/app/package.json
+      - ./src:/usr/src/repo/apps/backend/src
+      - /usr/src/repo/apps/backend/node_modules
+      - ./package.json:/usr/src/repo/apps/backend/package.json
     container_name: chesser
     ports:
       - '9200:9200'
@@ -31,8 +33,10 @@ services:
   game-svc:
     networks:
       - chesser_net
-    build: .
-    command: ['npm', 'run', 'start:game-svc']
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    command: ['pnpm', 'run', 'start:game-svc']
     env_file:
       - .env.docker
     environment:
@@ -42,9 +46,9 @@ services:
       HEALTH_PORT: 9300
       GRPC_PORT: 50051
     volumes:
-      - ./src:/usr/src/app/src
-      - /usr/src/app/node_modules
-      - ./package.json:/usr/src/app/package.json
+      - ./src:/usr/src/repo/apps/backend/src
+      - /usr/src/repo/apps/backend/node_modules
+      - ./package.json:/usr/src/repo/apps/backend/package.json
     container_name: chess-game-svc
     depends_on:
       redis:
