@@ -170,5 +170,5 @@ env:
 
 The compose services build `apps/backend/Dockerfile` (dev image, `start:dev` with `src/` mounted) with the repo root as context. Run the frontend with `pnpm --filter frontend dev`.
 
-- Grafana: http://localhost:3001 (import `deploy/k8s/platform/dashboards/chess-overview.json`; the Pods row stays empty outside Kubernetes)
+- Grafana: http://localhost:3010 (admin/admin; **Chess backend** is provisioned from `apps/backend/observability/dashboards`, reloads on file change; the Pods row stays empty outside Kubernetes)
 - OTLP: `http://localhost:4318`

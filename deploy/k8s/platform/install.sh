@@ -103,7 +103,7 @@ ok "headlamp ready"
 
 CURRENT="dashboards and alerts"
 step "Applying dashboards and alert rules"
-kubectl apply -k "$DIR/dashboards"
+kubectl apply -k "$DIR/../../../apps/backend/observability/dashboards"
 kubectl apply -f "$DIR/alerts/chess-alerts.yaml"
 ok "dashboards and alerts applied"
 

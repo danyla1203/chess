@@ -87,11 +87,13 @@ services:
     networks:
       - chesser_net
     ports:
-      - '3001:3000'
+      - '3010:3000'
       - '4317:4317'
       - '4318:4318'
     volumes:
       - lgtm_data:/data
+      - ./observability/grafana-dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/chess.yaml:ro
+      - ./observability/dashboards:/otel-lgtm/dashboards/chess:ro
 
 volumes:
   postgres_data:
