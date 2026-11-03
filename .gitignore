@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+logs/
+.env
+.env.local
+.env.docker
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+deploy/k8s/secrets.env
+storybook-static/
