@@ -1,4 +1,5 @@
-import React from 'react';
+'use client';
+
 import {
   Dropdown,
   DropdownTrigger,
@@ -7,20 +8,25 @@ import {
   Button,
 } from '@heroui/react';
 
-type Content = { href: string; name: string; onclick?: () => void };
-interface DropdownProps {
+export type DropdownContent = {
+  href: string;
+  name: string;
+  onclick?: () => void;
+};
+
+export interface DropdownUiProps {
   label: string;
-  contents: Content[];
+  contents: DropdownContent[];
 }
 
-export function DropdownUi({ label, contents }: DropdownProps) {
+export function DropdownUi({ label, contents }: DropdownUiProps) {
   return (
     <Dropdown>
       <DropdownTrigger>
         <Button variant="bordered">{label}</Button>
       </DropdownTrigger>
       <DropdownMenu aria-label="Static Actions">
-        {contents.map((content: Content) => (
+        {contents.map((content: DropdownContent) => (
           <DropdownItem
             key={content.href}
             href={content.href}

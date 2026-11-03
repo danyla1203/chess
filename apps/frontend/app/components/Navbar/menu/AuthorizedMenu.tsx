@@ -1,6 +1,6 @@
 import { useUserState } from '@/context/UserContext';
 import { userLogout } from '@/app/lib/request';
-import { DropdownUi } from '@/ui/Dropdown';
+import { DropdownUi } from '@chess/ui';
 
 export function AuthorizedMenu() {
   const { profile, removeUser } = useUserState();

@@ -36,14 +36,12 @@ HeroUIProviders            app/heroui.provider.tsx   HeroUI + next-themes (dark)
 
 ```
 app/
-├── components/            shared UI, barrel-exported from components/index.ts
-│   ├── Navbar/            NavbarMenu, Profile -> AnonymousMenu | AuthorizedMenu (DropdownUi)
+├── components/            app-wired UI, barrel-exported from components/index.ts (also re-exports Loader, GithubIcon, GoogleIcon from @chess/ui)
+│   ├── Navbar/            NavbarMenu, Profile -> AnonymousMenu | AuthorizedMenu (DropdownUi from @chess/ui)
 │   ├── Gamelist/          lobby table fed by GameListContext
 │   ├── CreateGame/        emits `create`, then pushes /game
 │   ├── PendingGame/       "Pending Game" button (rejoin / leave)
-│   ├── Notification/      toast renderer
-│   ├── Loader/            full-screen HeroUI Spinner
-│   └── icons/             Google, Github SVGs
+│   └── Notification/      Notifications: NotificationContext -> NotificationStack from @chess/ui
 ├── game/
 │   ├── page.tsx           wires GameProvider around Chat, BoardController, RightMenu
 │   ├── Board.controller.tsx  selection + click-to-move, highlights legal targets
@@ -64,16 +62,16 @@ app/
 ├── lib/
 │   ├── context/           User, Socket (event enums), Notification, GameList
 │   ├── request/           one function per REST call, built on req() in utis.ts
-│   ├── ui/Dropdown.tsx    generic dropdown menu
 │   └── utils.ts           deviceId(), anonymous game stats, restructGameResult()
 ├── user/                  profile page pieces
-├── globals.css            Tailwind 4 entry + HeroUI plugin
+├── globals.css            imports @chess/ui/styles.css (Tailwind 4 entry + HeroUI plugin) + @source for app/
 ├── heroui.provider.tsx
 ├── layout.tsx, page.tsx, loading.tsx
-hero.mjs                   `heroui()` Tailwind plugin, loaded via @plugin in globals.css
 eslint.config.mjs          flat config
 postcss.config.mjs         @tailwindcss/postcss
 ```
+
+Design system (`packages/ui`, `@chess/ui`): HeroUI plugin + tokens (`src/theme/`), Tailwind entry `styles.css`, generic components (`DropdownUi`, `Loader`, `GithubIcon`, `GoogleIcon`, `NotificationStack`/`NotificationItem`) with Storybook. See `packages/ui/CLAUDE.md`.
 
 ## REST calls (`app/lib/request/`)
 

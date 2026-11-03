@@ -26,9 +26,6 @@
       "@/*": [
         "./*"
       ],
-      "@/ui/*": [
-        "./app/lib/ui/*"
-      ],
       "@/components": [
         "./app/components"
       ],
