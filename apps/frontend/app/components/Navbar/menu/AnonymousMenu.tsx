@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DropdownUi } from '@/ui/Dropdown';
+import { DropdownUi } from '@chess/ui';
 
 export function AnonymousMenu() {
   const contents = [

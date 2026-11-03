@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNotification } from '@/context/NotificationContext';
 import { emailVerification } from '@/requests';
 import { Button, Divider, Input } from '@heroui/react';
-import { GoogleIcon } from '@/app/components/icons/Google';
+import { GoogleIcon } from '@chess/ui';
 
 export function EmailInput() {
   const [email, setEmail] = useState('');
