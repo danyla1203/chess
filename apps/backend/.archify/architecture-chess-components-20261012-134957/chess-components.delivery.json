@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "6f86ecb6-eb20-4030-819b-9ec8e37a9c7e",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/nvoidxcrl/dev/chess/chess_backend/.archify/architecture-chess-components-20261012-134957/candidate.json",
+  "output": "/Users/nvoidxcrl/dev/chess/chess_backend/.archify/architecture-chess-components-20261012-134957/chess-components.html",
+  "specification": {
+    "sha256": "0fa03f96776529b240a0376e78ab6dde247edc3fb66a96c10d6c2c3337ab0ca3",
+    "bytes": 17821
+  },
+  "artifact": {
+    "sha256": "81560a1af1e74f470d1c53804b171594178b5f7c7465380bd30fdbd89c03ea75",
+    "bytes": 812147
+  }
+}

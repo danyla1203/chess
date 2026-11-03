@@ -1,0 +1,98 @@
+services:
+  chesser:
+    networks:
+      - chesser_net
+    build: .
+    env_file:
+      - .env.docker
+    environment:
+      OTEL_SERVICE_NAME: chess-core
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      OTEL_SEMCONV_STABILITY_OPT_IN: http
+      REDIS_URL: redis://redis:6379
+      GAME_SVC_GRPC_TARGET: game-svc:50051
+    volumes:
+      - ./src:/usr/src/app/src
+      - /usr/src/app/node_modules
+      - ./package.json:/usr/src/app/package.json
+    container_name: chesser
+    ports:
+      - '9200:9200'
+    depends_on:
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
+      game-svc:
+        condition: service_started
+      lgtm:
+        condition: service_started
+
+  game-svc:
+    networks:
+      - chesser_net
+    build: .
+    command: ['npm', 'run', 'start:game-svc']
+    env_file:
+      - .env.docker
+    environment:
+      OTEL_SERVICE_NAME: chess-game-svc
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
+      REDIS_URL: redis://redis:6379
+      HEALTH_PORT: 9300
+      GRPC_PORT: 50051
+    volumes:
+      - ./src:/usr/src/app/src
+      - /usr/src/app/node_modules
+      - ./package.json:/usr/src/app/package.json
+    container_name: chess-game-svc
+    depends_on:
+      redis:
+        condition: service_started
+      lgtm:
+        condition: service_started
+
+  db:
+    image: postgres:17
+    container_name: postgres_db
+    networks:
+      - chesser_net
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chess
+    ports:
+      - '5434:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    networks:
+      - chesser_net
+    image: redis:8.10
+    container_name: redis
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6380:6379'
+
+  lgtm:
+    image: grafana/otel-lgtm:0.36.0
+    container_name: lgtm
+    networks:
+      - chesser_net
+    ports:
+      - '3001:3000'
+      - '4317:4317'
+      - '4318:4318'
+    volumes:
+      - lgtm_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  lgtm_data:
+networks:
+  chesser_net:
+    driver: bridge

@@ -1,0 +1,53 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: chess
+  namespace: monitoring
+spec:
+  groups:
+    - name: chess.game
+      rules:
+        - alert: ChessClockLeaderMissing
+          expr: (sum(chess_game_clock_leader) != 1) or absent(chess_game_clock_leader)
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: Game clocks are not running on exactly one game-svc instance
+            description: '{{ $value }} instances hold the clock lock. With 0, games never time out; check game-svc pods and Redis.'
+        - alert: ChessMoveLatencyHigh
+          expr: histogram_quantile(0.99, sum by (le) (rate(chess_game_move_duration_seconds_bucket[5m]))) > 0.5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: p99 move latency is above 500 ms
+            description: 'p99 is {{ $value | humanizeDuration }}. Look for slow traces in Tempo, Redis CAS retries, or game-svc CPU throttling.'
+        - alert: ChessCommandTimeouts
+          expr: |
+            sum(rate(chess_rpc_client_duration_seconds_count{outcome=~"timeout|unavailable"}[5m]))
+              / sum(rate(chess_rpc_client_duration_seconds_count[5m])) > 0.01
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: More than 1% of game commands get no reply from game-svc
+            description: '{{ $value | humanizePercentage }} of gRPC commands time out or find no game-svc endpoint. Players see "Game service did not answer". Check game-svc pods, the game-svc-grpc headless Service and core logs.'
+    - name: chess.events
+      rules:
+        - alert: ChessDeadEvents
+          expr: max(chess_events_dead) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Events failed 5 deliveries and were dead-lettered
+            description: '{{ $value }} entries in {chess}:events:dead. Inspect with XRANGE {chess}:events:dead - +; game results there were not saved.'
+        - alert: ChessEventLag
+          expr: max by (group) (chess_events_lag) > 100
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: 'Consumer group {{ $labels.group }} is falling behind on {chess}:events'
+            description: '{{ $value }} events not yet read. Finished games are not being saved, and unacknowledged entries are never trimmed, so Redis memory grows. Check core pods and Postgres.'

@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: postgres
+  namespace: chess
+spec:
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 15s
+  selector:
+    matchLabels:
+      cnpg.io/cluster: postgres

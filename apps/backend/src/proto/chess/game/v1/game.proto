@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package chess.game.v1;
+
+service GameCommands {
+  rpc Create(CreateRequest) returns (CreateReply);
+  rpc Join(InGameRequest) returns (JoinReply);
+  rpc Pending(ClientRequest) returns (PendingReply);
+  rpc CancelLobby(ClientRequest) returns (Empty);
+  rpc Leave(ClientRequest) returns (Empty);
+  rpc Surrender(InGameRequest) returns (Empty);
+  rpc Move(MoveRequest) returns (Empty);
+  rpc Chat(ChatRequest) returns (Empty);
+  rpc ProposeDraw(InGameRequest) returns (Empty);
+  rpc AcceptDraw(InGameRequest) returns (Empty);
+  rpc RejectDraw(InGameRequest) returns (Empty);
+  rpc AddTime(InGameRequest) returns (Empty);
+}
+
+message Empty {}
+
+message ClientIdentity {
+  int64 user_id = 1;
+  string name = 2;
+  bool authorized = 3;
+}
+
+message ClientRequest {
+  ClientIdentity client = 1;
+}
+
+message InGameRequest {
+  ClientIdentity client = 1;
+  int64 game_id = 2;
+}
+
+message GameConfig {
+  string side = 1;
+  double time = 2;
+  double time_increment = 3;
+  double bet = 4;
+}
+
+message CreateRequest {
+  ClientIdentity client = 1;
+  GameConfig config = 2;
+}
+
+message CreateReply {
+  int64 id = 1;
+  string match_id = 2;
+}
+
+message JoinReply {
+  int64 id = 1;
+}
+
+message Turn {
+  int64 game_id = 1;
+  string figure = 2;
+  string cell = 3;
+}
+
+message MoveRequest {
+  ClientIdentity client = 1;
+  Turn turn = 2;
+}
+
+message ChatRequest {
+  ClientIdentity client = 1;
+  int64 game_id = 2;
+  string text = 3;
+}
+
+message ClockState {
+  double w = 1;
+  double b = 2;
+  optional string running = 3;
+  double server_now = 4;
+}
+
+message Board {
+  map<string, string> w = 1;
+  map<string, string> b = 2;
+}
+
+message InitData {
+  Board board = 1;
+  int64 game_id = 2;
+  string side = 3;
+  double max_time = 4;
+  double time_increment = 5;
+  ClockState clock = 6;
+}
+
+message PendingGame {
+  int64 id = 1;
+  InitData init_data = 2;
+}
+
+message PendingReply {
+  optional PendingGame game = 1;
+}

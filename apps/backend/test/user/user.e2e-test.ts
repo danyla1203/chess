@@ -1,0 +1,352 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { ConflictException, INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { faker } from '@faker-js/faker';
+import req from 'supertest';
+import { AppModule } from '../../src/app.module';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
+import { checkTokens } from '../utils/checkTokens';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+
+jest.mock('axios', () => null);
+
+describe('User e2e', () => {
+  let app: INestApplication;
+  let server: any;
+  let prisma: PrismaService;
+  let cnf: ConfigService;
+  let jwt: JwtService;
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        provide: CACHE_MANAGER,
+        useValue: {
+          get: () => null,
+          set: () => jest.fn(),
+        },
+      })
+      .compile();
+    app = moduleFixture.createNestApplication();
+    await app.init();
+    server = app.getHttpServer();
+    prisma = moduleFixture.get(PrismaService);
+    cnf = moduleFixture.get(ConfigService);
+    jwt = moduleFixture.get(JwtService);
+  });
+  afterAll(async () => {
+    await app.close();
+    server.close();
+  });
+
+  describe('signup', () => {
+    it('should return 409 if no email confirmation', (done) => {
+      req(server)
+        .post('/user/signup')
+        .send({
+          name: faker.internet.username(),
+          email: faker.internet.email(),
+          password: faker.internet.password(),
+          deviceId: 'test1',
+        })
+        .expect(409, new ConflictException('Confirm email first').getResponse())
+        .end(done);
+    });
+    it('should return 409 if user already exist', async () => {
+      const user = await prisma.user.findFirst();
+      await req(server)
+        .post('/user/signup')
+        .send({
+          name: faker.internet.username(),
+          email: user.email,
+          password: faker.internet.password(),
+          deviceId: 'test1',
+        })
+        .expect(
+          409,
+          new ConflictException('User already exists').getResponse(),
+        );
+    });
+    it('should create user and return tokens', async () => {
+      const confirmation = await prisma.confirmation.findFirst({
+        include: {
+          user: true,
+        },
+        where: {
+          user: null,
+        },
+      });
+      const { body } = await req(server)
+        .post('/user/signup')
+        .send({
+          name: faker.internet.username(),
+          email: confirmation.email,
+          password: faker.internet.password(),
+          deviceId: 'test1',
+        })
+        .expect(201);
+      expect(body).toHaveProperty('access');
+      expect(body).toHaveProperty('refresh');
+
+      const [access, refresh] = checkTokens(
+        body.access,
+        body.refresh,
+        cnf.get('JWT_SECRET'),
+      );
+      const user = await prisma.user.findUnique({
+        where: { email: confirmation.email },
+      });
+      const expectedPayload = { id: user.id, deviceId: 'testD' };
+
+      expect(access.id).toEqual(expectedPayload.id);
+      expect(refresh.id).toEqual(expectedPayload.id);
+      expect(refresh.deviceId).toEqual('test1');
+      expect(access.deviceId).toEqual('test1');
+    });
+  });
+  describe('getProfile', () => {
+    let access: string;
+    let user: any;
+    beforeAll(async () => {
+      user = await prisma.user.findFirst({
+        include: {
+          auth: true,
+        },
+        where: {
+          auth: { some: {} },
+        },
+      });
+      access = jwt.sign(
+        { id: user.id, deviceId: user.auth[0].deviceId },
+        {
+          secret: cnf.get('JWT_SECRET'),
+        },
+      );
+    });
+    it('should return profile', async () => {
+      await req(server)
+        .get('/user')
+        .set('Authorization', `Bearer ${access}`)
+        .expect(200, {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          balance: user.balance,
+          createdAt: user.createdAt.toISOString(),
+          winningBalance: user.winningBalance,
+        });
+    });
+  });
+  describe('get games', () => {
+    let access: string;
+    let games: any;
+    beforeAll(async () => {
+      const user = await prisma.user.findFirst({
+        include: {
+          auth: true,
+          players: {
+            include: {
+              game: true,
+            },
+          },
+        },
+        where: {
+          auth: { some: {} },
+          players: { some: {} },
+        },
+      });
+      games = await prisma.game.findMany({
+        select: {
+          id: true,
+          maxTime: true,
+          timeIncrement: true,
+          sideSelecting: true,
+          isDraw: true,
+          moves: true,
+          bet: true,
+          createdAt: true,
+          players: {
+            select: {
+              userId: true,
+              side: true,
+              isWinner: true,
+              user: { select: { id: true, name: true } },
+            },
+          },
+        },
+        where: { players: { some: { userId: user.id } } },
+        orderBy: { id: 'asc' },
+      });
+      access = jwt.sign(
+        { id: user.id, deviceId: user.auth[0].deviceId },
+        {
+          secret: cnf.get('JWT_SECRET'),
+        },
+      );
+    });
+    it('should return user games', async () => {
+      const parsed = games.map((g) => {
+        const time = Math.floor(g.maxTime / (1000 * 60));
+        const inc = Math.floor(g.timeIncrement / 1000);
+        const [pl1, pl2] = g.players.map((pl) => {
+          return {
+            userId: pl.userId,
+            side: pl.side,
+            winner: pl.isWinner,
+            name: pl.user.name,
+          };
+        });
+        const result = g.isDraw
+          ? { pl1, pl2 }
+          : pl1.winner
+            ? { winner: pl1, looser: pl2 }
+            : { winner: pl2, looser: pl1 };
+        return {
+          id: g.id,
+          key: g.id,
+          bet: g.bet,
+          date: g.createdAt.toISOString(),
+          cnf: {
+            inc,
+            time,
+          },
+          result,
+          sidepick: g.sideSelecting,
+        };
+      });
+      await req(server)
+        .get('/user/games')
+        .set('Authorization', `Bearer ${access}`)
+        .expect(200, { games: parsed, wins: 0, looses: 1, draws: 0 });
+    });
+  });
+  describe('update', () => {
+    let access: string;
+    let user: any;
+    beforeAll(async () => {
+      user = await prisma.user.findFirst({
+        include: {
+          auth: true,
+        },
+        where: {
+          auth: { some: {} },
+        },
+      });
+      access = jwt.sign(
+        { id: user.id, deviceId: user.auth[0].deviceId },
+        {
+          secret: cnf.get('JWT_SECRET'),
+        },
+      );
+    });
+    it('should update user', async () => {
+      await req(server)
+        .patch('/user')
+        .set('Authorization', `Bearer ${access}`)
+        .send({
+          name: 'NewName',
+        })
+        .expect(200, {
+          id: user.id,
+          name: 'NewName',
+          email: user.email,
+          balance: user.balance,
+          createdAt: user.createdAt.toISOString(),
+          winningBalance: user.winningBalance,
+        });
+    });
+  });
+  describe('user payments history', () => {
+    let access: string;
+    let user: any;
+    beforeAll(async () => {
+      user = await prisma.user.findFirst({
+        include: {
+          auth: true,
+          payment: {
+            orderBy: {
+              date: 'desc',
+            },
+          },
+        },
+        where: {
+          auth: {
+            some: {
+              expiresIn: { gte: new Date() },
+            },
+          },
+        },
+      });
+      access = jwt.sign(
+        { id: user.id, deviceId: user.auth[1].deviceId },
+        {
+          secret: cnf.get('JWT_SECRET'),
+        },
+      );
+    });
+    it('should return all users invoices', async () => {
+      user = JSON.parse(JSON.stringify(user));
+      await req(server)
+        .get('/user/payment/history')
+        .set('Authorization', `Bearer ${access}`)
+        .then((res: any) => {
+          expect(res.body.total).toEqual(user.payment.length);
+          expect(res.body.invoices).toStrictEqual(user.payment);
+        });
+    });
+  });
+  describe('update user name', () => {
+    let access: string;
+    let user: any;
+    beforeAll(async () => {
+      user = await prisma.user.findFirst({
+        include: {
+          auth: true,
+          payment: {
+            orderBy: {
+              date: 'desc',
+            },
+          },
+        },
+        where: {
+          auth: {
+            some: {
+              expiresIn: { gte: new Date() },
+            },
+          },
+        },
+      });
+      access = jwt.sign(
+        { id: user.id, deviceId: user.auth[1].deviceId },
+        {
+          secret: cnf.get('JWT_SECRET'),
+        },
+      );
+    });
+    it('should throw Conflict error if provided name already taken', async () => {
+      const anotherUser = await prisma.user.findFirst({
+        where: { id: { not: user.id } },
+      });
+      await req(server)
+        .patch('/user')
+        .set('Authorization', `Bearer ${access}`)
+        .send({ name: anotherUser.name })
+        .expect(409);
+    });
+    it('should update user name', async () => {
+      const newName = faker.string.alpha({ length: { min: 5, max: 14 } });
+      await req(server)
+        .patch('/user')
+        .set('Authorization', `Bearer ${access}`)
+        .send({ name: newName })
+        .expect(200);
+      const updatedUser = await prisma.user.findUnique({
+        where: { id: user.id },
+      });
+      expect(updatedUser.name).toEqual(newName);
+    });
+  });
+});

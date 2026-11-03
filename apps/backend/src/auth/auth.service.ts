@@ -1,0 +1,158 @@
+import {
+  BadRequestException as BadRequest,
+  ConflictException as Conflict,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import bcrypt from 'bcrypt';
+import { EmailLoginDto, NameLoginDto } from './dto';
+import { AuthModel } from './auth.model';
+import { TokenService } from './tokens/token.service';
+import { InternalAuthorizedUserFields } from '../user/entities/user.entity';
+import { Tokens } from './tokens/token.entities';
+import { ConfigService } from '@nestjs/config';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private tokenService: TokenService,
+    private model: AuthModel,
+    private config: ConfigService,
+  ) {}
+
+  public async sendVerificationMail(
+    email: string,
+  ): Promise<{ message: 'ok'; email: string; code: number }> {
+    const isUserExist = await this.model.findUserByEmail(email);
+    if (isUserExist) throw new Conflict('User already exists');
+
+    const code = Math.floor(Math.random() * 1000000);
+    // INFO: Disable sendgrid mailing service for development purpose
+    // const [response] = await this.mailService.sendVerificationMail(code, email);
+    // if (response.statusCode !== 202) {
+    //   throw new BadRequest('Mail not sent');
+    // }
+    const confirmation = await this.model.findConfirmation(email);
+    if (!confirmation) {
+      await this.model.createConfirmation(code, email);
+    } else if (!confirmation.isConfirmed) {
+      await this.model.changeConfirmationCode(confirmation.id, code);
+    } else {
+      throw new Conflict('Email already confirmed');
+    }
+    // INFO: Returning code, while sendgrid mailing is disabled
+    return { message: 'ok', email, code };
+  }
+  public async verifyEmail(
+    code: string,
+    email: string,
+  ): Promise<{ message: 'ok' }> {
+    const confirmation = await this.model.findConfirmation(email);
+    if (!confirmation) throw new BadRequest('Invalid email');
+    if (confirmation.code !== code) throw new BadRequest('Invalid code');
+
+    await this.model.confirmConfirmation(email);
+
+    return { message: 'ok' };
+  }
+
+  public async useRefresh(refreshToken: string): Promise<Tokens> {
+    const auth = await this.model.findSession(refreshToken);
+    if (!auth) throw new UnauthorizedException();
+    if (auth.expiresIn < new Date()) {
+      await this.model.deleteSession(auth.id);
+      throw new BadRequest('Session expired');
+    }
+
+    const tokens = await this.tokenService.getPair(auth.userId, auth.deviceId);
+    await this.model.deleteSession(auth.id);
+    await this.model.createSession(auth.userId, tokens.refresh, auth.deviceId);
+
+    return tokens;
+  }
+
+  public async createSession(id: number, deviceId: string): Promise<Tokens> {
+    const tokens = await this.tokenService.getPair(id, deviceId);
+
+    await this.model.createSession(id, tokens.refresh, deviceId);
+
+    return tokens;
+  }
+
+  public async checkoutUserSession(
+    id: number,
+    deviceId: string,
+  ): Promise<InternalAuthorizedUserFields> {
+    const auth = await this.model.findSessionByUserId(id, deviceId);
+    if (!auth) throw new UnauthorizedException();
+    if (auth.expiresIn < new Date()) {
+      await this.model.deleteSession(auth.id);
+      throw new BadRequest('Session expired');
+    }
+    return { ...auth.user, deviceId: auth.deviceId };
+  }
+
+  public async login(loginData: NameLoginDto | EmailLoginDto): Promise<Tokens> {
+    const user =
+      'email' in loginData
+        ? await this.model.findUserByEmail(loginData.email)
+        : await this.model.findUserByName(loginData.name);
+    if (!user) throw new UnauthorizedException();
+
+    const isPasswordValid = await bcrypt.compare(
+      loginData.password,
+      user.password,
+    );
+    if (!isPasswordValid) throw new UnauthorizedException();
+
+    const tokens = await this.tokenService.getPair(user.id, loginData.deviceId);
+
+    await this.model.createSession(user.id, tokens.refresh, loginData.deviceId);
+
+    return tokens;
+  }
+  public async logout(id: number, deviceId: string) {
+    await this.model.deleteSessionByUserId(id, deviceId);
+  }
+
+  public async googleOAuth(code: string) {
+    const { email } = await this.tokenService.getGoogleUser(code);
+    const user = await this.model.findUserByEmail(email);
+    if (!user) {
+      const confirmation = await this.model.findConfirmation(email);
+      if (!confirmation) await this.model.createConfirmation(-1, email, true);
+      return { message: 'ok', email, action: 'user:created' };
+    } else {
+      const tokens = await this.tokenService.getPair(
+        user.id,
+        'google-' + user.id,
+      );
+      await this.model.createSession(
+        user.id,
+        tokens.refresh,
+        'google-' + user.id,
+      );
+      return { ...tokens, action: 'user:authorized' };
+    }
+  }
+
+  public async getGoogleOauthLink() {
+    const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+    const options = {
+      redirect_uri: this.config.get<string>('GOOGLE_REDIRECT_URL'),
+      client_id: this.config.get<string>('GOOGLE_CLIENT_ID'),
+      access_type: 'offline',
+      response_type: 'code',
+      prompt: 'consent',
+      scope: [
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email',
+      ].join(' '),
+    };
+
+    const qs = new URLSearchParams(options);
+
+    return `${rootUrl}?${qs.toString()}`;
+  }
+}

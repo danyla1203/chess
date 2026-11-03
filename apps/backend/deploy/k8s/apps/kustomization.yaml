@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: chess
+resources:
+  - ../base
+  - config.yaml
+  - redis.yaml
+  - core.yaml
+  - game-svc.yaml
+  - gateway.yaml
+images:
+  - name: chess-backend
+    newName: chess-backend
+    newTag: latest
+  - name: chess-backend-migrate
+    newName: chess-backend-migrate
+    newTag: latest

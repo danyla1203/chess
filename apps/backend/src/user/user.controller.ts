@@ -1,0 +1,48 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Request,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { UserService } from './user.service';
+import { CreateUserDto, UpdateUserDto } from './dto';
+import { AuthGuard } from '../auth';
+import { UserCacheInterceptor } from './interceptors/UserCache.interceptor';
+@UseInterceptors(UserCacheInterceptor)
+@Controller('user')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @Post('/signup')
+  signUp(@Body() createUserDto: CreateUserDto) {
+    return this.userService.create(createUserDto);
+  }
+
+  @Get('')
+  @UseGuards(AuthGuard)
+  findOne(@Request() req) {
+    return this.userService.profile(req.user.id);
+  }
+
+  @Get('/games')
+  @UseGuards(AuthGuard)
+  findGames(@Request() req) {
+    return this.userService.games(req.user.id);
+  }
+
+  @Patch('')
+  @UseGuards(AuthGuard)
+  update(@Request() { user }, @Body() { name }: UpdateUserDto) {
+    return this.userService.updateUserName(user.id, name);
+  }
+
+  @Get('/payment/history')
+  @UseGuards(AuthGuard)
+  getInvoices(@Request() req) {
+    return this.userService.getUserInvoices(req.user.id);
+  }
+}

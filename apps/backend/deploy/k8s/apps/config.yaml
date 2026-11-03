@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chess-config
+data:
+  ENV: prod
+  JWT_ACCESS_EXPIRES: 360s
+  JWT_REFRESH_EXPIRES: 30d
+  GAME_SVC_GRPC_TARGET: dns:///game-svc-grpc:50051
+  OTEL_METRIC_EXPORT_INTERVAL: '15000'
+  OTEL_SEMCONV_STABILITY_OPT_IN: http
