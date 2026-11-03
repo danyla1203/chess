@@ -3,55 +3,20 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Button } from '@heroui/react';
 import { io, type Socket } from 'socket.io-client';
+import {
+  User,
+  type ClientToServerEvents,
+  type ServerToClientEvents,
+} from '@chess/contract';
 import { getAnonymousGames } from '../utils';
 import { useUserState } from './UserContext';
 import { Loader } from '@/components';
 
-export enum Lobby {
-  update = 'lobby:update',
-  added = 'lobby:added',
-  removed = 'lobby:removed',
-}
-export enum Game {
-  pendingGame = 'game:pending-one',
-  created = 'game:created',
-  init = 'game:init-data',
-  start = 'game:start',
-  shah = 'game:shah',
-  mate = 'game:mate',
-  draw = 'game:draw',
-  rejectDraw = 'game:draw_rejected',
-  addTime = 'game:add-time',
-  end = 'game:end',
-  strike = 'game:strike',
-  boardUpdate = 'game:board-update',
-  message = 'game:chat-message',
-  surrender = 'game:surrender',
-  drawPurpose = 'game:draw_propose',
-  playerDiconnected = 'game:opponent-disconnected',
-  playerReconected = 'game:player-reconnected',
-}
-export enum User {
-  anonymousToken = 'user:anon-token',
-}
+export type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-export enum Emit {
-  createGame = 'create',
-  gameJoin = 'join',
-  gameRejoin = 'rejoin',
-  figureMove = 'move',
-  pushMessage = 'chat-message',
-  addTime = 'add_time',
-  surrender = 'surrender',
-  drawPurpose = 'draw_propose',
-  drawReject = 'draw_reject',
-  drawAccept = 'draw_accept',
-  leave = 'leave',
-}
+export const WebSocketContext = createContext<GameSocket | null>(null);
 
-export const WebSocketContext = createContext<Socket | null>(null);
-
-export const useWebSocket = (): Socket => {
+export const useWebSocket = (): GameSocket => {
   const context = useContext(WebSocketContext);
   if (!context) {
     throw new Error('No context provided');
@@ -59,7 +24,7 @@ export const useWebSocket = (): Socket => {
   return context;
 };
 
-const createSocket = (token: string | null) =>
+const createSocket = (token: string | null): GameSocket =>
   io(`${process.env.NEXT_PUBLIC_WS_HOST}/game?Authorization=${token}`, {
     transports: ['websocket'],
     reconnectionAttempts: 5,
@@ -70,7 +35,7 @@ export const WebSocketProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<GameSocket | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const { updateUser } = useUserState();
   console.warn(process.env.NEXT_PUBLIC_WS_HOST);
@@ -102,7 +67,7 @@ export const WebSocketProvider = ({
   useEffect(() => {
     // TODO: Potential XSS vulnerability, change it in future
     const accessToken = localStorage.getItem('accessToken');
-    let newSocket: Socket;
+    let newSocket: GameSocket;
     if (!accessToken) newSocket = anonConnection();
     else newSocket = authConnection(accessToken);
 

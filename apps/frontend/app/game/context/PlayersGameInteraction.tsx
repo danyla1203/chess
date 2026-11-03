@@ -1,4 +1,5 @@
-import { Emit, Game, useWebSocket } from '@/context/SocketContext';
+import { Emit, Game } from '@chess/contract';
+import { useWebSocket } from '@/context/SocketContext';
 import { useConfigContext } from '.';
 import { useContext, useEffect, useState, createContext } from 'react';
 
@@ -51,7 +52,7 @@ export const PlayersGameInteractionProvider = ({
   };
   const drawPurpose = () => {
     console.log('purp');
-    socket.volatile.emit(Emit.drawPurpose, {
+    socket.volatile.emit(Emit.drawPropose, {
       gameId: cnf.gameId,
     });
     setDrawState('waiting');
@@ -69,14 +70,14 @@ export const PlayersGameInteractionProvider = ({
   };
 
   useEffect(() => {
-    socket.on(Game.drawPurpose, () => {
+    socket.on(Game.drawPropose, () => {
       setDrawState('incoming');
     });
     socket.on(Game.rejectDraw, () => {
       setDrawState(null);
     });
     return () => {
-      socket.off(Game.drawPurpose);
+      socket.off(Game.drawPropose);
       socket.off(Game.rejectDraw);
     };
   }, []);

@@ -9,7 +9,8 @@ import {
   Button,
   Slider,
 } from '@heroui/react';
-import { Emit, useWebSocket } from '@/context/SocketContext';
+import { Emit, type CreateGame as CreateGameConfig } from '@chess/contract';
+import { useWebSocket } from '@/context/SocketContext';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useUserState } from '@/app/lib/context/UserContext';
@@ -23,7 +24,7 @@ export function CreateGame() {
   const socket = useWebSocket();
   const router = useRouter();
 
-  const create = (side: string) => {
+  const create = (side: CreateGameConfig['side']) => {
     const body = {
       side,
       time: minutes * 60 * 1000,

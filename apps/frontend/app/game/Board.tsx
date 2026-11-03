@@ -1,10 +1,6 @@
 import { CellItem } from './Cell';
-import {
-  type PlainBoardState,
-  type Cell,
-  type SelectedCell,
-  type ShahData,
-} from './types';
+import type { PlainBoardState, Cell, ShahData } from '@chess/contract';
+import { type SelectedCell } from './types';
 
 const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 

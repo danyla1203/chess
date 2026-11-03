@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Input, Card, CardBody, Button } from '@heroui/react';
 import { useChat } from './context/Chat';
-import { type Message } from './types';
+import type { ChatMessage } from '@chess/contract';
 
 function InputBox({ addMessage }: { addMessage: (text: string) => void }) {
   const [val, setVal] = useState<string>('');
@@ -28,7 +28,7 @@ function InputBox({ addMessage }: { addMessage: (text: string) => void }) {
   );
 }
 
-function MessageItem({ message }: { message: Message }) {
+function MessageItem({ message }: { message: ChatMessage }) {
   const outputData = new Date();
   const minutes = outputData.getMinutes();
   const hours = outputData.getHours();

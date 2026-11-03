@@ -1,6 +1,7 @@
 'use client';
 
-import { type Cell, type Figure, type SelectedCell } from './types';
+import type { Cell, Figure } from '@chess/contract';
+import { type SelectedCell } from './types';
 import { Board } from './Board';
 import { useBoard } from './context/Board';
 import { useConfigContext } from './context';
