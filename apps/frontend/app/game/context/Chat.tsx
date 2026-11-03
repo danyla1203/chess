@@ -1,11 +1,11 @@
-import { Emit, Game, useWebSocket } from '@/context/SocketContext';
-import { type Message } from '../types';
+import { Emit, Game, type ChatMessage } from '@chess/contract';
+import { useWebSocket } from '@/context/SocketContext';
 
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useConfigContext } from '.';
 
 type Chat = {
-  messages: Message[];
+  messages: ChatMessage[];
   addMessage: (message: string) => void;
 };
 
@@ -26,7 +26,7 @@ export const useChat = () => {
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const socket = useWebSocket();
   const cnf = useConfigContext();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const addMessage = (text: string) => {
     socket.volatile.emit(Emit.pushMessage, {
@@ -35,14 +35,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
-  const setUpdateMessages = (message: Message) => {
+  const setUpdateMessages = (message: ChatMessage) => {
     const copy = [...messages];
     copy.push(message);
     setMessages(copy);
   };
 
   useEffect(() => {
-    socket.on(Game.message, (newState: Message) => {
+    socket.on(Game.message, (newState) => {
       setUpdateMessages(newState);
     });
     socket.on(Game.end, () => {

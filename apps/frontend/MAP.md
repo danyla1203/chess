@@ -52,7 +52,7 @@ app/
 │   ├── Chat.tsx              in-game chat
 │   ├── RightMenu/            captured pieces, clocks (+time), surrender/draw controls
 │   ├── chessPieces.scss      piece sprites as base64 SVG backgrounds
-│   ├── types.ts              board/move/result types (mirror backend DTOs)
+│   ├── types.ts              UI-only types (selection, restructured results); wire types come from @chess/contract
 │   └── context/              per-game providers, nested in this order:
 │       index.tsx             GameProvider: config (gameId, side, maxTime) from game:init-data; stores anon results
 │       PlayersGameInteraction.tsx  surrender, draw propose/accept/reject
@@ -62,7 +62,7 @@ app/
 │       Chat.tsx              messages from game:chat-message (+ "Game is over" on game:end)
 │       PlayerConnection.tsx  opponent online flag
 ├── lib/
-│   ├── context/           User, Socket (event enums), Notification, GameList
+│   ├── context/           User, Socket (typed GameSocket), Notification, GameList
 │   ├── request/           one function per REST call, built on req() in utis.ts
 │   ├── ui/Dropdown.tsx    generic dropdown menu
 │   └── utils.ts           deviceId(), anonymous game stats, restructGameResult()
@@ -92,7 +92,7 @@ postcss.config.mjs         @tailwindcss/postcss
 
 ## Socket contract
 
-Enums in `lib/context/SocketContext.tsx`. `Emit` = client → server (`create`, `join`, `rejoin`, `move`, `chat-message`, `add_time`, `surrender`, `draw_propose`, `draw_reject`, `draw_accept`, `leave`). `Game`/`Lobby`/`User` = server → client, matching `chess_backend/src/game/EmitTypes.ts`. Full payloads are in `chess_backend/MAP.md`.
+Enums, payload types and the `ServerToClientEvents`/`ClientToServerEvents` maps live in `@chess/contract` (`packages/contract/src/socket`); the socket is typed as `GameSocket` in `lib/context/SocketContext.tsx`. `Emit` = client → server (`create`, `join`, `rejoin`, `move`, `chat-message`, `add_time`, `surrender`, `draw_propose`, `draw_reject`, `draw_accept`, `leave`). `Game`/`Lobby`/`User` = server → client, matching `apps/backend/src/domain/game/EmitTypes.ts`. `rejoin` and `leave` carry no payload. REST types are in `packages/contract/src/rest` and used by `lib/request/`.
 
 Figure ids come from the backend: `K1/K2` are **knights** and `Kn` is the **king**.
 

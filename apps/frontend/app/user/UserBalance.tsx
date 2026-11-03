@@ -5,7 +5,7 @@ import { stripeCheckout } from '../lib/request/stripeCheckout';
 export function UserBalance({ profile }: { profile: Profile }) {
   const topUpRedirect = () => {
     void stripeCheckout()?.then(({ url }) => {
-      window.location.href = url;
+      if (url) window.location.href = url;
     });
   };
   const int = Math.floor(profile.winningBalance / 100);

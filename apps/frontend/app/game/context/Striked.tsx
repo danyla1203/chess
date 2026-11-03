@@ -1,5 +1,5 @@
-import { Game, useWebSocket } from '@/context/SocketContext';
-import { type Figure, type StrikeData } from '../types';
+import { Game, type Figure, type StrikedData } from '@chess/contract';
+import { useWebSocket } from '@/context/SocketContext';
 
 import { useState, useEffect, createContext, useContext } from 'react';
 
@@ -32,7 +32,7 @@ export const StrikedProvider = ({
     b: [],
   });
 
-  const updateStrikedFigures = ({ figure, strikedSide }: StrikeData) => {
+  const updateStrikedFigures = ({ figure, strikedSide }: StrikedData) => {
     const copy = { ...striked };
     copy[strikedSide].push(figure);
     setStrikedFigures(copy);

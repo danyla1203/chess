@@ -26,7 +26,7 @@ export function SignupForm() {
 
   const signUp = async () => {
     const res = await createUser(email || '', userName, password);
-    if (res.error) {
+    if (!('profile' in res)) {
       addNotification('error', res.error);
     } else {
       const { profile, access, refresh } = res;

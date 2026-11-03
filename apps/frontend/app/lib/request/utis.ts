@@ -1,10 +1,20 @@
-async function req(url: string, method: string): Promise<any>;
-async function req(url: string, method: string, token: string): Promise<any>;
-async function req(url: string, method: string, body: any): Promise<any>;
+export type Failable<T> = T & { error?: string };
+
+async function req<T = any>(url: string, method: string): Promise<Failable<T>>;
+async function req<T = any>(
+  url: string,
+  method: string,
+  token: string | null,
+): Promise<Failable<T>>;
+async function req<T = any>(
+  url: string,
+  method: string,
+  body: object,
+): Promise<Failable<T>>;
 async function req(
   url: string,
   method = 'GET',
-  tokenOrBody?: string | any,
+  tokenOrBody?: string | object | null,
 ): Promise<any> {
   const base: any = {
     headers: {

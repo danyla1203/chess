@@ -2,14 +2,12 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getProfile } from '@/requests';
+import type { PaymentInvoice } from '@chess/contract';
 import { type RestructedGameResult } from '@/app/game/types';
 import { Loader } from '@/app/components';
 
-export type Invoice = {
-  id: number;
+export type Invoice = Pick<PaymentInvoice, 'id' | 'topUpAmount' | 'date'> & {
   key: number;
-  topUpAmount: number;
-  date: Date;
 };
 
 export type Profile = {

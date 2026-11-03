@@ -1,8 +1,14 @@
-import { Game, Emit, useWebSocket } from '@/context/SocketContext';
+import {
+  Game,
+  Emit,
+  type BoardUpdate,
+  type ClockState,
+  type InitedGameData,
+} from '@chess/contract';
+import { useWebSocket } from '@/context/SocketContext';
 
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { useConfigContext } from '.';
-import type { ClockState, InitedGameData } from '../types';
 
 const RENDER_INTERVAL_MS = 100;
 
@@ -77,8 +83,7 @@ export const TimerProvider = ({
 
   useEffect(() => {
     anchor.current = { ...anchor.current, receivedAt: performance.now() };
-    const onBoardUpdate = ({ clock }: { clock?: ClockState }) =>
-      applyClock(clock);
+    const onBoardUpdate = ({ clock }: BoardUpdate) => applyClock(clock);
     const onInit = ({ clock }: InitedGameData) => applyClock(clock);
 
     socket.on(Game.boardUpdate, onBoardUpdate);

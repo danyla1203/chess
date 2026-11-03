@@ -2,24 +2,15 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lobby, Game, useWebSocket, Emit } from './SocketContext';
+import {
+  Lobby,
+  Game,
+  Emit,
+  type GameData as LobbyGame,
+  type GameConfig,
+} from '@chess/contract';
+import { useWebSocket } from './SocketContext';
 
-type PlayerData = {
-  name: string;
-  userId: number;
-};
-
-export type GameDataPayload = {
-  id: string;
-  spectators: number;
-  players: PlayerData[];
-  isActive: boolean;
-  config: {
-    time: number;
-    timeIncrement: number;
-    side: 'w' | 'b' | 'rand';
-  };
-};
 export type GameData = {
   id: string;
   key: string;
@@ -27,7 +18,7 @@ export type GameData = {
     time: number;
     inc: number;
   };
-  sidepick: 'w' | 'b' | 'rand';
+  sidepick: GameConfig['side'];
   opponent: string;
 };
 
@@ -61,7 +52,7 @@ export const useGameList = () => {
   return context;
 };
 
-const toGameData = (g: GameDataPayload): GameData => ({
+const toGameData = (g: LobbyGame): GameData => ({
   id: String(g.id),
   key: String(g.id),
   sidepick: g.config.side,
@@ -88,22 +79,22 @@ export const GameListProvider = ({
   const rejoin = (gameId: number) => {
     router.push(`/game?action=rejoin&id=${gameId}`);
   };
-  const leave = (gameId: number) => {
-    socket.volatile.emit(Emit.leave, { gameId });
+  const leave = (_gameId: number) => {
+    socket.volatile.emit(Emit.leave);
   };
 
   useEffect(() => {
-    socket.on(Lobby.update, (payload: GameDataPayload[]) => {
+    socket.on(Lobby.update, (payload) => {
       setGames(payload.map(toGameData));
     });
-    socket.on(Lobby.added, (payload: GameDataPayload) => {
+    socket.on(Lobby.added, (payload) => {
       const game = toGameData(payload);
       setGames((games) => [...games.filter((g) => g.id !== game.id), game]);
     });
-    socket.on(Lobby.removed, ({ gameId }: { gameId: number }) => {
+    socket.on(Lobby.removed, ({ gameId }) => {
       setGames((games) => games.filter((g) => g.id !== String(gameId)));
     });
-    socket.on(Game.pendingGame, ({ gameId }: { gameId: number }) => {
+    socket.on(Game.pendingGame, ({ gameId }) => {
       setPendingGame(gameId);
     });
     socket.on(Game.end, () => {

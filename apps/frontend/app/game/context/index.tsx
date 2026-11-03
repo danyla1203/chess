@@ -1,11 +1,7 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 
-import { useWebSocket, Game, Emit } from '@/context/SocketContext';
-import {
-  type DrawGame,
-  type GameWithWinner,
-  type InitedGameData,
-} from '../types';
+import { Game, Emit, type InitedGameData } from '@chess/contract';
+import { useWebSocket } from '@/context/SocketContext';
 import { useSearchParams } from 'next/navigation';
 import { TimerProvider } from './Timer';
 import { BoardProvider } from './Board';
@@ -16,12 +12,6 @@ import { PlayersGameInteractionProvider } from './PlayersGameInteraction';
 import { useUserState } from '@/app/lib/context/UserContext';
 import { restructGameResult } from '@/app/lib/utils';
 import { Loader } from '@/app/components';
-
-type GameEnd = {
-  reason: string;
-  winner: boolean;
-  game: DrawGame | GameWithWinner;
-};
 
 const GameContext = createContext<InitedGameData>({
   board: { w: {}, b: {} },
@@ -53,13 +43,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const gameId = parseInt(id as string);
       socket.volatile.emit(Emit.gameJoin, { gameId });
     } else if (param === 'rejoin') {
-      const gameId = parseInt(params.get('id') as string);
-      socket.volatile.emit(Emit.gameRejoin, { gameId });
+      socket.volatile.emit(Emit.gameRejoin);
     }
-    socket.on(Game.init, (payload: InitedGameData) => {
+    socket.on(Game.init, (payload) => {
       setInitData(payload);
     });
-    socket.on(Game.end, ({ game }: GameEnd) => {
+    socket.on(Game.end, ({ game }) => {
       if (!profile?.isAuthorized) {
         const gms = localStorage.getItem('anon-games');
         if (gms) {

@@ -1,13 +1,15 @@
-import { Emit, Game, useWebSocket } from '@/context/SocketContext';
 import {
+  Emit,
+  Game,
   type Figure,
   type Cell,
-  type Move,
+  type MoveUpdate,
   type PlainBoardState,
-  type StrikeData,
+  type StrikedData,
   type ShahData,
   type MateData,
-} from '../types';
+} from '@chess/contract';
+import { useWebSocket } from '@/context/SocketContext';
 
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useConfigContext } from '.';
@@ -59,13 +61,13 @@ export const BoardProvider = ({
     });
   };
 
-  const updateBoardState = ({ cell, prevCell, figure, side }: Move) => {
+  const updateBoardState = ({ cell, prevCell, figure, side }: MoveUpdate) => {
     const copy = { ...boardState };
     delete copy[side][prevCell];
     copy[side][cell] = figure;
     setBoardState(copy);
   };
-  const removeStrikedFigure = ({ cell, strikedSide }: StrikeData) => {
+  const removeStrikedFigure = ({ cell, strikedSide }: StrikedData) => {
     const copy = { ...boardState };
     delete copy[strikedSide][cell];
     setBoardState(copy);

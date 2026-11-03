@@ -1,4 +1,4 @@
-import { type PlainBoardState, type Cell, type Figure } from './types';
+import type { PlainBoardState, Cell, Figure } from '@chess/contract';
 
 export class HighlightedCels {
   private Board!: PlainBoardState;

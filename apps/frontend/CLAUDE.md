@@ -34,7 +34,8 @@ Env (`.env.local`, see `.env.example`): `NEXT_PUBLIC_API_HOST`, `NEXT_PUBLIC_WS_
 - Path aliases (tsconfig): `@/*` -> repo root, `@/components` -> `app/components`, `@/context/*` -> `app/lib/context/*`, `@/requests` -> `app/lib/request`, `@/ui/*` -> `app/lib/ui/*`.
 - Every API call is a small function in `app/lib/request/`, built on the `req()` helper in `utis.ts` (sic). Re-export it from `request/index.ts`.
 - Global state is React context in `app/lib/context/`. Per-game state is a stack of providers in `app/game/context/`.
-- Socket event names (`Game`, `Lobby`, `User`, `Emit` enums in `app/lib/context/SocketContext.tsx`) mirror `chess_backend/src/domain/game/EmitTypes.ts` and the gateway's `@SubscribeMessage` names. Change both sides together.
+- Socket event names (`Game`, `Lobby`, `User`, `Emit` enums), socket payload types and REST request/response types come from `@chess/contract` (`packages/contract`). Import them from there; never redefine wire types locally. The socket is typed (`GameSocket` in `app/lib/context/SocketContext.tsx`). Change the contract and the backend together; additive only.
+- `app/game/types.ts` holds UI-only types (`SelectedCell`, `RestructedGameResult`, `OpponentLeavePayload`).
 - Auth tokens live in `localStorage` (`accessToken`, `refreshToken`). Anonymous players get `anon-token`, and their finished games are kept in `anon-games`.
 - Chess piece sprites are CSS classes in `app/game/chessPieces.scss`, keyed by figure name without its digit (`pawn`, `R`, `K`, `B`, `Q`, `Kn`) plus side (`w`/`b`).
 - Prettier: single quotes, trailing commas.

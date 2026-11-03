@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { type Cell, type Figure } from './types';
+import type { Cell, Figure } from '@chess/contract';
 
 interface CellProps {
   highlighted: boolean;

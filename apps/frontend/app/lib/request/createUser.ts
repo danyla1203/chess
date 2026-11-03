@@ -1,4 +1,6 @@
+import type { SignUpRequest, Tokens } from '@chess/contract';
 import { deviceId } from '../utils';
+import { type Profile } from '../context/UserContext';
 import { getProfile } from './userProfile';
 import { req } from './utis';
 
@@ -6,20 +8,20 @@ export const createUser = async (
   email: string,
   userName: string,
   password: string,
-) => {
+): Promise<
+  | { error: string }
+  | { error?: undefined; profile: Profile; access: string; refresh: string }
+> => {
   const host = process.env.NEXT_PUBLIC_API_HOST as string;
-  try {
-    const res = await req(`${host}/user/signup`, 'POST', {
-      email,
-      name: userName,
-      password,
-      deviceId: deviceId(),
-    });
-    if (res.error) return res;
-    const { access, refresh } = res;
-    const profile = await getProfile(access);
-    return { profile, access, refresh };
-  } catch (e) {
-    console.error('Signup failed');
-  }
+  const body: SignUpRequest = {
+    email,
+    name: userName,
+    password,
+    deviceId: deviceId(),
+  };
+  const res = await req<Tokens>(`${host}/user/signup`, 'POST', body);
+  if (res.error) return { error: res.error };
+  const { access, refresh } = res;
+  const profile = await getProfile(access);
+  return { profile, access, refresh };
 };
