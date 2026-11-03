@@ -1,4 +1,1 @@
-export type Tokens = {
-  access: string;
-  refresh: string;
-};
+export type { Tokens } from '@chess/contract';

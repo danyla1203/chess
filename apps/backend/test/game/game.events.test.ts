@@ -2,7 +2,7 @@ import {
   gameEndedEvent,
   gameEndedMessage,
 } from '../../src/infrastructure/game/game.events';
-import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { GameEnd } from '@chess/contract';
 import { EventType } from '../../src/infrastructure/messaging';
 import { generateConfig, startedGame } from './generators';
 

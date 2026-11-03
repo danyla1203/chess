@@ -1,6 +1,7 @@
 import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
+import type { SignUpRequest } from '@chess/contract';
 
-export class CreateUserDto {
+export class CreateUserDto implements SignUpRequest {
   @IsEmail()
   email: string;
 

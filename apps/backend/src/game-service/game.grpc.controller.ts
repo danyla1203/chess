@@ -12,7 +12,8 @@ import {
   MoveRequest,
   PendingReply,
 } from '../generated/chess/game/v1/game';
-import type { CreateGameDto, InitedGameData } from '../game/dto';
+import type { InitedGameData } from '@chess/contract';
+import type { CreateGameDto } from '../game/dto';
 import type {
   ClientIdentity,
   GameCommandName,

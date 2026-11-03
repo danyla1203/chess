@@ -14,7 +14,7 @@ import {
   MateData,
   ShahData,
   StrikedData,
-} from '../../../MoveResult';
+} from '@chess/contract';
 
 export class GameProcess {
   store: GameState;

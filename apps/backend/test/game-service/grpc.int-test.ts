@@ -18,7 +18,7 @@ import { GameClock } from '../../src/infrastructure/game/game.clock';
 import { GameMetrics } from '../../src/infrastructure/game/game.metrics';
 import { GamePublisher } from '../../src/game/game.publisher';
 import { GameAdapter } from '../../src/game/game.adapter';
-import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { GameEnd } from '@chess/contract';
 import { GameCommandHandler } from '../../src/game-service/game.commands';
 import { GameGrpcController } from '../../src/game-service/game.grpc.controller';
 import { GrpcHealthController } from '../../src/game-service/grpc.health.controller';

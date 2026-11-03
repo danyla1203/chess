@@ -6,7 +6,7 @@ import { GameMetrics } from '../../src/infrastructure/game/game.metrics';
 import { GamePublisher } from '../../src/game/game.publisher';
 import { GameAdapter } from '../../src/game/game.adapter';
 import { GameProcess } from '../../src/domain/game/entities/game/process/game.process';
-import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { GameEnd } from '@chess/contract';
 import { Client } from '../../src/domain/game/entities';
 import { EventType } from '../../src/infrastructure/messaging';
 import { generateClient, generateConfig } from './generators';

@@ -1,6 +1,7 @@
 import { IsNumber, IsString, Length } from 'class-validator';
+import type { Turn } from '@chess/contract';
 
-export class TurnBody {
+export class TurnBody implements Turn {
   @IsNumber()
   gameId: number;
 

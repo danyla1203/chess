@@ -1,4 +1,4 @@
-import { ShahData } from '../../../MoveResult';
+import { ShahData } from '@chess/contract';
 import { Figures, Figure, Cell, FiguresSet, GameStateSnapshot } from '..';
 
 export class GameState {

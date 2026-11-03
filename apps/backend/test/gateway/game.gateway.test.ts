@@ -8,7 +8,8 @@ import { GatewayMetrics } from '../../src/gateway/gateway.metrics';
 import { SocketNotifier, userRoom } from '../../src/gateway/socket.notifier';
 import { IsBalanceEnough } from '../../src/gateway/guards';
 import { GameReadModel } from '../../src/game-read';
-import { Game, Lobby, User, room } from '../../src/domain/game/EmitTypes';
+import { Game, Lobby, User } from '@chess/contract';
+import { room } from '../../src/infrastructure/socket/rooms';
 import { Client } from '../../src/domain/game/entities';
 import {
   generateClient,

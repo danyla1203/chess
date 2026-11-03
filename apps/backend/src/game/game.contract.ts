@@ -1,4 +1,5 @@
-import type { CreateGameDto, InitedGameData, TurnBody } from './dto';
+import type { InitedGameData } from '@chess/contract';
+import type { CreateGameDto, TurnBody } from './dto';
 
 export type ClientIdentity = {
   userId: number;

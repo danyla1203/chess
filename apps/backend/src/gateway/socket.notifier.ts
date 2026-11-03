@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Namespace } from 'socket.io';
-import { Game as GameEvent, userRoom, room } from '../domain/game/EmitTypes';
+import { Game as GameEvent } from '@chess/contract';
+import { userRoom, room } from '../infrastructure/socket/rooms';
 
 export { userRoom };
 
