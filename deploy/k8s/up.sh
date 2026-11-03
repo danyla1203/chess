@@ -9,6 +9,12 @@ EXPECTED_CONTEXT="${KUBE_CONTEXT:-docker-desktop}"
 STATE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/chess"
 source "$DIR/secrets-lib.sh"
 TAG_FILE="$STATE_DIR/last-tag"
+HOSTS_FILE="$STATE_DIR/last-hosts"
+BACKEND_DOCKERFILE="$ROOT/apps/backend/Dockerfile.prod"
+FRONTEND_DOCKERFILE="$ROOT/apps/frontend/Dockerfile"
+WEB_HOST="${CHESS_WEB_HOST:-chess.localhost}"
+API_HOST="${CHESS_API_HOST:-api.chess.localhost}"
+PUBLIC_SCHEME="${CHESS_PUBLIC_SCHEME:-http}"
 ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-300s}"
 MIN_DOCKER_MEM=$((8 * 1024 * 1024 * 1024))
 
@@ -54,7 +60,8 @@ usage() {
   cat <<EOF
 Usage: deploy/k8s/up.sh [options]
 
-Installs the platform, builds the images, and deploys the chess services to
+Installs the platform, builds the images, and deploys the chess services and
+the frontend to
 the local Docker Desktop Kubernetes cluster.
 
 Options:
@@ -66,6 +73,12 @@ Environment:
   KUBE_CONTEXT         expected kubectl context (default: docker-desktop)
   CHESS_SECRETS_FILE   KEY=VALUE file for chess-secrets (default: $SECRETS_FILE)
   ROLLOUT_TIMEOUT      per-workload rollout timeout (default: 300s)
+  CHESS_WEB_HOST       hostname the frontend HTTPRoute serves (default: chess.localhost)
+  CHESS_API_HOST       hostname the browser uses for REST and Socket.IO (default: api.chess.localhost)
+  CHESS_PUBLIC_SCHEME  scheme baked into the frontend URLs (default: http)
+
+The NEXT_PUBLIC_* values are inlined into the frontend bundle at build time:
+changing the hosts needs a rebuild (no --skip-build).
 EOF
 }
 
@@ -74,7 +87,7 @@ diagnose() {
   kubectl -n "$NAMESPACE" get pods -o wide >&2 || true
   printf '\n%slast events%s\n' "$BOLD" "$RESET" >&2
   kubectl -n "$NAMESPACE" get events --sort-by=.lastTimestamp 2>/dev/null | tail -n 15 >&2 || true
-  for workload in core game-svc; do
+  for workload in core game-svc frontend; do
     printf '\n%slogs: %s%s\n' "$BOLD" "$workload" "$RESET" >&2
     kubectl -n "$NAMESPACE" logs "deploy/$workload" --all-containers --prefix --tail=20 >&2 2>&1 || true
   done
@@ -140,7 +153,8 @@ default_sc="$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annotat
 [ -n "$default_sc" ] || die "no default StorageClass" "Postgres, Redis and the monitoring stack need persistent volumes"
 info "default StorageClass: $default_sc"
 
-[ -f "$ROOT/Dockerfile.prod" ] || die "Dockerfile.prod not found in $ROOT"
+[ -f "$BACKEND_DOCKERFILE" ] || die "$BACKEND_DOCKERFILE not found"
+[ -f "$FRONTEND_DOCKERFILE" ] || die "$FRONTEND_DOCKERFILE not found"
 
 docker_mem="$(docker info --format '{{.MemTotal}}' 2>/dev/null || echo 0)"
 if [ "$docker_mem" -lt "$MIN_DOCKER_MEM" ]; then
@@ -165,20 +179,31 @@ if [ "$SKIP_BUILD" -eq 1 ]; then
   [ -f "$TAG_FILE" ] || die "no previous build recorded" "run without --skip-build"
   TAG="$(cat "$TAG_FILE")"
   info "reusing tag $TAG"
+  if [ -f "$HOSTS_FILE" ]; then
+    read -r WEB_HOST API_HOST PUBLIC_SCHEME <"$HOSTS_FILE"
+    info "frontend was built for $PUBLIC_SCHEME://$WEB_HOST (API $PUBLIC_SCHEME://$API_HOST)"
+  fi
 else
   TAG="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo dev)"
   if [ -n "$(git -C "$ROOT" status --porcelain 2>/dev/null || true)" ]; then
     TAG="$TAG-$(date +%s)"
   fi
   info "tag: $TAG"
-  docker build -f "$ROOT/Dockerfile.prod" --target runtime -t "chess-backend:$TAG" "$ROOT"
-  docker build -f "$ROOT/Dockerfile.prod" --target migrate -t "chess-backend-migrate:$TAG" "$ROOT"
+  info "frontend: $PUBLIC_SCHEME://$WEB_HOST, API: $PUBLIC_SCHEME://$API_HOST"
+  docker build -f "$BACKEND_DOCKERFILE" --target runtime -t "chess-backend:$TAG" "$ROOT"
+  docker build -f "$BACKEND_DOCKERFILE" --target migrate -t "chess-backend-migrate:$TAG" "$ROOT"
+  docker build -f "$FRONTEND_DOCKERFILE" \
+    --build-arg "NEXT_PUBLIC_API_HOST=$PUBLIC_SCHEME://$API_HOST" \
+    --build-arg "NEXT_PUBLIC_WS_HOST=$PUBLIC_SCHEME://$API_HOST" \
+    --build-arg "NEXT_PUBLIC_HOST=$PUBLIC_SCHEME://$WEB_HOST" \
+    -t "chess-frontend:$TAG" "$ROOT"
   printf '%s' "$TAG" >"$TAG_FILE"
+  printf '%s %s %s\n' "$WEB_HOST" "$API_HOST" "$PUBLIC_SCHEME" >"$HOSTS_FILE"
 fi
-for image in "chess-backend:$TAG" "chess-backend-migrate:$TAG"; do
+for image in "chess-backend:$TAG" "chess-backend-migrate:$TAG" "chess-frontend:$TAG"; do
   docker image inspect "$image" >/dev/null 2>&1 || die "image $image not found locally"
 done
-ok "images chess-backend:$TAG and chess-backend-migrate:$TAG"
+ok "images chess-backend:$TAG, chess-backend-migrate:$TAG and chess-frontend:$TAG"
 
 step "Creating secrets"
 apply_infra_secrets
@@ -197,8 +222,12 @@ step "Deploying services"
 manifest="$(kubectl kustomize "$APPS")"
 manifest="$(printf '%s\n' "$manifest" | sed \
   -e "s#image: chess-backend-migrate:[^[:space:]]*#image: chess-backend-migrate:$TAG#" \
-  -e "s#image: chess-backend:[^[:space:]]*#image: chess-backend:$TAG#")"
+  -e "s#image: chess-backend:[^[:space:]]*#image: chess-backend:$TAG#" \
+  -e "s#image: chess-frontend:[^[:space:]]*#image: chess-frontend:$TAG#" \
+  -e "s#^\([[:space:]]*- \)chess\.localhost\$#\1$WEB_HOST#")"
 grep -q "image: chess-backend:$TAG" <<<"$manifest" || die "failed to pin the image tag in the rendered manifests"
+grep -q "image: chess-frontend:$TAG" <<<"$manifest" || die "failed to pin the frontend image tag in the rendered manifests"
+grep -Eq "^[[:space:]]*- ${WEB_HOST//./\\.}\$" <<<"$manifest" || die "failed to set the frontend hostname in the rendered manifests"
 printf '%s\n' "$manifest" | kubectl apply -f -
 ok "manifests applied"
 
@@ -212,7 +241,8 @@ step "Waiting for rollouts"
 kubectl -n "$NAMESPACE" rollout status statefulset/redis --timeout="$ROLLOUT_TIMEOUT"
 kubectl -n "$NAMESPACE" rollout status deployment/core --timeout="$ROLLOUT_TIMEOUT"
 kubectl -n "$NAMESPACE" rollout status deployment/game-svc --timeout="$ROLLOUT_TIMEOUT"
-ok "redis, core and game-svc are ready"
+kubectl -n "$NAMESPACE" rollout status deployment/frontend --timeout="$ROLLOUT_TIMEOUT"
+ok "redis, core, game-svc and frontend are ready"
 
 step "Finding the gateway address"
 address=""
@@ -232,10 +262,13 @@ printf '\n%sDone in %ds%s\n\n' "$GREEN$BOLD" "$((SECONDS - START_TIME))" "$RESET
 printf 'Pods:\n'
 kubectl -n "$NAMESPACE" get pods
 printf '\nAccess:\n'
+printf '  Frontend:          %s://%s\n' "$PUBLIC_SCHEME" "$WEB_HOST"
+printf '  API:               %s://%s/health/ready\n' "$PUBLIC_SCHEME" "$API_HOST"
 if [ -n "$address" ]; then
   printf '  API via gateway:   curl http://%s/health/ready\n' "$address"
 fi
 printf '  API port-forward:  kubectl -n %s port-forward svc/core 9200:80\n' "$NAMESPACE"
+printf '  Web port-forward:  kubectl -n %s port-forward svc/frontend 3000:80\n' "$NAMESPACE"
 printf '  Grafana:           http://grafana.localhost\n'
 printf '  Headlamp:          http://headlamp.localhost\n'
 printf '  Grafana password:  kubectl -n monitoring get secret grafana-admin -o jsonpath="{.data.admin-password}" | base64 -d; echo\n'

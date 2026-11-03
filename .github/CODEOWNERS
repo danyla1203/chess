@@ -1,0 +1,13 @@
+/package.json @danyla1203
+/pnpm-workspace.yaml @danyla1203
+/pnpm-lock.yaml @danyla1203
+/turbo.json @danyla1203
+/.gitignore @danyla1203
+/.dockerignore @danyla1203
+/CLAUDE.md @danyla1203
+/.github/ @danyla1203
+/apps/backend/ @danyla1203
+/packages/contract/ @danyla1203
+/deploy/ @danyla1203
+/apps/frontend/ @danyla1203
+/packages/ui/ @danyla1203

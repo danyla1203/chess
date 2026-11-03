@@ -54,7 +54,7 @@ usage() {
   cat <<EOF
 Usage: deploy/k8s/down.sh [options]
 
-Default: removes the chess services (core, game-svc, redis, gateway, config
+Default: removes the chess services (core, game-svc, frontend, redis, gateway, config
 and secret) and keeps Postgres, Redis data and the platform.
 
 Options:
@@ -63,7 +63,7 @@ Options:
                 namespace (users and games are lost)
   --platform    remove everything: --data plus monitoring, operators, gateway,
                 cert-manager, their CRDs and namespaces
-  --images      also remove the local chess-backend docker images
+  --images      also remove the local chess-backend and chess-frontend docker images
   -y, --yes     do not ask for confirmation
   -h, --help    show this help
 
@@ -186,11 +186,11 @@ ok "ready"
 step "Removing chess services"
 if kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
   run kubectl -n "$NAMESPACE" delete \
-    httproute/core gateway/chess \
+    httproute/core httproute/frontend gateway/chess \
     horizontalpodautoscaler/core horizontalpodautoscaler/game-svc \
     poddisruptionbudget/core poddisruptionbudget/game-svc \
-    deployment/core deployment/game-svc \
-    service/core service/game-svc-grpc service/redis statefulset/redis \
+    deployment/core deployment/game-svc deployment/frontend \
+    service/core service/game-svc-grpc service/frontend service/redis statefulset/redis \
     configmap/chess-config secret/chess-secrets \
     --ignore-not-found --wait=true --timeout="$DELETE_TIMEOUT"
   ok "services removed (namespace, Postgres and Redis volume kept)"
@@ -260,14 +260,14 @@ fi
 
 if [ "$IMAGES" -eq 1 ]; then
   step "Removing local images"
-  images="$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -E '^chess-backend(-migrate)?:' || true)"
+  images="$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -E '^chess-(backend(-migrate)?|frontend):' || true)"
   if [ -n "$images" ]; then
     while IFS= read -r image; do
       info "removing $image"
       run docker image rm "$image"
     done <<<"$images"
   else
-    info "no chess-backend images found"
+    info "no chess-backend or chess-frontend images found"
   fi
   ok "images removed"
 fi

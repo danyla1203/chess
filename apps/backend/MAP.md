@@ -102,10 +102,10 @@ prisma/
 prisma.config.ts               schema path, migrations path, seed command, DATABASE_URL
 test/                          mirrors src; *.test.ts (unit), *.int-test.ts (DB), *.e2e-test.ts (HTTP)
 postman/, .postman/            Postman collection for the REST API
-docker.compose.yml             core + game-svc (gRPC :50051) + postgres:17 + redis (AOF) + grafana/otel-lgtm (Grafana on :3001)
+docker.compose.yml             (context: repo root) core + game-svc (gRPC :50051) + postgres:17 + redis (AOF) + grafana/otel-lgtm (Grafana on :3001)
 buf.yaml, buf.gen.yaml         proto lint/breaking rules and ts-proto codegen (`npm run proto`, `npm run proto:breaking` against `dev`)
-Dockerfile.prod                targets: `runtime` (both entrypoints, prod deps only), `migrate` (prisma migrate deploy)
-deploy/k8s/                    platform install (kube-prometheus-stack, Tempo, Loki, OTel Collector, Headlamp, CloudNativePG, Envoy Gateway), Grafana dashboard, apps/ (Redis, core, game-svc + headless `game-svc-grpc` Service)
+Dockerfile.prod                built from the repo root (`turbo prune backend`); targets: `runtime` (both entrypoints, prod deps only), `migrate` (prisma migrate deploy)
+../../deploy/k8s/              (repo root) platform install, Grafana dashboard, apps/ (Redis, core, game-svc + headless `game-svc-grpc` Service, frontend); see its README
 ```
 
 ## REST routes

@@ -1,32 +1,46 @@
-FROM node:24-alpine AS deps
-RUN apk add --no-cache openssl
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+FROM node:24-alpine AS base
+RUN apk add --no-cache libc6-compat openssl \
+  && npm install -g corepack@latest \
+  && corepack enable
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+  PNPM_HOME=/pnpm \
+  TURBO_TELEMETRY_DISABLED=1
+ENV PATH=$PNPM_HOME:$PATH
 
-FROM deps AS migrate
-COPY prisma ./prisma
-COPY prisma.config.ts ./
+FROM base AS prune
+WORKDIR /repo
+RUN npm install -g turbo@2.11.10
+COPY . .
+RUN turbo prune backend --docker
+
+FROM base AS installer
+WORKDIR /repo
+COPY --from=prune /repo/out/json/ ./
+COPY --from=prune /repo/out/pnpm-lock.yaml /repo/out/pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+  pnpm install --frozen-lockfile --store-dir /pnpm/store
+COPY --from=prune /repo/out/full/ ./
+
+FROM installer AS migrate
+WORKDIR /repo/apps/backend
+USER node
 CMD ["npx", "prisma", "migrate", "deploy"]
 
-FROM deps AS build
-COPY tsconfig.json tsconfig.build.json nest-cli.json prisma.config.ts ./
-COPY prisma ./prisma
-COPY src ./src
-RUN npx prisma generate \
-  && npm run build \
-  && cp -r node_modules/.prisma /tmp/prisma-client \
-  && npm prune --omit=dev \
-  && rm -rf node_modules/.prisma \
-  && mv /tmp/prisma-client node_modules/.prisma
+FROM installer AS build
+RUN pnpm turbo run build --filter=backend
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+  pnpm --filter=backend deploy --prod --store-dir /pnpm/store /prod/backend
+RUN node -e "const p=require('path'),f=require('fs'),r=d=>p.resolve(f.realpathSync(require.resolve('@prisma/client/package.json',{paths:[d]})),'../../../.prisma');f.cpSync(r(process.argv[1]),r(process.argv[2]),{recursive:true})" -- /repo/apps/backend /prod/backend \
+  && cd /prod/backend \
+  && node -e "require('@prisma/client').PrismaClient; require('@chess/contract'); require('bcrypt')"
 
 FROM node:24-alpine AS runtime
 RUN apk add --no-cache openssl tini
 WORKDIR /app
 ENV NODE_ENV=production
-COPY package.json ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
+COPY --from=build /prod/backend/package.json ./
+COPY --from=build /prod/backend/node_modules ./node_modules
+COPY --from=build /repo/apps/backend/dist ./dist
 USER node
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/main.js"]
