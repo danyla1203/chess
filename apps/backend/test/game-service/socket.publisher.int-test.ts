@@ -81,10 +81,8 @@ describe('SocketEventPublisher from game-svc (integration, Redis emitter)', () =
   it('should play the push side of a game across instances', async () => {
     const game = new Game(whiteClient, generateConfig('w', 0), 42);
 
-    const created = next(white, GameEvent.created);
     const added = next(black, Lobby.added);
     publisher.publish(game, game.pullEvents());
-    expect(await created).toStrictEqual({ gameId: 42 });
     expect(await added).toMatchObject({ id: 42, players: [{ userId: 1 }] });
 
     game.addPlayer(blackClient);
@@ -93,15 +91,10 @@ describe('SocketEventPublisher from game-svc (integration, Redis emitter)', () =
       next(white, GameEvent.init),
       next(black, GameEvent.init),
     ]);
-    const starts = Promise.all([
-      next(white, GameEvent.start),
-      next(black, GameEvent.start),
-    ]);
     const removed = next(white, Lobby.removed);
     publisher.publish(game, game.pullEvents());
     const [whiteInit, blackInit] = (await inits) as { side: string }[];
     expect([whiteInit.side, blackInit.side]).toStrictEqual(['w', 'b']);
-    await expect(starts).resolves.toHaveLength(2);
     expect(await removed).toStrictEqual({ gameId: 42 });
 
     game.makeTurn(1, 'pawn4', 'd4');

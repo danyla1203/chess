@@ -153,7 +153,7 @@ export type BoardUpdate = {
   clock: ClockState;
 };
 
-export type OpponentReconnected = {
+export type OpponentPresence = {
   opponent: ChatAuthor;
 };
 
@@ -176,17 +176,15 @@ export type ServerToClientEvents = {
   [Lobby.added]: (game: GameData) => void;
   [Lobby.removed]: (payload: GameRef) => void;
   [Game.pendingGame]: (payload: GameRef) => void;
-  [Game.created]: (payload: GameRef) => void;
   [Game.init]: (data: InitedGameData) => void;
-  [Game.start]: () => void;
   [Game.boardUpdate]: (payload: BoardUpdate) => void;
   [Game.message]: (message: ChatMessage) => void;
   [Game.drawPropose]: (draw: DrawAgreement) => void;
   [Game.rejectDraw]: (draw: DrawAgreement) => void;
   [Game.addTime]: (clock: ClockState) => void;
   [Game.end]: (payload: GameEndPayload) => void;
-  [Game.playerDiconnected]: () => void;
-  [Game.playerReconected]: (payload: OpponentReconnected) => void;
+  [Game.playerDiconnected]: (payload: OpponentPresence) => void;
+  [Game.playerReconected]: (payload: OpponentPresence) => void;
 };
 
 export type ClientToServerEvents = {

@@ -76,9 +76,10 @@ describe('SocketNotifier across instances (integration, Redis adapter)', () => {
   });
 
   it('should reach a user connected to another instance', async () => {
+    const presence = { opponent: { id: 1, name: 'white' } };
     const received = next(black, GameEvent.playerDiconnected);
-    a.notifier.opponentDisconnected(2);
-    await expect(received).resolves.toBeUndefined();
+    a.notifier.opponentDisconnected(2, presence);
+    await expect(received).resolves.toStrictEqual(presence);
   });
 
   it('should broadcast to a game room whose sockets live on both instances', async () => {
@@ -86,7 +87,7 @@ describe('SocketNotifier across instances (integration, Redis adapter)', () => {
     a.io.of('/game').in(userRoom(2)).socketsJoin(room(5));
     await settle();
 
-    const clock = { w: 1000, b: 2000, running: 'w', serverNow: 1 };
+    const clock = { w: 1000, b: 2000, running: 'w' as const, serverNow: 1 };
     const toWhite = next(white, GameEvent.addTime);
     const toBlack = next(black, GameEvent.addTime);
     b.notifier.toGame(5, GameEvent.addTime, clock);

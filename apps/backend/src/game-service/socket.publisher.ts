@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Emitter } from '@socket.io/redis-emitter';
 import { Game as GameEvent, GameEnd, Lobby } from '@chess/contract';
 import { room, userRoom } from '../infrastructure/socket/rooms';
+import type { GameEmitter } from '../infrastructure/socket/socket.types';
 import type { Game, GameDomainEvent } from '../domain/game/entities/game';
 import type { GameAdapterI } from '../game/game.adapter.interface';
 import { GamePublisher } from '../game/game.publisher';
@@ -11,7 +11,7 @@ import { SOCKET_EMITTER } from './socket.emitter';
 @Injectable()
 export class SocketEventPublisher extends GamePublisher {
   constructor(
-    @Inject(SOCKET_EMITTER) private readonly io: Emitter,
+    @Inject(SOCKET_EMITTER) private readonly io: GameEmitter,
     @Inject('GameAdapterI') private readonly adapter: GameAdapterI,
   ) {
     super();
@@ -25,9 +25,7 @@ export class SocketEventPublisher extends GamePublisher {
     const gameRoom = room(game.id);
     switch (event.type) {
       case 'created': {
-        const creator = userRoom(game.players[0].userId);
-        this.io.in(creator).socketsJoin(gameRoom);
-        this.io.to(creator).emit(GameEvent.created, { gameId: game.id });
+        this.io.in(userRoom(game.players[0].userId)).socketsJoin(gameRoom);
         this.io.emit(Lobby.added, lobbyView(game));
         break;
       }
@@ -44,9 +42,6 @@ export class SocketEventPublisher extends GamePublisher {
               this.adapter.initedGameDataDto(pl.userId, game),
             );
         }
-        this.io
-          .to(game.players.map((pl) => userRoom(pl.userId)))
-          .emit(GameEvent.start);
         this.io.emit(Lobby.removed, { gameId: game.id });
         break;
       case 'moved':
@@ -62,7 +57,10 @@ export class SocketEventPublisher extends GamePublisher {
         });
         break;
       case 'chatPosted':
-        this.io.to(gameRoom).emit(GameEvent.message, event.message);
+        this.io.to(gameRoom).emit(GameEvent.message, {
+          ...event.message,
+          date: event.message.date.toISOString(),
+        });
         break;
       case 'drawProposed':
         this.io.to(gameRoom).emit(GameEvent.drawPropose, game.draw);

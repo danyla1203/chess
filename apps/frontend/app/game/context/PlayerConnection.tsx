@@ -1,9 +1,7 @@
 import { Game } from '@chess/contract';
 import { useWebSocket } from '@/context/SocketContext';
-import { type OpponentLeavePayload } from '../types';
 import { useState, useEffect, createContext, useContext } from 'react';
-
-type OpponentEvent = { opponent: OpponentLeavePayload };
+import { useConfigContext } from '.';
 
 const PlayerConnectionCtx = createContext({
   w: true,
@@ -24,26 +22,22 @@ export const PlayerConnectionProvider = ({
   children: React.ReactNode;
 }) => {
   const socket = useWebSocket();
+  const { side } = useConfigContext();
   const [playersInGame, setConnectionStatus] = useState({ w: true, b: true });
 
   useEffect(() => {
-    const onDisconnected = ({ opponent }: OpponentEvent) => {
-      const copy = { ...playersInGame };
-      copy[opponent.side] = false;
-      setConnectionStatus(copy);
-    };
-    const onReconnected = ({ opponent }: OpponentEvent) => {
-      const copy = { ...playersInGame };
-      copy[opponent.side] = true;
-      setConnectionStatus(copy);
-    };
-    socket.on(Game.playerDiconnected, onDisconnected as () => void);
-    socket.on(Game.playerReconected, onReconnected as (p: unknown) => void);
+    const opponentSide = side === 'w' ? 'b' : 'w';
+    const onDisconnected = () =>
+      setConnectionStatus((status) => ({ ...status, [opponentSide]: false }));
+    const onReconnected = () =>
+      setConnectionStatus((status) => ({ ...status, [opponentSide]: true }));
+    socket.on(Game.playerDiconnected, onDisconnected);
+    socket.on(Game.playerReconected, onReconnected);
     return () => {
-      socket.off(Game.playerDiconnected);
-      socket.off(Game.playerReconected);
+      socket.off(Game.playerDiconnected, onDisconnected);
+      socket.off(Game.playerReconected, onReconnected);
     };
-  }, []);
+  }, [side]);
 
   return (
     <PlayerConnectionCtx.Provider value={playersInGame}>

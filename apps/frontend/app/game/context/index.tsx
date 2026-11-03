@@ -45,9 +45,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     } else if (param === 'rejoin') {
       socket.volatile.emit(Emit.gameRejoin);
     }
-    socket.on(Game.init, (payload) => {
-      setInitData(payload);
-    });
+    const onInit = (payload: InitedGameData) => setInitData(payload);
+    socket.on(Game.init, onInit);
     socket.on(Game.end, ({ game }) => {
       if (!profile?.isAuthorized) {
         const gms = localStorage.getItem('anon-games');
@@ -65,7 +64,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
     });
     return () => {
-      socket.off(Game.init);
+      socket.off(Game.init, onInit);
     };
   }, []);
 

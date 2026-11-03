@@ -113,6 +113,7 @@ export const fakeNotifier = () => ({
   bind: jest.fn(),
   toGame: jest.fn(),
   opponentDisconnected: jest.fn(),
+  opponentReconnected: jest.fn(),
 });
 
 export const fakePublisher = () => {

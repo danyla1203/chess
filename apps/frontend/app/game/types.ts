@@ -1,8 +1,4 @@
-import type { Cell, OpponentReconnected, Side } from '@chess/contract';
-
-export type OpponentLeavePayload = OpponentReconnected['opponent'] & {
-  side: Side;
-};
+import type { Cell } from '@chess/contract';
 
 export type SelectedCell = {
   cell: Cell | null;

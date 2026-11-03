@@ -1,6 +1,6 @@
 # chess_frontend
 
-Next.js 16 (App Router, Turbopack) + React 19 client for the chess app. UI is HeroUI v2 on Tailwind CSS 4. It talks to `../chess_backend` over REST (`fetch`/axios) and Socket.IO.
+Next.js 16 (App Router, Turbopack) + React 19 client for the chess app. UI is HeroUI v2 on Tailwind CSS 4. It talks to `apps/backend` over REST (`fetch`/axios) and Socket.IO.
 
 See [MAP.md](MAP.md) for routes, the provider tree, the game-state contexts and the socket event contract. Workspace-wide rules, the cross-repo contract and shared agents/commands are in [../CLAUDE.md](../CLAUDE.md).
 
@@ -11,18 +11,18 @@ Educational pet project; the owner studies system design. Criticize solutions wi
 ## Commands
 
 ```bash
-npm run dev         # next dev (Turbopack)
-npm run build       # production build; also type-checks
-npm run typecheck   # tsc --noEmit
-npm run lint        # eslint (flat config: next core-web-vitals + typescript + prettier); lint:fix to autofix
-npm run prettier    # format everything
+pnpm --filter frontend dev         # next dev (Turbopack)
+pnpm turbo run build --filter=frontend      # production build (standalone output)
+pnpm turbo run typecheck --filter=frontend  # next typegen + tsc --noEmit
+pnpm turbo run lint --filter=frontend       # eslint (flat config: next core-web-vitals + typescript + prettier)
+pnpm --filter frontend prettier    # format everything
 ```
 
 Env (`.env.local`, see `.env.example`): `NEXT_PUBLIC_API_HOST`, `NEXT_PUBLIC_WS_HOST`, `NEXT_PUBLIC_HOST`. No tests exist.
 
 ## Toolchain facts that bite
 
-- Node >= 20.9 (`.nvmrc` = 24). `next lint` no longer exists; use `npm run lint`.
+- Node >= 20.9 (`.nvmrc` = 24). `next lint` no longer exists; use the `lint` script.
 - Tailwind 4 has no `tailwind.config`. The theme and Tailwind entry live in `@chess/ui` (`packages/ui`): `app/globals.css` only does `@import '@chess/ui/styles.css'` (tailwindcss, HeroUI plugin `packages/ui/src/theme/hero.mjs`, `@source` for HeroUI theme classes and `packages/ui/src`, `dark` custom variant) plus `@source '.'` for `app/`. PostCSS uses `@tailwindcss/postcss`.
 - Generic UI (`DropdownUi`, `Loader`, `GithubIcon`, `GoogleIcon`, `NotificationStack`/`NotificationItem`) lives in `@chess/ui` with Storybook stories; see `packages/ui/CLAUDE.md`. App-wired components (contexts, routing, requests, sockets) stay in `app/components`.
 - HeroUI is the renamed NextUI. Import from `@heroui/react`, never `@nextui-org/*`. `app/heroui.provider.tsx` wraps `HeroUIProvider` + `next-themes` (dark by default).
@@ -36,7 +36,7 @@ Env (`.env.local`, see `.env.example`): `NEXT_PUBLIC_API_HOST`, `NEXT_PUBLIC_WS_
 - Every API call is a small function in `app/lib/request/`, built on the `req()` helper in `utis.ts` (sic). Re-export it from `request/index.ts`.
 - Global state is React context in `app/lib/context/`. Per-game state is a stack of providers in `app/game/context/`.
 - Socket event names (`Game`, `Lobby`, `User`, `Emit` enums), socket payload types and REST request/response types come from `@chess/contract` (`packages/contract`). Import them from there; never redefine wire types locally. The socket is typed (`GameSocket` in `app/lib/context/SocketContext.tsx`). Change the contract and the backend together; additive only.
-- `app/game/types.ts` holds UI-only types (`SelectedCell`, `RestructedGameResult`, `OpponentLeavePayload`).
+- `app/game/types.ts` holds UI-only types (`SelectedCell`, `RestructedGameResult`).
 - Auth tokens live in `localStorage` (`accessToken`, `refreshToken`). Anonymous players get `anon-token`, and their finished games are kept in `anon-games`.
 - Chess piece sprites are CSS classes in `app/game/chessPieces.scss`, keyed by figure name without its digit (`pawn`, `R`, `K`, `B`, `Q`, `Kn`) plus side (`w`/`b`).
 - Prettier: single quotes, trailing commas.

@@ -1,6 +1,7 @@
 import type { Provider } from '@nestjs/common';
 import { Emitter } from '@socket.io/redis-emitter';
 import type Redis from 'ioredis';
+import type { ServerToClientEvents } from '@chess/contract';
 import { REDIS } from '../infrastructure/redis';
 import { LoggerService } from '../infrastructure/logger';
 
@@ -12,7 +13,7 @@ export const socketEmitterProvider: Provider = {
   provide: SOCKET_EMITTER,
   inject: [REDIS, LoggerService],
   useFactory: (redis: Redis, logger: LoggerService) =>
-    new Emitter({
+    new Emitter<ServerToClientEvents>({
       publish: (channel: string, message: Buffer) =>
         redis
           .publish(channel, message)

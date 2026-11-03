@@ -151,7 +151,9 @@ describe('GameGateway (unit)', () => {
       });
       await gateway.handleDisconnect(socket);
       expect(games.cancelLobbyGame).not.toHaveBeenCalled();
-      expect(notifier.opponentDisconnected).toHaveBeenCalledWith(2);
+      expect(notifier.opponentDisconnected).toHaveBeenCalledWith(2, {
+        opponent: { id: client.userId, name: client.name },
+      });
     });
     it('should send nothing when the user has no game', async () => {
       await gateway.handleDisconnect(socket);
@@ -184,7 +186,7 @@ describe('GameGateway (unit)', () => {
       await gateway.rejoinGame(socket);
       expect(socket.join).toHaveBeenCalledWith(room(5));
       expect(socket.emit).toHaveBeenCalledWith(Game.init, { side: 'w' });
-      expect(notifier.toGame).toHaveBeenCalledWith(5, Game.playerReconected, {
+      expect(notifier.opponentReconnected).toHaveBeenCalledWith(5, {
         opponent: { id: 1, name: client.name },
       });
     });

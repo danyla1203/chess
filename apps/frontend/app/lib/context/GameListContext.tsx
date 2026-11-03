@@ -103,7 +103,10 @@ export const GameListProvider = ({
     socket.on(Game.playerReconected, () => {
       setPendingGame(null);
     });
+    const onInit = () => setPendingGame(null);
+    socket.on(Game.init, onInit);
     return () => {
+      socket.off(Game.init, onInit);
       socket.off(Lobby.update);
       socket.off(Lobby.added);
       socket.off(Lobby.removed);

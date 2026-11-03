@@ -16,6 +16,10 @@ Not here: the gRPC `.proto` (internal core <-> game-svc, stays in `apps/backend/
 - Do not rename enum members or change event strings; add a new member and retire the old one later.
 - The backend DTO classes `implements` these types, so a breaking edit fails the backend typecheck.
 
+## Pending contractions
+
+- `game:player-reconnected` is still sent to the whole game room, including the reconnecting player, because older frontends clear their pending game on it. The frontend now also clears it on `game:init-data`. Once no tab older than that is connected, send it only to the opponent (`.except(socket.id)` in `SocketNotifier.opponentReconnected`).
+
 ## Build
 
 ```bash
