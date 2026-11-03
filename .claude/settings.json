@@ -18,7 +18,58 @@
       "Read(./**/.env)",
       "Read(./**/.env.local)",
       "Read(./**/.env.docker)",
-      "Read(./deploy/k8s/secrets.env)"
+      "Read(./deploy/k8s/secrets.env)",
+      "Bash(git push:*)",
+      "Bash(git filter-repo:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git rebase:*)",
+      "Bash(git replace:*)",
+      "Bash(git update-ref:*)",
+      "Bash(git fast-import:*)",
+      "Bash(git commit --amend:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git reset --soft:*)",
+      "Bash(git reset --keep:*)",
+      "Bash(git reset --merge:*)",
+      "Bash(git clean:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git checkout .:*)",
+      "Bash(git checkout -f:*)",
+      "Bash(git restore:*)",
+      "Bash(git branch -D:*)",
+      "Bash(git branch -M:*)",
+      "Bash(git tag -d:*)",
+      "Bash(git tag -f:*)",
+      "Bash(git reflog expire:*)",
+      "Bash(git reflog delete:*)",
+      "Bash(git gc:*)",
+      "Bash(git prune:*)",
+      "Bash(git stash drop:*)",
+      "Bash(git stash clear:*)",
+      "Bash(git remote remove:*)",
+      "Bash(git remote rm:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(bfg:*)",
+      "Bash(gh repo delete:*)",
+      "Edit(./.claude/settings.json)",
+      "Write(./.claude/settings.json)",
+      "Edit(./.claude/settings.local.json)",
+      "Write(./.claude/settings.local.json)",
+      "Edit(./.claude/hooks/**)",
+      "Write(./.claude/hooks/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-git.py\""
+          }
+        ]
+      }
     ]
   }
 }
