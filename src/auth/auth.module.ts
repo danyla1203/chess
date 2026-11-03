@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
-import { AuthService } from '.';
-import { PrismaService } from '../prisma.service';
+import { AuthService } from './';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { AuthController } from './auth.controller';
 import { AuthModel } from './auth.model';
 import { TokenModule } from './tokens/tokens.module';
-import { MailService } from '../mail/mail.service';
+import { MailService } from '../infrastructure/mail/mail.service';
 
 @Global()
 @Module({

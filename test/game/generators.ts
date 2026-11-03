@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { Client, Player } from '../../src/game/entities';
+import { Client, Player } from '../../src/domain/game/entities';
 import {
   Config,
   GameResult,
   Game as GameEntity,
-} from '../../src/game/entities/game';
+} from '../../src/domain/game/entities/game';
 
 export const generateGameResult = (
   config?: Config,

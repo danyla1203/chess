@@ -1,8 +1,15 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import type { GameRepository, Updated } from '../../src/game/game.repository';
-import { gameEndedMessage } from '../../src/game/game.events';
-import type { OutboxMessage } from '../../src/messaging';
-import { Game, GameData, GameSnapshot } from '../../src/game/entities/game';
+import type {
+  GameRepository,
+  Updated,
+} from '../../src/infrastructure/game/game.repository';
+import { gameEndedMessage } from '../../src/infrastructure/game/game.events';
+import type { IntegrationEvent } from '../../src/infrastructure/messaging';
+import {
+  Game,
+  GameDomainEvent,
+  GameSnapshot,
+} from '../../src/domain/game/entities/game';
 
 export class InMemoryGameRepository implements Omit<
   GameRepository,
@@ -10,7 +17,7 @@ export class InMemoryGameRepository implements Omit<
 > {
   games = new Map<number, string>();
   userGames = new Map<number, number>();
-  outbox: OutboxMessage[] = [];
+  outbox: IntegrationEvent[] = [];
   private seq = 0;
 
   private store(game: Game): void {
@@ -63,18 +70,17 @@ export class InMemoryGameRepository implements Omit<
     return id ? this.get(id) : null;
   }
 
-  async lobby(): Promise<GameData[]> {
+  async lobbyIds(): Promise<string[]> {
     return this.all()
       .filter((g) => g.status === 'lobby')
-      .map((g) => ({
-        id: g.id,
-        players: g.players.map(({ userId, name, side }) => ({
-          userId,
-          name,
-          side,
-        })),
-        config: g.config,
-      }));
+      .map((g) => String(g.id));
+  }
+
+  async reproject(id: number): Promise<boolean> {
+    const game = await this.get(id);
+    if (!game || game.isFinished) return false;
+    this.store(game);
+    return true;
   }
 
   async activeIds(): Promise<string[]> {
@@ -105,15 +111,20 @@ export class InMemoryGameRepository implements Omit<
 
 export const fakeNotifier = () => ({
   bind: jest.fn(),
-  lobbyUpdate: jest.fn(),
   toGame: jest.fn(),
-  joinGame: jest.fn(),
-  gameCreated: jest.fn(),
-  gameStart: jest.fn(),
-  initData: jest.fn(),
-  gameEnd: jest.fn(),
   opponentDisconnected: jest.fn(),
 });
+
+export const fakePublisher = () => {
+  const published: { gameId: number; event: GameDomainEvent }[] = [];
+  return {
+    published,
+    types: () => published.map(({ event }) => event.type),
+    publish: jest.fn((game: Game, events: GameDomainEvent[]) => {
+      for (const event of events) published.push({ gameId: game.id, event });
+    }),
+  };
+};
 
 export const fakeMetrics = () => ({
   connectionOpened: jest.fn(),

@@ -1,10 +1,10 @@
 import Redis from 'ioredis';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { GameRepository } from '../../src/game/game.repository';
-import { GameEnd } from '../../src/game/EmitTypes';
-import { Game } from '../../src/game/entities/game';
-import { RedisKeys } from '../../src/redis';
-import { RoutingKey } from '../../src/messaging';
+import { GameRepository } from '../../src/infrastructure/game/game.repository';
+import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { Game } from '../../src/domain/game/entities/game';
+import { RedisKeys } from '../../src/infrastructure/redis';
+import { EventType } from '../../src/infrastructure/messaging';
 import { RedisTestDb, clearChessKeys, testRedis } from '../redis/helpers';
 import { generateClient, generateConfig } from './generators';
 
@@ -49,10 +49,19 @@ describe('GameRepository (integration, Redis)', () => {
     const loaded = await repo.load(game.id);
     expect(loaded.version).toBe(1);
     expect(loaded.game.toSnapshot()).toStrictEqual(game.toSnapshot());
-    expect(await repo.lobby()).toEqual([
-      expect.objectContaining({ id: game.id }),
-    ]);
-    expect(await redis.get(RedisKeys.userGame(1))).toBe(String(game.id));
+    expect(await repo.lobbyIds()).toEqual([String(game.id)]);
+    expect(
+      JSON.parse(await redis.hget(RedisKeys.lobbyView, String(game.id))),
+    ).toStrictEqual({
+      id: game.id,
+      players: [{ userId: 1, name: game.players[0].name, side: 'w' }],
+      config: game.config,
+    });
+    expect(await redis.hgetall(RedisKeys.userView(1))).toStrictEqual({
+      gameId: String(game.id),
+      status: 'lobby',
+      opponentId: '',
+    });
   });
 
   it('should refuse to create the same game twice', async () => {
@@ -62,7 +71,17 @@ describe('GameRepository (integration, Redis)', () => {
 
   it('should move a started game from the lobby to the active set with a deadline', async () => {
     const game = await activeGame();
-    expect(await repo.lobby()).toHaveLength(0);
+    expect(await repo.lobbyIds()).toHaveLength(0);
+    expect(await redis.hlen(RedisKeys.lobbyView)).toBe(0);
+    expect(await redis.hgetall(RedisKeys.userView(1))).toStrictEqual({
+      gameId: String(game.id),
+      status: 'active',
+      opponentId: '2',
+    });
+    expect(await redis.hgetall(RedisKeys.userView(2))).toMatchObject({
+      status: 'active',
+      opponentId: '1',
+    });
     expect(await repo.activeIds()).toEqual([String(game.id)]);
     expect(Number(await redis.zscore(RedisKeys.deadlines, game.id))).toBe(
       game.deadline(),
@@ -79,40 +98,42 @@ describe('GameRepository (integration, Redis)', () => {
     );
   });
 
-  it('should write the outbox atomically when a game ends, and clean indexes', async () => {
+  it('should write game.ended to the event stream atomically when a game ends, and clean indexes', async () => {
     const game = await activeGame();
     await repo.update(game.id, (g) =>
       g.endGame(g.players[0], g.players[1], GameEnd.surrender),
     );
 
-    const entries = await redis.xrange(RedisKeys.outbox, '-', '+');
+    const entries = await redis.xrange(RedisKeys.events, '-', '+');
     expect(entries).toHaveLength(1);
     const message = JSON.parse(entries[0][1][1]);
     expect(message).toMatchObject({
-      routingKey: RoutingKey.GameEnded,
+      type: EventType.GameEnded,
       messageId: game.matchId,
       payload: { gameId: game.id, reason: 'surrender' },
     });
 
     expect(await repo.activeIds()).toEqual([]);
     expect(await redis.zcard(RedisKeys.deadlines)).toBe(0);
-    expect(await redis.exists(RedisKeys.userGame(1))).toBe(0);
+    expect(await redis.exists(RedisKeys.userView(1))).toBe(0);
+    expect(await redis.exists(RedisKeys.userView(2))).toBe(0);
     expect(await redis.ttl(RedisKeys.game(game.id))).toBeGreaterThan(0);
   });
 
-  it('should not write the outbox for updates that do not end the game', async () => {
+  it('should not write events for updates that do not end the game', async () => {
     const game = await activeGame();
     await repo.update(game.id, (g) => g.setDrawProposeFrom('w'));
     const lobby = await lobbyGame(3);
     await repo.update(lobby.id, (g) => g.cancel());
-    expect(await redis.xlen(RedisKeys.outbox)).toBe(0);
+    expect(await redis.xlen(RedisKeys.events)).toBe(0);
   });
 
   it('should keep a user pointer that belongs to another game', async () => {
     const first = await lobbyGame(1);
-    await redis.set(RedisKeys.userGame(1), '999');
+    await redis.hset(RedisKeys.userView(1), 'gameId', '999');
     await repo.update(first.id, (g) => g.cancel());
-    expect(await redis.get(RedisKeys.userGame(1))).toBe('999');
+    expect(await redis.hget(RedisKeys.userView(1), 'gameId')).toBe('999');
+    expect(await redis.hlen(RedisKeys.lobbyView)).toBe(0);
   });
 
   it('should retry on concurrent writes so no update is lost', async () => {
@@ -152,7 +173,7 @@ describe('GameRepository (integration, Redis)', () => {
         }),
       ),
     );
-    expect(await redis.xlen(RedisKeys.outbox)).toBe(1);
+    expect(await redis.xlen(RedisKeys.events)).toBe(1);
   });
 
   it('should load many games in one round trip and skip missing ones', async () => {
@@ -160,5 +181,40 @@ describe('GameRepository (integration, Redis)', () => {
     const b = await lobbyGame(2);
     const games = await repo.loadMany([a.id, 12345, b.id]);
     expect(games.map((g) => g.id)).toStrictEqual([a.id, b.id]);
+  });
+
+  it('should not touch the views when a write loses the version race', async () => {
+    const game = await lobbyGame(1);
+    const view = await redis.hget(RedisKeys.lobbyView, String(game.id));
+    game.cancel();
+    const saved = await (
+      repo as unknown as {
+        save: (g: Game, v: number, o: null) => Promise<boolean>;
+      }
+    ).save(game, 0, null);
+    expect(saved).toBe(false);
+    expect(await redis.hget(RedisKeys.lobbyView, String(game.id))).toBe(view);
+    expect(await redis.hget(RedisKeys.userView(1), 'status')).toBe('lobby');
+  });
+
+  it('should reproject views from the snapshot and skip finished games', async () => {
+    const lobby = await lobbyGame(5);
+    const active = await activeGame();
+    await redis.del(
+      RedisKeys.lobbyView,
+      RedisKeys.userView(1),
+      RedisKeys.userView(5),
+    );
+
+    expect(await repo.reproject(lobby.id)).toBe(true);
+    expect(await repo.reproject(active.id)).toBe(true);
+    expect(await redis.hexists(RedisKeys.lobbyView, String(lobby.id))).toBe(1);
+    expect(await redis.hget(RedisKeys.userView(1), 'opponentId')).toBe('2');
+
+    await repo.update(active.id, (g) =>
+      g.endGame(g.players[0], g.players[1], GameEnd.surrender),
+    );
+    expect(await repo.reproject(active.id)).toBe(false);
+    expect(await redis.exists(RedisKeys.userView(1))).toBe(0);
   });
 });

@@ -4,9 +4,10 @@ import { AppModule } from '../../src/app.module';
 import req from 'supertest';
 import { AuthService } from '../../src/auth';
 import { faker } from '@faker-js/faker';
-import { PrismaService } from '../../src/prisma.service';
-import { LoggerService } from '../../src/tools/logger';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
+import { LoggerService } from '../../src/infrastructure/logger';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { EventStream } from '../../src/infrastructure/messaging';
 
 jest.mock('axios', () => null);
 
@@ -38,7 +39,11 @@ describe('AuthController unit', () => {
       .overrideProvider(LoggerService)
       .useValue({
         log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
       })
+      .overrideProvider(EventStream)
+      .useValue({ subscribe: jest.fn() })
       .compile();
 
     app = module.createNestApplication();

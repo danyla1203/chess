@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Confirmation, Payment } from '@prisma/client';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { CreateUserDto } from './dto';
 import { prismaSelectUserProfile, UserGames, UserProfile } from './entities';
 

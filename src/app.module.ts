@@ -4,13 +4,13 @@ import { AuthModule } from './auth/auth.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { PaymentsModule } from './payments/payments.module';
 import { UserModule } from './user/user.module';
-import { MailService } from './mail/mail.service';
-import { LoggerModule } from './tools/logger';
+import { MailService } from './infrastructure/mail/mail.service';
+import { LoggerModule } from './infrastructure/logger';
 import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis from '@keyv/redis';
-import { TelemetryModule } from './tools/telemetry';
-import { MessagingModule } from './messaging';
-import { RedisModule } from './redis';
+import { TelemetryModule } from './infrastructure/telemetry';
+import { MessagingModule } from './infrastructure/messaging';
+import { RedisModule } from './infrastructure/redis';
 import { GameHistoryModule } from './game-history/game-history.module';
 import { HealthModule } from './health/health.module';
 

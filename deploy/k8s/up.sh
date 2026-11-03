@@ -137,7 +137,7 @@ info "context: $context"
 kubectl wait --for=condition=Ready node --all --timeout=60s >/dev/null 2>&1 || die "the cluster nodes are not Ready" "check: kubectl get nodes"
 
 default_sc="$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}' 2>/dev/null || true)"
-[ -n "$default_sc" ] || die "no default StorageClass" "Postgres, Redis, RabbitMQ and the monitoring stack need persistent volumes"
+[ -n "$default_sc" ] || die "no default StorageClass" "Postgres, Redis and the monitoring stack need persistent volumes"
 info "default StorageClass: $default_sc"
 
 [ -f "$ROOT/Dockerfile.prod" ] || die "Dockerfile.prod not found in $ROOT"
@@ -156,7 +156,6 @@ else
 fi
 kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 || die "namespace '$NAMESPACE' does not exist" "run without --skip-platform"
 kubectl -n "$NAMESPACE" get cluster.postgresql.cnpg.io postgres >/dev/null 2>&1 || die "Postgres cluster chess/postgres not found" "run without --skip-platform"
-kubectl -n "$NAMESPACE" get rabbitmqcluster.rabbitmq.com rabbitmq >/dev/null 2>&1 || die "RabbitMQ cluster chess/rabbitmq not found" "run without --skip-platform"
 kubectl get gatewayclass eg >/dev/null 2>&1 || die "GatewayClass 'eg' not found" "run without --skip-platform"
 ok "platform present"
 
@@ -192,7 +191,7 @@ grep -Ev "$INFRA_KEY_PATTERN" "$SECRETS_FILE" >"$app_env"
 kubectl -n "$NAMESPACE" create secret generic chess-secrets --from-env-file="$app_env" --dry-run=client -o yaml | kubectl apply -f -
 rm -f "$app_env"
 ok "secret chess-secrets applied from $SECRETS_FILE"
-ok "redis, postgres, rabbitmq and grafana credentials applied from $SECRETS_FILE"
+ok "redis, postgres and grafana credentials applied from $SECRETS_FILE"
 
 step "Deploying services"
 manifest="$(kubectl kustomize "$APPS")"
@@ -203,14 +202,11 @@ grep -q "image: chess-backend:$TAG" <<<"$manifest" || die "failed to pin the ima
 printf '%s\n' "$manifest" | kubectl apply -f -
 ok "manifests applied"
 
-step "Waiting for broker and database credentials"
-for secret in postgres-app core-user-credentials game-svc-user-credentials; do
-  info "waiting for secret $secret"
-  wait_for_secret "$secret" 240 || die "secret $secret was not created in time" "check: kubectl -n $NAMESPACE get cluster.postgresql.cnpg.io,rabbitmqcluster,user.rabbitmq.com"
-done
+step "Waiting for database credentials"
+info "waiting for secret postgres-app"
+wait_for_secret postgres-app 240 || die "secret postgres-app was not created in time" "check: kubectl -n $NAMESPACE get cluster.postgresql.cnpg.io"
 kubectl -n "$NAMESPACE" wait --for=condition=Ready cluster.postgresql.cnpg.io/postgres --timeout=300s >/dev/null
-kubectl -n "$NAMESPACE" wait --for=condition=AllReplicasReady rabbitmqcluster.rabbitmq.com/rabbitmq --timeout=300s >/dev/null
-ok "postgres and rabbitmq ready"
+ok "postgres ready"
 
 step "Waiting for rollouts"
 kubectl -n "$NAMESPACE" rollout status statefulset/redis --timeout="$ROLLOUT_TIMEOUT"
@@ -243,5 +239,4 @@ printf '  API port-forward:  kubectl -n %s port-forward svc/core 9200:80\n' "$NA
 printf '  Grafana:           http://grafana.localhost\n'
 printf '  Headlamp:          http://headlamp.localhost\n'
 printf '  Grafana password:  kubectl -n monitoring get secret grafana-admin -o jsonpath="{.data.admin-password}" | base64 -d; echo\n'
-printf '  RabbitMQ UI:       kubectl -n %s port-forward svc/rabbitmq 15672\n' "$NAMESPACE"
 printf '  Logs:              kubectl -n %s logs -f deploy/core\n' "$NAMESPACE"

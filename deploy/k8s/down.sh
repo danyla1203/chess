@@ -55,11 +55,12 @@ usage() {
 Usage: deploy/k8s/down.sh [options]
 
 Default: removes the chess services (core, game-svc, redis, gateway, config
-and secret) and keeps Postgres, RabbitMQ, Redis data and the platform.
+and secret) and keeps Postgres, Redis data and the platform.
 
 Options:
-  --data        also delete the Postgres and RabbitMQ clusters and every
-                volume in the '$NAMESPACE' namespace (users, games, queues are lost)
+  --data        also delete the Postgres cluster (and a RabbitMQ cluster left
+                by an older install) and every volume in the '$NAMESPACE'
+                namespace (users and games are lost)
   --platform    remove everything: --data plus monitoring, operators, gateway,
                 cert-manager, their CRDs and namespaces
   --images      also remove the local chess-backend docker images
@@ -114,6 +115,9 @@ run() {
 crd_exists() {
   kubectl get crd "$1" >/dev/null 2>&1
 }
+
+LEGACY_RABBITMQ_OPERATOR_VERSION=v2.23.0
+LEGACY_RABBITMQ_TOPOLOGY_OPERATOR_VERSION=v1.17.0
 
 version_of() {
   sed -n "s/^$1=//p" "$INSTALL_SH" | head -n 1
@@ -171,7 +175,7 @@ if [ "$DATA" -eq 1 ] && [ "$ASSUME_YES" -eq 0 ]; then
   if [ "$PLATFORM" -eq 1 ]; then
     printf '  %sThis deletes ALL chess services, data, monitoring, operators and CRDs on "%s".%s\n' "$RED$BOLD" "$context" "$RESET"
   else
-    printf '  %sThis deletes the services plus Postgres, RabbitMQ and all volumes in "%s" on "%s".%s\n' "$RED$BOLD" "$NAMESPACE" "$context" "$RESET"
+    printf '  %sThis deletes the services plus Postgres and all volumes in "%s" on "%s".%s\n' "$RED$BOLD" "$NAMESPACE" "$context" "$RESET"
   fi
   printf '  Type %syes%s to continue: ' "$BOLD" "$RESET"
   read -r answer
@@ -186,16 +190,16 @@ if kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
     horizontalpodautoscaler/core horizontalpodautoscaler/game-svc \
     poddisruptionbudget/core poddisruptionbudget/game-svc \
     deployment/core deployment/game-svc \
-    service/core service/redis statefulset/redis \
+    service/core service/game-svc-grpc service/redis statefulset/redis \
     configmap/chess-config secret/chess-secrets \
     --ignore-not-found --wait=true --timeout="$DELETE_TIMEOUT"
-  ok "services removed (namespace, Postgres, RabbitMQ and Redis volume kept)"
+  ok "services removed (namespace, Postgres and Redis volume kept)"
 else
   info "namespace $NAMESPACE not present, nothing to remove"
 fi
 
 if [ "$DATA" -eq 1 ]; then
-  step "Removing Postgres, RabbitMQ and volumes"
+  step "Removing Postgres and volumes"
   if kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
     if crd_exists users.rabbitmq.com; then
       run kubectl -n "$NAMESPACE" delete permission.rabbitmq.com,user.rabbitmq.com --all --ignore-not-found --timeout=60s
@@ -217,8 +221,13 @@ fi
 if [ "$PLATFORM" -eq 1 ]; then
   step "Removing the platform"
 
-  rabbitmq_operator="$(version_of RABBITMQ_OPERATOR_VERSION)"
-  rabbitmq_topology="$(version_of RABBITMQ_TOPOLOGY_OPERATOR_VERSION)"
+  if kubectl get namespace rabbitmq-system >/dev/null 2>&1; then
+    rabbitmq_operator="$LEGACY_RABBITMQ_OPERATOR_VERSION"
+    rabbitmq_topology="$LEGACY_RABBITMQ_TOPOLOGY_OPERATOR_VERSION"
+  else
+    rabbitmq_operator=""
+    rabbitmq_topology=""
+  fi
   if [ -n "$rabbitmq_topology" ]; then
     info "rabbitmq topology operator $rabbitmq_topology"
     run kubectl delete --ignore-not-found --timeout=120s -f "https://github.com/rabbitmq/messaging-topology-operator/releases/download/$rabbitmq_topology/messaging-topology-operator-with-certmanager.yaml"

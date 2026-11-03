@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { User } from '@prisma/client';
 import { GameHistoryModel } from '../../src/game-history/game-history.model';
-import { PrismaService } from '../../src/prisma.service';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { generateGameEndedEvent } from './generators';
 
 describe('GameHistoryModel (integration)', () => {

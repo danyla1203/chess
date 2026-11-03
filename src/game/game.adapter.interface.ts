@@ -1,5 +1,5 @@
 import { InitedGameData, PlainBoardState } from './dto';
-import { DrawGame, Game, GameWithWinner } from './entities/game';
+import { DrawGame, Game, GameWithWinner } from '../domain/game/entities/game';
 
 export interface GameAdapterI {
   initedGameDataDto: (userId: number, game: Game) => InitedGameData;

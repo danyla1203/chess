@@ -1,44 +1,41 @@
 import { Test } from '@nestjs/testing';
-import { GameHistoryConsumer } from '../../src/game-history/game-history.consumer';
+import {
+  GameHistoryConsumer,
+  HISTORY_GROUP,
+} from '../../src/game-history/game-history.consumer';
 import { GameHistoryModel } from '../../src/game-history/game-history.model';
-import { Queue, RabbitMQService } from '../../src/messaging';
-import { LoggerService } from '../../src/tools/logger';
+import { EventStream, EventType } from '../../src/infrastructure/messaging';
+import { LoggerService } from '../../src/infrastructure/logger';
 import { generateGameEndedEvent } from './generators';
 
 describe('GameHistoryConsumer (unit)', () => {
   let consumer: GameHistoryConsumer;
   let model: { save: jest.Mock };
-  let rabbit: { subscribe: jest.Mock };
+  let events: { subscribe: jest.Mock };
   let logger: { warn: jest.Mock; error: jest.Mock };
 
   beforeEach(async () => {
     model = { save: jest.fn().mockResolvedValue('saved') };
-    rabbit = { subscribe: jest.fn().mockResolvedValue(undefined) };
+    events = { subscribe: jest.fn() };
     logger = { warn: jest.fn(), error: jest.fn() };
     const moduleRef = await Test.createTestingModule({
       providers: [
         GameHistoryConsumer,
         { provide: GameHistoryModel, useValue: model },
-        { provide: RabbitMQService, useValue: rabbit },
+        { provide: EventStream, useValue: events },
         { provide: LoggerService, useValue: logger },
       ],
     }).compile();
     consumer = moduleRef.get(GameHistoryConsumer);
   });
 
-  it('should subscribe to the game-ended queue on bootstrap', () => {
+  it('should subscribe its group to game.ended on bootstrap', () => {
     consumer.onApplicationBootstrap();
-    expect(rabbit.subscribe).toHaveBeenCalledWith(
-      Queue.GameEndedPersist,
+    expect(events.subscribe).toHaveBeenCalledWith(
+      HISTORY_GROUP,
+      EventType.GameEnded,
       expect.any(Function),
     );
-  });
-
-  it('should log when subscribing fails', async () => {
-    rabbit.subscribe.mockRejectedValueOnce(new Error('no channel'));
-    consumer.onApplicationBootstrap();
-    await new Promise(process.nextTick);
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('should save a game when both players are authorized', async () => {

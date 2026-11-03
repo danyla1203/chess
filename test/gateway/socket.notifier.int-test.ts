@@ -2,9 +2,9 @@ import { createServer, Server as HttpServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { Server, ServerOptions } from 'socket.io';
 import { io, Socket as ClientSocket } from 'socket.io-client';
-import { RedisIoAdapter } from '../../src/tools/redis-io.adapter';
+import { RedisIoAdapter } from '../../src/infrastructure/socket/redis-io.adapter';
 import { SocketNotifier, userRoom } from '../../src/gateway/socket.notifier';
-import { Game as GameEvent, GameEnd } from '../../src/game/EmitTypes';
+import { Game as GameEvent, room } from '../../src/domain/game/EmitTypes';
 
 type Node = {
   http: HttpServer;
@@ -75,18 +75,14 @@ describe('SocketNotifier across instances (integration, Redis adapter)', () => {
   });
 
   it('should reach a user connected to another instance', async () => {
-    const received = next(black, GameEvent.end);
-    a.notifier.gameEnd(2, true, { id: 7 }, GameEnd.timeout);
-    expect(await received).toStrictEqual({
-      winner: true,
-      game: { id: 7 },
-      reason: GameEnd.timeout,
-    });
+    const received = next(black, GameEvent.playerDiconnected);
+    a.notifier.opponentDisconnected(2);
+    await expect(received).resolves.toBeUndefined();
   });
 
-  it('should join remote sockets to a game room and broadcast to it', async () => {
-    a.notifier.joinGame(1, 5);
-    a.notifier.joinGame(2, 5);
+  it('should broadcast to a game room whose sockets live on both instances', async () => {
+    a.io.of('/game').in(userRoom(1)).socketsJoin(room(5));
+    a.io.of('/game').in(userRoom(2)).socketsJoin(room(5));
     await settle();
 
     const clock = { w: 1000, b: 2000, running: 'w', serverNow: 1 };
@@ -96,14 +92,5 @@ describe('SocketNotifier across instances (integration, Redis adapter)', () => {
 
     expect(await toWhite).toStrictEqual(clock);
     expect(await toBlack).toStrictEqual(clock);
-  });
-
-  it('should start the game for both players wherever they are connected', async () => {
-    const started = Promise.all([
-      next(white, GameEvent.start),
-      next(black, GameEvent.start),
-    ]);
-    b.notifier.gameStart([1, 2]);
-    await expect(started).resolves.toHaveLength(2);
   });
 });

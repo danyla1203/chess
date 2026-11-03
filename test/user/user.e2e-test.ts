@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { faker } from '@faker-js/faker';
 import req from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/prisma.service';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { checkTokens } from '../utils/checkTokens';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 

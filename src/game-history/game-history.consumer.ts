@@ -1,30 +1,26 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Queue, RabbitMQService } from '../messaging';
-import type { GameEndedEvent } from '../messaging';
-import { LoggerService } from '../tools/logger';
-import { annotateActiveSpan } from '../tools/telemetry';
+import { EventStream, EventType } from '../infrastructure/messaging';
+import type { GameEndedEvent } from '../infrastructure/messaging';
+import { LoggerService } from '../infrastructure/logger';
+import { annotateActiveSpan } from '../infrastructure/telemetry';
 import { GameHistoryModel } from './game-history.model';
+
+export const HISTORY_GROUP = 'history';
 
 @Injectable()
 export class GameHistoryConsumer implements OnApplicationBootstrap {
   constructor(
-    private readonly rabbit: RabbitMQService,
+    private readonly events: EventStream,
     private readonly model: GameHistoryModel,
     private readonly logger: LoggerService,
   ) {}
 
   onApplicationBootstrap(): void {
-    this.rabbit
-      .subscribe<GameEndedEvent>(Queue.GameEndedPersist, (event) =>
-        this.handleGameEnded(event),
-      )
-      .catch((err: Error) =>
-        this.logger.error(
-          `Cannot subscribe to ${Queue.GameEndedPersist}: ${err.message}`,
-          err.stack,
-          GameHistoryConsumer.name,
-        ),
-      );
+    this.events.subscribe<GameEndedEvent>(
+      HISTORY_GROUP,
+      EventType.GameEnded,
+      (event) => this.handleGameEnded(event),
+    );
   }
 
   public async handleGameEnded(event: GameEndedEvent): Promise<void> {

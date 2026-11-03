@@ -1,6 +1,6 @@
-import { GameProcess } from '../../src/game/entities/game/process/game.process';
+import { GameProcess } from '../../src/domain/game/entities/game/process/game.process';
 import { emptyBoard, gameBoardFabric, boardFabric } from './utils';
-import { Board, Cell, Figure } from '../../src/game/entities/game';
+import { Board, Cell, Figure } from '../../src/domain/game/entities/game';
 import { ShahData } from '../../src/game/dto';
 
 describe('GameProcess (unit)', () => {

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { Game, GameAdapter } from '../../src/game/entities/game';
+import { Game } from '../../src/domain/game/entities/game';
+import { GameAdapter } from '../../src/game/game.adapter';
 import { InitedGameData, PlainBoardState } from '../../src/game/dto';
 
 describe('GameAdapter', () => {

@@ -7,7 +7,7 @@ import req from 'supertest';
 import bcrypt from 'bcrypt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/prisma.service';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { faker } from '@faker-js/faker';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 

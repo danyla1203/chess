@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Auth, Confirmation, User } from '@prisma/client';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
 
 @Injectable()
 export class AuthModel {

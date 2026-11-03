@@ -2,8 +2,8 @@ K8S_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SECRETS_FILE="${CHESS_SECRETS_FILE:-$K8S_DIR/secrets.env}"
 APP_NAMESPACE=chess
 MONITORING_NAMESPACE=monitoring
-INFRA_KEYS="REDIS_PASSWORD GRAFANA_ADMIN_USER GRAFANA_ADMIN_PASSWORD POSTGRES_PASSWORD RABBITMQ_ADMIN_USER RABBITMQ_ADMIN_PASSWORD RABBITMQ_CORE_PASSWORD RABBITMQ_GAME_SVC_PASSWORD"
-INFRA_KEY_PATTERN='^(REDIS_PASSWORD|GRAFANA_ADMIN_USER|GRAFANA_ADMIN_PASSWORD|POSTGRES_PASSWORD|RABBITMQ_ADMIN_USER|RABBITMQ_ADMIN_PASSWORD|RABBITMQ_CORE_PASSWORD|RABBITMQ_GAME_SVC_PASSWORD)='
+INFRA_KEYS="REDIS_PASSWORD GRAFANA_ADMIN_USER GRAFANA_ADMIN_PASSWORD POSTGRES_PASSWORD"
+INFRA_KEY_PATTERN='^(REDIS_PASSWORD|GRAFANA_ADMIN_USER|GRAFANA_ADMIN_PASSWORD|POSTGRES_PASSWORD|RABBITMQ_[A-Z_]+)='
 
 declare -F info >/dev/null || info() { printf '  -> %s\n' "$1"; }
 declare -F warn >/dev/null || warn() { printf '  warn %s\n' "$1" >&2; }
@@ -49,7 +49,7 @@ ensure_secrets_file() {
   for key in $INFRA_KEYS; do
     if [ -z "$(secret_get "$key")" ]; then
       case $key in
-        GRAFANA_ADMIN_USER | RABBITMQ_ADMIN_USER) secret_set "$key" admin ;;
+        GRAFANA_ADMIN_USER) secret_set "$key" admin ;;
         *) secret_set "$key" "$(openssl rand -hex 24)" ;;
       esac
       info "generated $key in $SECRETS_FILE"
@@ -80,7 +80,7 @@ create_secret_once() {
 }
 
 apply_infra_secrets() {
-  local redis_password postgres_password rabbitmq_admin_user rabbitmq_admin_password
+  local redis_password postgres_password
   ensure_secrets_file
   kubectl create namespace "$APP_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >/dev/null
   kubectl create namespace "$MONITORING_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >/dev/null
@@ -99,23 +99,4 @@ apply_infra_secrets() {
     "username=chess" \
     "password=$postgres_password" \
     "uri=postgresql://chess:$(urlencode "$postgres_password")@postgres-rw:5432/chess"
-
-  rabbitmq_admin_user="$(secret_get RABBITMQ_ADMIN_USER)"
-  rabbitmq_admin_password="$(secret_get RABBITMQ_ADMIN_PASSWORD)"
-  create_secret_once "$APP_NAMESPACE" rabbitmq-default-user Opaque "$rabbitmq_admin_password" \
-    "username=$rabbitmq_admin_user" \
-    "password=$rabbitmq_admin_password" \
-    "default_user.conf=default_user = $rabbitmq_admin_user"$'\n'"default_pass = $rabbitmq_admin_password" \
-    "host=rabbitmq.$APP_NAMESPACE.svc" \
-    "port=5672" \
-    "provider=rabbitmq" \
-    "type=rabbitmq"
-
-  create_secret_once "$APP_NAMESPACE" core-user-credentials Opaque "$(secret_get RABBITMQ_CORE_PASSWORD)" \
-    "username=core" \
-    "password=$(secret_get RABBITMQ_CORE_PASSWORD)"
-
-  create_secret_once "$APP_NAMESPACE" game-svc-user-credentials Opaque "$(secret_get RABBITMQ_GAME_SVC_PASSWORD)" \
-    "username=game-svc" \
-    "password=$(secret_get RABBITMQ_GAME_SVC_PASSWORD)"
 }

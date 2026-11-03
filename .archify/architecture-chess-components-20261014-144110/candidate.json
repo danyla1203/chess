@@ -1,0 +1,595 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Chess Backend: All Components",
+    "output": ".archify/architecture-chess-components-20261014-144110/chess-components.html",
+    "quality_profile": "showcase",
+    "locale": "en"
+  },
+  "components": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Browser client",
+      "sublabel": "REST + Socket.IO",
+      "pos": [
+        40,
+        180
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "gateway",
+      "type": "backend",
+      "label": "GameGateway",
+      "sublabel": "+ GameClient \u00b7 JWT handshake",
+      "pos": [
+        280,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "tag": "IsBalanceEnough"
+    },
+    {
+      "id": "notifier",
+      "type": "backend",
+      "label": "SocketNotifier",
+      "sublabel": "Socket.IO \u00b7 Redis adapter",
+      "pos": [
+        280,
+        320
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "readmodel",
+      "type": "backend",
+      "label": "GameReadModel",
+      "sublabel": "lobby \u00b7 user views",
+      "pos": [
+        520,
+        40
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "grpc",
+      "type": "messagebus",
+      "label": "gRPC GameCommands",
+      "sublabel": ":50051 \u00b7 5 s deadline",
+      "pos": [
+        520,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "tag": "11 methods"
+    },
+    {
+      "id": "pubsub",
+      "type": "messagebus",
+      "label": "Redis pub/sub",
+      "sublabel": "socket.io#/game#",
+      "pos": [
+        520,
+        320
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "handler",
+      "type": "backend",
+      "label": "GameCommandHandler",
+      "sublabel": "routes by method",
+      "pos": [
+        760,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "tag": "requirePlayer"
+    },
+    {
+      "id": "socketpub",
+      "type": "backend",
+      "label": "SocketEventPublisher",
+      "sublabel": "domain events \u2192 rooms",
+      "pos": [
+        760,
+        320
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "service",
+      "type": "backend",
+      "label": "GameService",
+      "sublabel": "create \u00b7 join \u00b7 move \u00b7 draw",
+      "pos": [
+        1000,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "clock",
+      "type": "backend",
+      "label": "GameClock",
+      "sublabel": "deadline scan \u00b7 leader lock",
+      "pos": [
+        1000,
+        460
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "backend",
+      "label": "GameRepository",
+      "sublabel": "optimistic CAS \u00b7 retry \u00d710",
+      "pos": [
+        1240,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "game",
+      "type": "backend",
+      "label": "Game aggregate",
+      "sublabel": "players \u00b7 clocks \u00b7 chat",
+      "pos": [
+        1240,
+        320
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "tag": "+ GameAdapter DTOs"
+    },
+    {
+      "id": "process",
+      "type": "backend",
+      "label": "GameProcess",
+      "sublabel": "rules \u00b7 check \u00b7 mate",
+      "tag": "GameState",
+      "pos": [
+        1240,
+        460
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "database",
+      "label": "Redis {chess}",
+      "sublabel": "games \u00b7 indexes \u00b7 views",
+      "pos": [
+        1480,
+        180
+      ],
+      "size": [
+        160,
+        70
+      ],
+      "tag": "AOF"
+    },
+    {
+      "id": "stream",
+      "type": "messagebus",
+      "label": "{chess}:events",
+      "sublabel": "Redis Stream \u00b7 MAXLEN ~100k",
+      "pos": [
+        1480,
+        320
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "eventstream",
+      "type": "backend",
+      "label": "EventStream",
+      "sublabel": "groups \u00b7 5 tries \u2192 dead",
+      "pos": [
+        1480,
+        460
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "history",
+      "type": "backend",
+      "label": "GameHistoryConsumer",
+      "sublabel": "core \u00b7 dedupe matchId",
+      "pos": [
+        1480,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "rest",
+      "type": "security",
+      "label": "REST controllers",
+      "sublabel": "AuthGuard (JWT + session)",
+      "pos": [
+        280,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "backend",
+      "label": "AuthService",
+      "sublabel": "AuthModel \u00b7 TokenService",
+      "tag": "Google OAuth",
+      "pos": [
+        40,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "payments",
+      "type": "backend",
+      "label": "PaymentsService",
+      "sublabel": "checkout \u00b7 webhook",
+      "pos": [
+        520,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "stripe",
+      "type": "external",
+      "label": "Stripe",
+      "sublabel": "StripeService (lazy)",
+      "pos": [
+        760,
+        600
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "user",
+      "type": "backend",
+      "label": "UserService",
+      "sublabel": "UserModel \u00b7 Redis cache",
+      "pos": [
+        520,
+        740
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "PostgreSQL (Prisma 7)",
+      "sublabel": "User \u00b7 Auth \u00b7 Confirmation \u00b7 Payment \u00b7 Game \u00b7 UserInGame",
+      "pos": [
+        40,
+        880
+      ],
+      "size": [
+        1600,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "game-svc process",
+      "wraps": [
+        "handler",
+        "socketpub",
+        "service",
+        "clock",
+        "repo",
+        "game",
+        "process"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "core \u00b7 REST modules",
+      "wraps": [
+        "rest",
+        "auth",
+        "payments",
+        "user"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c-client-gw",
+      "from": "client",
+      "to": "gateway",
+      "label": "WS emit",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-gw-grpc",
+      "from": "gateway",
+      "to": "grpc",
+      "label": "unary call",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-grpc-handler",
+      "from": "grpc",
+      "to": "handler",
+      "label": "serve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-handler-service",
+      "from": "handler",
+      "to": "service",
+      "label": "call",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-service-repo",
+      "from": "service",
+      "to": "repo",
+      "label": "update()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-repo-redis",
+      "from": "repo",
+      "to": "redis",
+      "label": "Lua CAS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c-repo-game",
+      "from": "repo",
+      "to": "game",
+      "label": "fromSnapshot"
+    },
+    {
+      "id": "c-service-game",
+      "from": "service",
+      "to": "game",
+      "label": "mutate"
+    },
+    {
+      "id": "c-game-process",
+      "from": "game",
+      "to": "process",
+      "label": "makeTurn"
+    },
+    {
+      "id": "c-clock-service",
+      "from": "clock",
+      "to": "service",
+      "label": "endByTimeout"
+    },
+    {
+      "id": "c-service-pub",
+      "from": "service",
+      "to": "socketpub",
+      "label": "pullEvents",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-pub-pubsub",
+      "from": "socketpub",
+      "to": "pubsub",
+      "label": "PUBLISH",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-pubsub-notifier",
+      "from": "pubsub",
+      "to": "notifier",
+      "label": "adapter",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-gw-notifier",
+      "from": "gateway",
+      "to": "notifier",
+      "label": "rooms \u00b7 rejoin"
+    },
+    {
+      "id": "c-notifier-client",
+      "from": "notifier",
+      "to": "client",
+      "label": "game:* \u00b7 lobby:*",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-gw-read",
+      "from": "gateway",
+      "to": "readmodel",
+      "label": "rejoin \u00b7 lobby"
+    },
+    {
+      "id": "c-read-redis",
+      "from": "readmodel",
+      "to": "redis",
+      "label": "HGETALL views"
+    },
+    {
+      "id": "c-redis-stream",
+      "from": "redis",
+      "to": "stream",
+      "label": "XADD on ended",
+      "variant": "dashed"
+    },
+    {
+      "id": "c-stream-es",
+      "from": "stream",
+      "to": "eventstream",
+      "label": "XREADGROUP"
+    },
+    {
+      "id": "c-es-history",
+      "from": "eventstream",
+      "to": "history",
+      "label": "GameEnded"
+    },
+    {
+      "id": "c-history-pg",
+      "from": "history",
+      "to": "pg",
+      "label": "serializable tx"
+    },
+    {
+      "id": "c-client-rest",
+      "from": "client",
+      "to": "rest",
+      "label": "HTTPS"
+    },
+    {
+      "id": "c-rest-auth",
+      "from": "rest",
+      "to": "auth",
+      "label": "/auth"
+    },
+    {
+      "id": "c-rest-payments",
+      "from": "rest",
+      "to": "payments",
+      "label": "/payments"
+    },
+    {
+      "id": "c-rest-user",
+      "from": "rest",
+      "to": "user",
+      "label": "/user"
+    },
+    {
+      "id": "c-payments-user",
+      "from": "payments",
+      "to": "user",
+      "label": "topUp"
+    },
+    {
+      "id": "c-payments-stripe",
+      "from": "payments",
+      "to": "stripe",
+      "label": "checkout"
+    },
+    {
+      "id": "c-auth-pg",
+      "from": "auth",
+      "to": "pg",
+      "label": "sessions"
+    },
+    {
+      "id": "c-user-pg",
+      "from": "user",
+      "to": "pg",
+      "label": "profile"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "After a command reaches game-svc",
+      "items": [
+        "GameClient calls game-svc over gRPC (chess.game.v1.GameCommands) with a 5 s deadline; errors map back to HTTP exceptions",
+        "GameGrpcController hands the request to GameCommandHandler; in-game commands first check the caller is a player",
+        "GameService calls GameRepository.update(id, mutate): load snapshot \u2192 Game.fromSnapshot \u2192 mutate \u2192 Lua CAS save, retried on version conflict",
+        "Moves go through GameProcess (validation, check, mate); the save also refreshes lobby and per-user views",
+        "SocketEventPublisher turns the game's domain events into Socket.IO emits via redis-emitter; core's Redis adapter delivers them to rooms"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Async side effects",
+      "items": [
+        "active \u2192 ended: the same Lua save XADDs a GameEndedEvent to {chess}:events",
+        "EventStream reads it in consumer group history; GameHistoryConsumer saves it to Postgres if both players are authorized, deduped by matchId",
+        "Failed events are reclaimed after 30 s and moved to {chess}:events:dead after 5 deliveries",
+        "GameClock (leader only) scans deadlines every 1 s and ends timed-out games via endByTimeout; browsers count clocks down locally"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "core business relations",
+      "items": [
+        "UserService.create \u2192 AuthService.createSession on signup",
+        "Stripe webhook \u2192 PaymentsService \u2192 UserService.topUpBalance",
+        "Socket handshake: ConnectionPatchProvider \u2192 TokenService / AuthService",
+        "IsBalanceEnough guard \u2192 BalanceModel \u2192 Postgres user balance"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Shared infrastructure",
+      "items": [
+        "Redis carries game state, read views, the event stream and Socket.IO pub/sub; RabbitMQ is gone",
+        "core reads lobby and user views straight from Redis through GameReadModel",
+        "OTel SDK (traces, metrics, logs), winston logger, /health/live + /health/ready, gRPC health service in game-svc"
+      ]
+    }
+  ]
+}

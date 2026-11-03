@@ -1,7 +1,9 @@
 {
   "uid": "chess-overview",
   "title": "Chess backend",
-  "tags": ["chess"],
+  "tags": [
+    "chess"
+  ],
   "timezone": "browser",
   "schemaVersion": 39,
   "refresh": "30s",
@@ -341,8 +343,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, messaging_destination_name) (rate(chess_messaging_process_duration_seconds_bucket{job=~\"$service\"}[$__rate_interval])))",
-          "legendFormat": "{{messaging_destination_name}}",
+          "expr": "histogram_quantile(0.95, sum by (le, messaging_consumer_group_name) (rate(chess_messaging_process_duration_seconds_bucket{job=~\"$service\"}[$__rate_interval])))",
+          "legendFormat": "{{messaging_consumer_group_name}}",
           "exemplar": true
         }
       ],
@@ -375,8 +377,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (messaging_destination_name, outcome) (rate(chess_messaging_process_duration_seconds_count{job=~\"$service\"}[$__rate_interval]))",
-          "legendFormat": "{{messaging_destination_name}} {{outcome}}",
+          "expr": "sum by (messaging_consumer_group_name, outcome) (rate(chess_messaging_process_duration_seconds_count{job=~\"$service\"}[$__rate_interval]))",
+          "legendFormat": "{{messaging_consumer_group_name}} {{outcome}}",
           "exemplar": true
         }
       ],
@@ -391,7 +393,7 @@
     {
       "id": 12,
       "type": "timeseries",
-      "title": "Publish failures",
+      "title": "Event stream lag by group",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -409,8 +411,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (messaging_destination_name) (increase(chess_messaging_publish_failures_total{job=~\"$service\"}[$__rate_interval]))",
-          "legendFormat": "{{messaging_destination_name}}",
+          "expr": "max by (group) (chess_events_lag{job=~\"$service\"})",
+          "legendFormat": "{{group}}",
           "exemplar": true
         }
       ],
@@ -420,12 +422,13 @@
         },
         "overrides": []
       },
-      "options": {}
+      "options": {},
+      "description": "Entries in {chess}:events not yet read by each consumer group. Unread entries are never trimmed."
     },
     {
-      "id": 13,
-      "type": "timeseries",
-      "title": "Queue depth (ready + unacked)",
+      "id": 14,
+      "type": "stat",
+      "title": "Dead-lettered events",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -443,51 +446,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (queue) (rabbitmq_queue_messages_ready)",
-          "legendFormat": "{{queue}} ready",
-          "exemplar": true
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (queue) (rabbitmq_queue_messages_unacked)",
-          "legendFormat": "{{queue}} unacked",
-          "exemplar": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {}
-    },
-    {
-      "id": 14,
-      "type": "stat",
-      "title": "Dead-lettered messages",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 12,
-        "y": 23
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(rabbitmq_queue_messages{queue=\"chess.dead-letter\"})",
+          "expr": "max(chess_events_dead{job=~\"$service\"})",
           "legendFormat": "dead letters",
           "exemplar": false
         }
@@ -502,140 +461,6 @@
       "description": "Anything above 0 needs a look: these messages failed 5 deliveries."
     },
     {
-      "id": 15,
-      "type": "stat",
-      "title": "Consumers per queue",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 18,
-        "y": 23
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (queue) (rabbitmq_queue_consumers)",
-          "legendFormat": "{{queue}}",
-          "exemplar": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {}
-    },
-    {
-      "id": 26,
-      "type": "stat",
-      "title": "Outbox pending",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 31
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(chess_outbox_pending{job=~\"$service\"})",
-          "legendFormat": "pending"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {},
-      "description": "game.ended events written to Redis and not yet confirmed by RabbitMQ. Should stay near 0."
-    },
-    {
-      "id": 27,
-      "type": "timeseries",
-      "title": "Outbox relay lag p95",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 6,
-        "y": 31
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(chess_outbox_relay_lag_seconds_bucket{job=~\"$service\"}[$__rate_interval])))",
-          "legendFormat": "p95"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "options": {}
-    },
-    {
-      "id": 28,
-      "type": "timeseries",
-      "title": "Outbox relay failures",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 14,
-        "y": 31
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(increase(chess_outbox_relay_failures_total{job=~\"$service\"}[$__rate_interval]))",
-          "legendFormat": "failures"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {}
-    },
-    {
       "id": 29,
       "type": "stat",
       "title": "Clock leaders",
@@ -645,9 +470,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 4,
-        "x": 20,
-        "y": 31
+        "w": 12,
+        "x": 12,
+        "y": 23
       },
       "targets": [
         {
@@ -672,7 +497,7 @@
     {
       "id": 30,
       "type": "timeseries",
-      "title": "Command round trip p95 (core -> game-svc)",
+      "title": "Command round trip p95 (core -> game-svc, gRPC)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -681,7 +506,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 39
+        "y": 31
       },
       "targets": [
         {
@@ -714,7 +539,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 39
+        "y": 31
       },
       "targets": [
         {
@@ -744,7 +569,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 47
+        "y": 39
       },
       "panels": []
     },
@@ -760,7 +585,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 48
+        "y": 40
       },
       "targets": [
         {
@@ -794,7 +619,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 48
+        "y": 40
       },
       "targets": [
         {
@@ -828,7 +653,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 48
+        "y": 40
       },
       "targets": [
         {
@@ -859,7 +684,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 48
       },
       "panels": []
     },
@@ -875,7 +700,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 57
+        "y": 49
       },
       "targets": [
         {
@@ -909,7 +734,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 57
+        "y": 49
       },
       "targets": [
         {
@@ -943,7 +768,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 57
+        "y": 49
       },
       "targets": [
         {
@@ -977,7 +802,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 65
+        "y": 57
       },
       "targets": [
         {
@@ -1011,7 +836,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 65
+        "y": 57
       },
       "targets": [
         {

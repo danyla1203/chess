@@ -46,9 +46,7 @@ TEMPO_VERSION=1.24.4
 LOKI_VERSION=7.3.0
 OTEL_COLLECTOR_VERSION=0.175.1
 HEADLAMP_VERSION=0.45.0
-RABBITMQ_OPERATOR_VERSION=v2.23.0
 CERT_MANAGER_VERSION=v1.18.2
-RABBITMQ_TOPOLOGY_OPERATOR_VERSION=v1.17.0
 CNPG_CHART_VERSION=0.26.0
 ENVOY_GATEWAY_VERSION=v1.5.0
 
@@ -129,18 +127,6 @@ helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
 apply_with_retry -f "$DIR/gateway/gateway-class.yaml"
 apply_with_retry -f "$DIR/gateway/ui-routes.yaml"
 ok "envoy gateway ready"
-
-CURRENT="rabbitmq operators and cluster"
-step "Installing rabbitmq operators $RABBITMQ_OPERATOR_VERSION / $RABBITMQ_TOPOLOGY_OPERATOR_VERSION"
-info "cluster operator"
-kubectl apply -f "https://github.com/rabbitmq/cluster-operator/releases/download/$RABBITMQ_OPERATOR_VERSION/cluster-operator.yml"
-kubectl -n rabbitmq-system rollout status deployment/rabbitmq-cluster-operator --timeout=180s
-info "messaging topology operator"
-kubectl apply -f "https://github.com/rabbitmq/messaging-topology-operator/releases/download/$RABBITMQ_TOPOLOGY_OPERATOR_VERSION/messaging-topology-operator-with-certmanager.yaml"
-kubectl -n rabbitmq-system rollout status deployment/messaging-topology-operator --timeout=180s
-info "rabbitmq cluster manifests"
-apply_with_retry -k "$DIR/../rabbitmq"
-ok "rabbitmq applied"
 
 CURRENT="postgres cluster"
 step "Creating postgres cluster"

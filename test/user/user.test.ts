@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { AuthService } from '../../src/auth';
-import { PrismaService } from '../../src/prisma.service';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { UserModel } from '../../src/user/model';
 import { UserService } from '../../src/user/user.service';
 import { generateUserGames } from './utils';

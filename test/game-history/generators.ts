@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import type { GameEndedEvent } from '../../src/messaging';
+import type { GameEndedEvent } from '../../src/infrastructure/messaging';
 
 export const generateGameEndedEvent = (
   overrides: Partial<GameEndedEvent> = {},

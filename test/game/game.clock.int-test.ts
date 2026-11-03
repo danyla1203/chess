@@ -1,22 +1,22 @@
 import Redis from 'ioredis';
-import { GameClock } from '../../src/game/game.clock';
-import { GameRepository } from '../../src/game/game.repository';
+import { GameClock } from '../../src/infrastructure/game/game.clock';
+import { GameRepository } from '../../src/infrastructure/game/game.repository';
 import { GameService } from '../../src/game/game.service';
-import { GameNotifier } from '../../src/game/game.notifier';
-import { GameMetrics } from '../../src/game/game.metrics';
-import { GameAdapter } from '../../src/game/entities/game';
-import { GameEnd } from '../../src/game/EmitTypes';
-import { LoggerService } from '../../src/tools/logger';
-import { RedisKeys } from '../../src/redis';
+import { GamePublisher } from '../../src/game/game.publisher';
+import { GameMetrics } from '../../src/infrastructure/game/game.metrics';
+import { GameAdapter } from '../../src/game/game.adapter';
+import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { LoggerService } from '../../src/infrastructure/logger';
+import { RedisKeys } from '../../src/infrastructure/redis';
 import { RedisTestDb, clearChessKeys, testRedis } from '../redis/helpers';
 import { generateClient, generateConfig } from './generators';
-import { fakeMetrics, fakeNotifier } from './fakes';
+import { fakeMetrics, fakePublisher } from './fakes';
 
 describe('GameClock (integration, Redis)', () => {
   let redis: Redis;
   let repo: GameRepository;
   let service: GameService;
-  let notifier: ReturnType<typeof fakeNotifier>;
+  let publisher: ReturnType<typeof fakePublisher>;
   const logger = { error: jest.fn() } as unknown as LoggerService;
 
   const clock = () =>
@@ -32,11 +32,11 @@ describe('GameClock (integration, Redis)', () => {
     redis = testRedis(RedisTestDb.clock);
     await clearChessKeys(redis);
     repo = new GameRepository(redis);
-    notifier = fakeNotifier();
+    publisher = fakePublisher();
     service = new GameService(
       repo,
       fakeMetrics() as unknown as GameMetrics,
-      notifier as unknown as GameNotifier,
+      publisher as unknown as GamePublisher,
       new GameAdapter(),
     );
   });
@@ -80,7 +80,7 @@ describe('GameClock (integration, Redis)', () => {
     const leader = clock();
     await leader.tick(game.turnStartedAt + 1500);
     expect((await repo.get(game.id)).isActive).toBe(true);
-    expect(notifier.gameEnd).not.toHaveBeenCalled();
+    expect(publisher.types()).not.toContain('ended');
     await leader.onApplicationShutdown();
   });
 
@@ -95,8 +95,8 @@ describe('GameClock (integration, Redis)', () => {
     const stored = await repo.get(game.id);
     expect(stored.endReason).toBe(GameEnd.timeout);
     expect(stored.winner.side).toBe('b');
-    expect(notifier.gameEnd).toHaveBeenCalledTimes(2);
-    expect(await redis.xlen(RedisKeys.outbox)).toBe(1);
+    expect(publisher.types().filter((t) => t === 'ended')).toHaveLength(1);
+    expect(await redis.xlen(RedisKeys.events)).toBe(1);
     await leader.onApplicationShutdown();
   });
 

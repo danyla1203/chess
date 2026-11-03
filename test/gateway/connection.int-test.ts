@@ -3,11 +3,12 @@ import { Test } from '@nestjs/testing';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { GameGateway } from '../../src/gateway/game.gateway';
 import { AuthService, TokenService } from '../../src/auth';
-import { GameClient } from '../../src/gateway/game.client';
+import { GameReadModel } from '../../src/game-read';
 import { ClientStore } from '../../src/gateway/ClientStore';
 import { AppModule } from '../../src/app.module';
-import { LoggerService } from '../../src/tools/logger';
-import { Game, Lobby, User } from '../../src/game/EmitTypes';
+import { LoggerService } from '../../src/infrastructure/logger';
+import { EventStream } from '../../src/infrastructure/messaging';
+import { Game, Lobby, User } from '../../src/domain/game/EmitTypes';
 
 jest.mock('axios', () => null);
 
@@ -15,7 +16,7 @@ describe('Socket connection (integration)', () => {
   let gateway: GameGateway;
   let authService: AuthService;
   let tokenService: TokenService;
-  let gmService: GameClient;
+  let views: GameReadModel;
   let store: ClientStore;
   let socket: any;
   beforeEach(async () => {
@@ -33,12 +34,16 @@ describe('Socket connection (integration)', () => {
       .overrideProvider(LoggerService)
       .useValue({
         log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
       })
+      .overrideProvider(EventStream)
+      .useValue({ subscribe: jest.fn() })
       .compile();
     gateway = moduleRef.get(GameGateway);
     authService = moduleRef.get(AuthService);
     tokenService = moduleRef.get(TokenService);
-    gmService = moduleRef.get(GameClient);
+    views = moduleRef.get(GameReadModel);
     store = moduleRef.get(ClientStore);
     socket = {
       emit: jest.fn(),
@@ -52,14 +57,14 @@ describe('Socket connection (integration)', () => {
 
   describe('anonymous flow', () => {
     beforeEach(() => {
-      jest.spyOn(gmService, 'lobby').mockResolvedValueOnce([]);
+      jest.spyOn(views, 'lobby').mockResolvedValueOnce([]);
       socket.id = 'test';
       socket.handshake = {
         query: '',
       };
     });
     it('anonymous connection without temp token', async () => {
-      jest.spyOn(gmService, 'pendingGame').mockResolvedValueOnce(null);
+      jest.spyOn(views, 'userGame').mockResolvedValueOnce(null);
       await gateway.handleConnection(socket);
       const cl = store.getClient(socket);
       expect(cl.name).toEqual('Anonymous');
@@ -68,9 +73,11 @@ describe('Socket connection (integration)', () => {
       expect(cl.authorized).toBeFalsy();
     });
     it('anonymous connection without temp token - return pending game', async () => {
-      jest
-        .spyOn(gmService, 'pendingGame')
-        .mockResolvedValueOnce({ id: 12345, initData: null });
+      jest.spyOn(views, 'userGame').mockResolvedValueOnce({
+        gameId: 12345,
+        status: 'active',
+        opponentId: 1,
+      });
       await gateway.handleConnection(socket);
       const cl = store.getClient(socket);
       expect(cl.name).toEqual('Anonymous');
@@ -87,7 +94,7 @@ describe('Socket connection (integration)', () => {
       expect(socket.emit).toHaveBeenNthCalledWith(3, Lobby.update, []);
     });
     it('anonymous connection with temp token', async () => {
-      jest.spyOn(gmService, 'pendingGame').mockResolvedValueOnce(null);
+      jest.spyOn(views, 'userGame').mockResolvedValueOnce(null);
       socket.id = 'test';
       socket.handshake = {
         query: {
@@ -124,10 +131,10 @@ describe('Socket connection (integration)', () => {
             deviceId: 'string',
           };
         });
-      jest.spyOn(gmService, 'lobby').mockResolvedValueOnce([]);
+      jest.spyOn(views, 'lobby').mockResolvedValueOnce([]);
     });
     it('authorized conn', async () => {
-      jest.spyOn(gmService, 'pendingGame').mockResolvedValueOnce(null);
+      jest.spyOn(views, 'userGame').mockResolvedValueOnce(null);
       await gateway.handleConnection(socket);
       const cl = store.getClient(socket);
       expect(cl.name).toEqual('Danek');
@@ -135,9 +142,11 @@ describe('Socket connection (integration)', () => {
       expect(cl.authorized).toBeTruthy();
     });
     it('authorized conn with pending game', async () => {
-      jest
-        .spyOn(gmService, 'pendingGame')
-        .mockResolvedValueOnce({ id: 12345, initData: null });
+      jest.spyOn(views, 'userGame').mockResolvedValueOnce({
+        gameId: 12345,
+        status: 'active',
+        opponentId: 1,
+      });
       await gateway.handleConnection(socket);
       const cl = store.getClient(socket);
       expect(cl.name).toEqual('Danek');

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { GameGateway } from './game.gateway';
 import { ConnectionPatchProvider } from './connection.provider';
 import { ClientStore } from './ClientStore';
@@ -7,9 +7,11 @@ import { BalanceModel } from './balance.model';
 import { GatewayMetrics } from './gateway.metrics';
 import { SocketNotifier } from './socket.notifier';
 import { GameClient } from './game.client';
-import { NotificationConsumer } from './notification.consumer';
+import { GameReadModule } from '../game-read';
+import { GameSvcClientModule } from './game-svc.client.module';
 
 @Module({
+  imports: [GameReadModule, GameSvcClientModule],
   providers: [
     GameGateway,
     ConnectionPatchProvider,
@@ -19,7 +21,6 @@ import { NotificationConsumer } from './notification.consumer';
     GatewayMetrics,
     SocketNotifier,
     GameClient,
-    NotificationConsumer,
   ],
 })
 export class GatewayModule {}

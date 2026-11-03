@@ -17,11 +17,12 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { WsValidationFilter } from '../tools/WsValidationFilter';
+import { WsValidationFilter } from '../infrastructure/socket/WsValidationFilter';
 import { CreateGameDto, TurnBody, ChatMessage } from '../game/dto';
 import type { ConnectToGameDto } from '../game/dto';
-import { Game, GameEnd, Lobby, User, room } from '../game/EmitTypes';
-import { annotateActiveSpan } from '../tools/telemetry';
+import { Game, Lobby, User, room } from '../domain/game/EmitTypes';
+import { GameReadModel } from '../game-read';
+import { annotateActiveSpan } from '../infrastructure/telemetry';
 import { ConnectionPatchProvider } from './connection.provider';
 import { ClientStore } from './ClientStore';
 import { IsBalanceEnough } from './guards';
@@ -43,6 +44,7 @@ export class GameGateway
 
   constructor(
     private readonly games: GameClient,
+    private readonly views: GameReadModel,
     private readonly connService: ConnectionPatchProvider,
     private readonly clientStore: ClientStore,
     private readonly metrics: GatewayMetrics,
@@ -60,10 +62,6 @@ export class GameGateway
     this.shuttingDown = true;
   }
 
-  private async broadcastLobby(): Promise<void> {
-    this.notifier.lobbyUpdate(await this.games.lobby());
-  }
-
   async handleDisconnect(socket: Socket) {
     this.metrics.connectionClosed();
     const client = this.clientStore.getClient(socket);
@@ -74,12 +72,12 @@ export class GameGateway
       .fetchSockets();
     if (otherSockets.length > 0) return;
 
-    await this.games.cancelLobbyGame(client);
-    const opponent = await this.games.currentOpponent(client);
-    if (opponent) {
-      this.notifier.opponentDisconnected(opponent.userId);
+    const view = await this.views.userGame(client.userId);
+    if (view?.status === 'lobby') {
+      await this.games.cancelLobbyGame(client);
+    } else if (view?.status === 'active' && view.opponentId) {
+      this.notifier.opponentDisconnected(view.opponentId);
     }
-    await this.broadcastLobby();
   }
 
   async handleConnection(socket: Socket) {
@@ -93,13 +91,13 @@ export class GameGateway
         userId: client.userId,
       });
     }
-    const pending = await this.games.pendingGame(client);
-    if (pending) {
-      await socket.join(room(pending.id));
-      socket.emit(Game.pendingGame, { gameId: pending.id });
+    const view = await this.views.userGame(client.userId);
+    if (view?.status === 'active') {
+      await socket.join(room(view.gameId));
+      socket.emit(Game.pendingGame, { gameId: view.gameId });
     }
 
-    socket.emit(Lobby.update, await this.games.lobby());
+    socket.emit(Lobby.update, await this.views.lobby());
   }
 
   @SubscribeMessage('create')
@@ -115,10 +113,6 @@ export class GameGateway
       'chess.match.id': game.matchId,
       'enduser.id': client.userId,
     });
-    this.notifier.joinGame(client.userId, game.id);
-    socket.emit(Game.created, { gameId: game.id });
-
-    await this.broadcastLobby();
   }
 
   @SubscribeMessage('rejoin')
@@ -138,10 +132,7 @@ export class GameGateway
 
   @SubscribeMessage('leave')
   async leaveGame(@ConnectedSocket() socket: Socket): Promise<void> {
-    const client = this.clientStore.getClient(socket);
-    const { winner, looser, gameDto } = await this.games.leave(client);
-    this.notifier.gameEnd(winner.userId, true, gameDto, GameEnd.playerLeave);
-    this.notifier.gameEnd(looser.userId, false, gameDto, GameEnd.playerLeave);
+    await this.games.leave(this.clientStore.getClient(socket));
   }
 
   @SubscribeMessage('join')
@@ -155,14 +146,7 @@ export class GameGateway
       'chess.game.id': gameId,
       'enduser.id': client.userId,
     });
-    const game = await this.games.joinGame(client, gameId);
-
-    for (const player of game.players) {
-      this.notifier.joinGame(player.userId, game.id);
-      this.notifier.initData(player.userId, player.initData);
-    }
-    this.notifier.gameStart(game.players.map((pl) => pl.userId));
-    await this.broadcastLobby();
+    await this.games.joinGame(client, gameId);
   }
 
   @SubscribeMessage('move')
@@ -175,15 +159,7 @@ export class GameGateway
       'chess.game.id': turn.gameId,
       'enduser.id': client.userId,
     });
-    const { result, prevCell, side, clock } = await this.games.move(
-      client,
-      turn,
-    );
-    this.notifier.toGame(turn.gameId, Game.boardUpdate, {
-      effect: result,
-      update: { figure: turn.figure, cell: turn.cell, prevCell, side },
-      clock,
-    });
+    await this.games.move(client, turn);
   }
 
   @SubscribeMessage('chat-message')
@@ -191,9 +167,7 @@ export class GameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId, text }: ChatMessage,
   ): Promise<void> {
-    const client = this.clientStore.getClient(socket);
-    const message = await this.games.chat(client, gameId, text);
-    this.notifier.toGame(gameId, Game.message, message);
+    await this.games.chat(this.clientStore.getClient(socket), gameId, text);
   }
 
   @SubscribeMessage('surrender')
@@ -202,13 +176,7 @@ export class GameGateway
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
     annotateActiveSpan({ 'chess.game.id': gameId });
-    const client = this.clientStore.getClient(socket);
-    const { winner, looser, gameDto } = await this.games.surrender(
-      client,
-      gameId,
-    );
-    this.notifier.gameEnd(winner.userId, true, gameDto, GameEnd.surrender);
-    this.notifier.gameEnd(looser.userId, false, gameDto, GameEnd.surrender);
+    await this.games.surrender(this.clientStore.getClient(socket), gameId);
   }
 
   @SubscribeMessage('draw_propose')
@@ -216,9 +184,7 @@ export class GameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
-    const client = this.clientStore.getClient(socket);
-    const propose = await this.games.proposeDraw(client, gameId);
-    this.notifier.toGame(gameId, Game.drawPropose, propose);
+    await this.games.proposeDraw(this.clientStore.getClient(socket), gameId);
   }
 
   @SubscribeMessage('draw_accept')
@@ -226,9 +192,7 @@ export class GameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
-    const client = this.clientStore.getClient(socket);
-    const game = await this.games.acceptDraw(client, gameId);
-    this.notifier.toGame(gameId, Game.end, { reason: GameEnd.draw, game });
+    await this.games.acceptDraw(this.clientStore.getClient(socket), gameId);
   }
 
   @SubscribeMessage('draw_reject')
@@ -236,9 +200,7 @@ export class GameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
-    const client = this.clientStore.getClient(socket);
-    const result = await this.games.rejectDraw(client, gameId);
-    this.notifier.toGame(gameId, Game.rejectDraw, result);
+    await this.games.rejectDraw(this.clientStore.getClient(socket), gameId);
   }
 
   @SubscribeMessage('add_time')
@@ -246,8 +208,6 @@ export class GameGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() { gameId }: { gameId: number },
   ): Promise<void> {
-    const client = this.clientStore.getClient(socket);
-    const result = await this.games.addTime(client, gameId);
-    this.notifier.toGame(gameId, Game.addTime, result);
+    await this.games.addTime(this.clientStore.getClient(socket), gameId);
   }
 }

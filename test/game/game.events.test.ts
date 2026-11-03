@@ -1,6 +1,9 @@
-import { gameEndedEvent, gameEndedMessage } from '../../src/game/game.events';
-import { GameEnd } from '../../src/game/EmitTypes';
-import { Exchange, RoutingKey } from '../../src/messaging';
+import {
+  gameEndedEvent,
+  gameEndedMessage,
+} from '../../src/infrastructure/game/game.events';
+import { GameEnd } from '../../src/domain/game/EmitTypes';
+import { EventType } from '../../src/infrastructure/messaging';
 import { generateConfig, startedGame } from './generators';
 
 describe('game.ended event (unit)', () => {
@@ -31,12 +34,11 @@ describe('game.ended event (unit)', () => {
     expect(event.players.every((pl) => !pl.isWinner)).toBe(true);
   });
 
-  it('should wrap the event as an outbox message for game.lifecycle', () => {
+  it('should wrap the event as a versioned integration event keyed by matchId', () => {
     const game = startedGame();
     game.endGameByDraw();
     expect(gameEndedMessage(game)).toMatchObject({
-      exchange: Exchange.GameLifecycle,
-      routingKey: RoutingKey.GameEnded,
+      type: EventType.GameEnded,
       messageId: game.matchId,
       trace: {},
     });

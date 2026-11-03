@@ -1,6 +1,6 @@
-import { GameState } from '../../src/game/entities/game/process/game.state';
+import { GameState } from '../../src/domain/game/entities/game/process/game.state';
 import { boardFabric } from './utils';
-import { Cell, Figure } from '../../src/game/entities/game';
+import { Cell, Figure } from '../../src/domain/game/entities/game';
 
 describe('GameState (unit)', () => {
   let state: GameState;

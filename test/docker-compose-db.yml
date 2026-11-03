@@ -21,23 +21,8 @@ services:
     container_name: test-redis
     ports:
       - '6391:6379'
-  rabbitmq:
-    image: rabbitmq:4.2.9
-    container_name: test-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: test
-      RABBITMQ_DEFAULT_PASS: test
-    healthcheck:
-      test: rabbitmq-diagnostics -q check_port_connectivity
-      interval: 5s
-      timeout: 10s
-      retries: 60
-    ports:
-      - '5673:5672'
   wait_for_db:
     image: hello-world
     depends_on:
       db:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy

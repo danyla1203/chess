@@ -4,9 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 import { PaymentsService } from '../../src/payments/payments.service';
 import { UserService } from '../../src/user/user.service';
-import { LoggerService } from '../../src/tools/logger';
+import { LoggerService } from '../../src/infrastructure/logger';
 import { LoggerServiceStub } from '../utils/LoggerServiceStub';
-import { StripeService } from '../../src/payments/stripe/stripe.service';
+import { StripeService } from '../../src/infrastructure/stripe/stripe.service';
 
 describe('PaymentsService (unit)', () => {
   let service: PaymentsService;

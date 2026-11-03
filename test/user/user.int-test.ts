@@ -5,7 +5,7 @@ import { ConflictException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { TokenService } from '../../src/auth/tokens/token.service';
 import { UserService } from '../../src/user/user.service';
-import { PrismaService } from '../../src/prisma.service';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { AppModule } from '../../src/app.module';
 
 jest.mock('axios', () => null);

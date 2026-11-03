@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import bcrypt from 'bcrypt';
 import { AuthService, TokenService } from '../../src/auth';
 import { AuthModel } from '../../src/auth/auth.model';
-import { PrismaService } from '../../src/prisma.service';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { TestTokenModule } from '../utils/TestTokenModule';
 
 describe('AuthService (unit)', () => {

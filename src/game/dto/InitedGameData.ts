@@ -1,4 +1,4 @@
-import { ClockState } from './ClockState';
+import { ClockState } from '../../domain/game/ClockState';
 import { PlainBoardState } from './PlainBoardState';
 
 export type InitedGameData = {

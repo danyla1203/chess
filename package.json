@@ -15,6 +15,9 @@
     "start:prod": "node dist/main",
     "start:game-svc": "nest start --watch --entryFile game-service/main",
     "start:game-svc:prod": "node dist/game-service/main",
+    "views:rebuild": "node dist/game-service/views.rebuild",
+    "proto": "buf lint && buf generate",
+    "proto:breaking": "buf breaking --against '.git#branch=dev'",
     "lint": "eslint \"{src,test,prisma}/**/*.ts\"",
     "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest --verbose --detectOpenHandles",
     "test:unit:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --verbose --detectOpenHandles",
@@ -29,12 +32,15 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.6",
+    "@grpc/proto-loader": "^0.8.1",
     "@keyv/redis": "^6.1.0",
     "@nestjs/cache-manager": "^12.0.1",
     "@nestjs/common": "^12.1.2",
     "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.1.2",
     "@nestjs/jwt": "^12.0.2",
+    "@nestjs/microservices": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
     "@nestjs/platform-socket.io": "^12.1.2",
     "@nestjs/websockets": "^12.1.2",
@@ -52,8 +58,7 @@
     "@prisma/instrumentation": "^7.10.0",
     "@sendgrid/mail": "^8.1.6",
     "@socket.io/redis-adapter": "^8.3.0",
-    "amqp-connection-manager": "^5.0.0",
-    "amqplib": "^2.2.0",
+    "@socket.io/redis-emitter": "^5.1.0",
     "bcrypt": "^6.0.0",
     "cache-manager": "^7.2.9",
     "class-transformer": "^0.5.1",
@@ -68,6 +73,7 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.73.0",
     "@eslint/js": "^10.0.1",
     "@faker-js/faker": "^10.6.0",
     "@nestjs/cli": "^12.0.8",
@@ -90,6 +96,7 @@
     "socket.io-client": "^4.8.3",
     "supertest": "^7.3.1",
     "ts-jest": "^29.4.14",
+    "ts-proto": "^2.15.3",
     "tsx": "^4.23.15",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.71.1"

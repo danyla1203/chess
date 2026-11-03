@@ -2,10 +2,10 @@
 
 NestJS 12, two processes from one codebase and one image:
 
-- **core** (`src/main.ts`, `AppModule`): REST, the Socket.IO gateway, game history. Game actions go to game-svc as RabbitMQ RPC.
-- **game-svc** (`src/game-service/main.ts`, `GameServiceModule`): game rules, Redis game state, clocks, outbox relay. No REST, no sockets.
+- **core** (`src/main.ts`, `AppModule`): REST, the Socket.IO gateway, game history. Game writes go to game-svc as gRPC commands (`GameClient`); game reads come from Redis read models (`GameReadModel`); finished games arrive on the `{chess}:events` stream.
+- **game-svc** (`src/game-service/main.ts`, `GameServiceModule`): game rules, Redis game state and read models, clocks, gRPC server (`GameCommands`, `grpc.health.v1`) on `GRPC_PORT` (50051), all game pushes to sockets (Redis emitter). HTTP only for health on `HEALTH_PORT`; no socket connections.
 
-Each entry imports `src/tools/telemetry/otel.ts` first (starts the OTel SDK before anything else is required), then bootstraps. core adds a global `ValidationPipe` and `LoggerFilter` and listens on `PORT` (9200 in dev). CORS allows `http://localhost:3000` when `ENV=dev`.
+Each entry imports `src/infrastructure/telemetry/otel.ts` first (starts the OTel SDK before anything else is required), then bootstraps. core adds a global `ValidationPipe` and `LoggerFilter` and listens on `PORT` (9200 in dev). CORS allows `http://localhost:3000` when `ENV=dev`.
 
 ## Layout
 
@@ -14,7 +14,6 @@ src/
 ├── main.ts                    bootstrap, CORS, global pipe/filter
 ├── main.ts                    (also installs RedisIoAdapter: Socket.IO rooms and emits shared across instances)
 ├── app.module.ts              [core] Config (global), Redis cache (global), Logger, Telemetry, Redis, Messaging, Health, Auth, Gateway, Payments, User, GameHistory
-├── prisma.service.ts          PrismaClient + pg adapter; each module provides its own instance
 ├── auth/                      @Global module, exports AuthService + TokenModule
 │   ├── auth.controller.ts     /auth/* routes
 │   ├── auth.service.ts        login, refresh rotation, email verification, Google OAuth
@@ -27,51 +26,74 @@ src/
 │   ├── model.ts               Prisma access for User, Game, Payment
 │   └── entities/              response shapes + prismaSelectUserProfile
 ├── gateway/                   [core] Socket.IO side of the game, namespace /game
-│   ├── game.gateway.ts        @SubscribeMessage handlers; every game action is an RPC to game-svc via GameClient
-│   ├── game.client.ts         typed RabbitMQ RPC client for the commands in game/game.contract.ts
-│   ├── socket.notifier.ts     all server -> client emits, addressed to `user:<id>` / `game:<id>` rooms so they work across instances
-│   ├── notification.consumer.ts  consumes `ws.notifications` (ticks, timeouts) from game-svc and emits them
+│   ├── game.gateway.ts        @SubscribeMessage handlers: writes are one command to game-svc via GameClient, connect/disconnect read GameReadModel; emits no game events itself
+│   ├── game.client.ts         gRPC client for GameCommands: 5 s deadline per call, rebuilds HttpExceptions, `chess.rpc.client.duration` metric
+│   ├── game-svc.client.module.ts  ClientsModule: proto, loader options, round_robin + retry-on-UNAVAILABLE service config, target `GAME_SVC_GRPC_TARGET`
+│   ├── socket.notifier.ts     the few emits core still owns (player reconnected/disconnected), addressed to `user:<id>` / `game:<id>` rooms
 │   ├── ClientStore.ts         Client identity kept on `socket.data.client`
 │   ├── connection.provider.ts handshake: JWT -> authorized Client, otherwise anonymous temp token
 │   ├── balance.model.ts       user balance lookup for IsBalanceEnough
 │   ├── guards/                IsBalanceEnough (bet <= balance)
 │   └── gateway.metrics.ts     open Socket.IO connections
 ├── game-service/              [game-svc] second entrypoint, no REST: health endpoints only
-│   ├── main.ts                bootstraps GameServiceModule, listens on HEALTH_PORT (9300)
-│   ├── game.commands.ts       serves `game-svc.commands`: maps each command to GameService, checks the caller is a player
-│   └── amqp.notifier.ts       GameNotifier that publishes ticks and timeout endings to `game.notifications`
-├── game/                      [game-svc] game domain, no transport code
-│   ├── game.contract.ts       command request/response types and notification union shared by core and game-svc
-│   ├── game.service.ts        create/join/move/draw/surrender/leave/timeout on top of GameRepository
-│   ├── game.repository.ts     Redis game store: versioned snapshot per game, Lua compare-and-set save that also updates indexes and writes the outbox
-│   ├── game.notifier.ts       abstract GameNotifier (gameEnd)
-│   ├── game.clock.ts          leader-elected (Redis lock) 1 s loop: ends timed-out games from the deadline index; no per-second ticks
-│   ├── game.events.ts         Game -> GameEndedEvent / outbox message
-│   ├── game.metrics.ts        OTel metrics: moves, move latency, games created/ended, bet volume, active/lobby, clock leader
-│   ├── EmitTypes.ts           server -> client event names (shared contract with frontend)
-│   ├── dto/                   CreateGame, Turn, ChatMessage + payload types
-│   └── entities/
-│       ├── Client.ts          identity: userId, name, authorized, anonymous temp token
-│       ├── Player.ts          identity + side + remaining time; snapshot (de)serialization
-│       └── game/
-│           ├── game.ts        Game aggregate: status, players, clocks (turnStartedAt + remaining ms), moves, chat, draw flags; toSnapshot/fromSnapshot
-│           ├── game.chat.ts   per-game chat log
-│           ├── game.adapter.ts  Game -> DTOs (plain board, init data, result)
-│           └── process/
-│               ├── game.process.ts  move validation, check ("shah") and mate detection
-│               └── game.state.ts    board maps per side, turn side, check/threat sets
+│   ├── main.ts                bootstraps GameServiceModule: gRPC on GRPC_PORT (50051), health HTTP on HEALTH_PORT (9300)
+│   ├── grpc.server.ts         hybrid microservice options; deferred init so the global filter and interceptor apply
+│   ├── game.grpc.controller.ts  @GrpcMethod per rpc (generated `GameCommandsControllerMethods`), proto <-> contract mapping
+│   ├── game.commands.ts       maps each command to GameService, checks the caller is a player
+│   ├── http-to-grpc.filter.ts HttpException -> gRPC status + `x-http-error-bin` trailer; logs 5xx
+│   ├── deadline.interceptor.ts  refuses a call whose deadline already passed or was cancelled
+│   ├── grpc.health.controller.ts  grpc.health.v1 Check (Redis ping); used by the k8s readiness probe
+│   ├── socket.emitter.ts      `@socket.io/redis-emitter` on namespace /game over the shared Redis client; publish errors are logged, never thrown
+│   ├── socket.publisher.ts    GamePublisher: domain events -> Socket.IO emits (same event names and payloads as before)
+│   └── views.rebuild.ts       `npm run views:rebuild`: wipes `view:*` and reprojects lobby/active games from snapshots
+├── game-read/                 [core reads, game-svc writes] Redis read models
+│   ├── views.ts               LobbyView, UserView (game-svc may import only this file)
+│   └── game-read.model.ts     GameReadModel: lobby(), userGame(userId)
+├── game/                      [game-svc] application layer: use cases over the domain, no transport code
+│   ├── game.contract.ts       command request/response types shared by core and game-svc
+│   ├── game.service.ts        create/join/move/draw/surrender/leave/timeout on top of GameRepository; publishes the aggregate's events after each save
+│   ├── game.publisher.ts      abstract GamePublisher (game + domain events)
+│   ├── game.views.ts          Game -> LobbyView
+│   ├── game.adapter.ts        Game -> DTOs (plain board, init data, result)
+│   ├── game.adapter.interface.ts
+│   └── dto/                   CreateGame, Turn, ChatMessage + payload types (re-exports MoveResult/ClockState from domain)
+├── domain/                    pure model; lint forbids imports from infrastructure, transport or app modules
+│   └── game/
+│       ├── EmitTypes.ts       server -> client event names (shared contract with frontend)
+│       ├── MoveResult.ts      CompletedMove, Shah/Mate/Striked data
+│       ├── ClockState.ts
+│       └── entities/
+│           ├── Client.ts      identity: userId, name, authorized, anonymous temp token
+│           ├── Player.ts      identity + side + remaining time; snapshot (de)serialization
+│           └── game/
+│               ├── game.ts    Game aggregate: status, players, clocks (turnStartedAt + remaining ms), moves, chat, draw flags; records domain events (pullEvents); toSnapshot/fromSnapshot
+│               ├── game.domain-events.ts  GameDomainEvent union: created, started, cancelled, moved, chatPosted, drawProposed, drawRejected, timeAdded, ended
+│               ├── game.chat.ts   per-game chat log
+│               └── process/
+│                   ├── game.process.ts  move validation, check ("shah") and mate detection
+│                   └── game.state.ts    board maps per side, turn side, check/threat sets
 ├── payments/
 │   ├── payments.controller.ts /payments/* routes
 │   ├── payments.service.ts    checkout session, webhook -> balance top-up
-│   └── stripe/                StripeService (lazy client, fixed price id)
-├── redis/                     RedisModule (ioredis client, token REDIS) and RedisKeys
-├── game-history/              consumes game.ended (queue core.game-ended); saves game + balance changes in one serializable tx, idempotent on matchId
-├── messaging/                 RabbitMQ (amqp-connection-manager): topology.ts (exchanges, queues, DLX), contracts.ts (event payloads), rpc.ts (error mapping), RabbitMQService (confirmed publish, ack/nack consumers, request/serve RPC over direct reply-to), OutboxRelay (game-svc only)
-├── health/                    GET /health/live, GET /health/ready (Redis + RabbitMQ, plus Postgres in core)
-├── mail/mail.service.ts       SendGrid wrapper; sending is commented out
-└── tools/
+│   └── dto/
+├── game-history/              consumer group `history` on game.ended; saves game + balance changes in one serializable tx, idempotent on matchId
+├── proto/                     `chess/game/v1/game.proto`, `grpc/health/v1/health.proto` (copied to dist by nest-cli assets)
+├── generated/                 ts-proto output (`npm run proto`, buf), committed; never edit by hand
+├── health/                    GET /health/live, GET /health/ready (Redis, plus Postgres in core)
+└── infrastructure/            adapters to external systems
+    ├── prisma/prisma.service.ts  PrismaClient + pg adapter; each module provides its own instance
+    ├── redis/                 RedisModule (ioredis client, token REDIS) and RedisKeys
+    ├── messaging/             Redis Streams: integration-event.ts (`{type, messageId, payload, trace}`), contracts.ts (payloads), EventStream (consumer groups, reclaim, dead stream, lag gauges)
+    ├── grpc/                  shared by both processes: proto paths, loader options, channel options, HttpException <-> gRPC status mapping
+    ├── game/                  [game-svc] game persistence and runtime adapters
+    │   ├── game.repository.ts Redis game store: versioned snapshot per game, Lua compare-and-set save that also updates indexes, read models and appends `game.ended` to `{chess}:events`
+    │   ├── game.clock.ts      leader-elected (Redis lock) 1 s loop: ends timed-out games from the deadline index; no per-second ticks
+    │   ├── game.events.ts     Game -> GameEndedEvent / integration event
+    │   └── game.metrics.ts    OTel metrics: moves, move latency, games created/ended, bet volume, active/lobby, clock leader
+    ├── stripe/                StripeService (lazy client, fixed price id)
+    ├── mail/mail.service.ts   SendGrid wrapper; sending is commented out
     ├── logger/                winston LoggerService (console + logs/log.json), global LoggerFilter
-    ├── WsValidationFilter.ts  maps 400/404/409 HttpExceptions to WsException
+    ├── socket/                RedisIoAdapter; WsValidationFilter maps 400/404/409 HttpExceptions to WsException
     └── telemetry/             otel.ts: NodeSDK with OTLP traces, metrics and logs, auto + Prisma instrumentation; TelemetryModule flushes on shutdown
 prisma/
 ├── schema.prisma              models below
@@ -80,9 +102,10 @@ prisma/
 prisma.config.ts               schema path, migrations path, seed command, DATABASE_URL
 test/                          mirrors src; *.test.ts (unit), *.int-test.ts (DB), *.e2e-test.ts (HTTP)
 postman/, .postman/            Postman collection for the REST API
-docker.compose.yml             core + game-svc + postgres:17 + redis (AOF) + rabbitmq + grafana/otel-lgtm (Grafana on :3001)
+docker.compose.yml             core + game-svc (gRPC :50051) + postgres:17 + redis (AOF) + grafana/otel-lgtm (Grafana on :3001)
+buf.yaml, buf.gen.yaml         proto lint/breaking rules and ts-proto codegen (`npm run proto`, `npm run proto:breaking` against `dev`)
 Dockerfile.prod                targets: `runtime` (both entrypoints, prod deps only), `migrate` (prisma migrate deploy)
-deploy/k8s/                    platform install (kube-prometheus-stack, Tempo, Loki, OTel Collector, Headlamp, RabbitMQ operator), Grafana dashboard, apps/ (Redis, core, game-svc)
+deploy/k8s/                    platform install (kube-prometheus-stack, Tempo, Loki, OTel Collector, Headlamp, CloudNativePG, Envoy Gateway), Grafana dashboard, apps/ (Redis, core, game-svc + headless `game-svc-grpc` Service)
 ```
 
 ## REST routes
@@ -105,7 +128,7 @@ deploy/k8s/                    platform install (kube-prometheus-stack, Tempo, L
 | GET    | `/payments/checkout-session`   | Auth             | Stripe checkout URL                                                       |
 | POST   | `/payments/webhook`            | Stripe signature | `checkout.session.completed` → `UserService.topUpBalance`                 |
 | GET    | `/health/live`                 | –                | liveness probe                                                            |
-| GET    | `/health/ready`                | –                | readiness: Postgres `SELECT 1` + RabbitMQ connection, 503 when down       |
+| GET    | `/health/ready`                | –                | readiness: Redis ping + Postgres `SELECT 1` (core), 503 when down         |
 
 `AuthGuard` parses `Authorization: Bearer <jwt>` (payload `{id, deviceId}`), checks the DB session, and sets `req.user = {id, name, deviceId}`.
 
@@ -117,7 +140,7 @@ Client → server (`@SubscribeMessage`):
 
 | Event                                          | Body                                                             | Guard           | Effect                                                                                                |
 | ---------------------------------------------- | ---------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- |
-| `create`                                       | `{side: 'w'\|'b'\|'rand', time, timeIncrement, bet}` (ms, cents) | IsBalanceEnough | new Game in lobby; `game:created` to creator, `lobby:update` to all                                   |
+| `create`                                       | `{side: 'w'\|'b'\|'rand', time, timeIncrement, bet}` (ms, cents) | IsBalanceEnough | new Game in lobby; `game:created` to creator, `lobby:added` to all                                    |
 | `join`                                         | `{gameId}`                                                       | IsBalanceEnough | second player joins; `game:init-data` to each, `game:start` to both players, clocks start             |
 | `rejoin`                                       | –                                                                | –               | re-sends `game:init-data`; `game:player-reconnected` to room                                          |
 | `leave`                                        | –                                                                | –               | leaver loses; `game:end` (`playerLeave`)                                                              |
@@ -127,26 +150,31 @@ Client → server (`@SubscribeMessage`):
 | `draw_propose` / `draw_accept` / `draw_reject` | `{gameId}`                                                       | IsPlayer        | `game:draw_propose` / `game:end` (`draw`) / `game:draw_rejected`                                      |
 | `add_time`                                     | `{gameId}`                                                       | IsPlayer        | adds `timeIncrement` to the opponent; `game:add-time`                                                 |
 
-Server → client (from `EmitTypes.ts`): `lobby:update`, `user:anon-token`, `game:pending-one`, `game:created`, `game:init-data`, `game:start`, `game:board-update`, `game:chat-message`, `game:draw_propose`, `game:draw_rejected`, `game:add-time`, `game:end`, `game:opponent-disconnected`, `game:player-reconnected`. Rooms: `game:<id>` (both players) and `user:<id>` (every socket of a user, joined on connect).
+Server → client (from `EmitTypes.ts`): `lobby:update` (full list, on connect only), `lobby:added`, `lobby:removed` (deltas), `user:anon-token`, `game:pending-one`, `game:created`, `game:init-data`, `game:start`, `game:board-update`, `game:chat-message`, `game:draw_propose`, `game:draw_rejected`, `game:add-time`, `game:end`, `game:opponent-disconnected`, `game:player-reconnected`. Rooms: `game:<id>` (both players) and `user:<id>` (every socket of a user, joined on connect).
+
+## Reads and writes (CQRS, no event sourcing)
+
+- **Writes**: every state change is a command to game-svc (`GameClient` -> `GameCommandHandler` -> `GameService` -> `GameRepository.update`). Commands return only what the caller needs (`create` -> id, `pending` -> initData), mostly `null`.
+- **Read models**: the Lua save script writes `{chess}:view:lobby` and `{chess}:view:user:<id>` in the same call as the snapshot (synchronous projection: no lag, no worker). core reads them through `GameReadModel`; connect and disconnect send no command unless there is a lobby game to cancel. `rejoin` still asks game-svc (`pending`), because init data needs the full aggregate.
+- **Domain events**: `Game` records events while it is mutated. They are dropped with the aggregate when a CAS save retries, and published by `GameService` only after a successful save. They are in-process, not persisted; the only persisted, cross-service event is `game.ended` on `{chess}:events`.
+- **Pushes**: `SocketEventPublisher` (game-svc) turns events into emits through the Redis emitter, which the Redis adapter on every core pod delivers to sockets. At-most-once; a client that missed something re-syncs with `rejoin`. Mate sends only `game:board-update` (with `effect.mate`), no `game:end`, as before.
+- **Rebuild**: `npm run views:rebuild` after a projection bug, a new view, or a Redis restore.
 
 Clocks run on the client. `game:init-data`, `game:board-update` and `game:add-time` carry `clock: {w, b, running, serverNow}` (remaining ms at `serverNow`, `running` = side to move or `null`). The client anchors on receipt with `performance.now()` and counts down locally; the server stays authoritative and ends games from `{chess}:deadlines`.
 
-## Messaging (RabbitMQ)
+## Service communication
 
-| Exchange             | Type   | Routing key            | Queue                                                         | Consumer                                                     |
-| -------------------- | ------ | ---------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
-| `game.lifecycle`     | topic  | `game.v1.ended`        | `core.game-ended` (quorum, delivery limit 5, DLX `chess.dlx`) | `GameHistoryConsumer`                                        |
-| `game.commands`      | direct | `game.v1.command`      | `game-svc.commands` (quorum, delivery limit 5, DLX)           | `GameCommandHandler` (game-svc), replies via direct reply-to |
-| `game.notifications` | direct | `game.v1.notification` | `ws.notifications` (quorum, single active consumer, TTL 10 s) | `NotificationConsumer` (core)                                |
-| `chess.dlx`          | topic  | `#`                    | `chess.dead-letter` (quorum)                                  | none, inspect manually                                       |
+| Path | Transport | Delivery | Code |
+| --- | --- | --- | --- |
+| core → game-svc commands | gRPC `chess.game.v1.GameCommands`, headless Service, `round_robin` | at most once per attempt; retried once only on `UNAVAILABLE` (never reached a server); 5 s deadline | `GameClient` → `GameGrpcController` → `GameCommandHandler` |
+| game-svc → sockets | Redis pub/sub via `@socket.io/redis-emitter` → Redis adapter on every core pod | at most once; client re-syncs with `rejoin` | `SocketEventPublisher` |
+| game-svc → core `game.ended` | Redis Stream `{chess}:events`, consumer group `history` | at least once; idempotent on `matchId` | Lua save → `EventStream` → `GameHistoryConsumer` |
 
-Commands carry the command name in the AMQP `type` property and expire after 5 s. Replies are `{ok, data}` or `{ok: false, error: {status, response}}`; core rebuilds the HttpException so `WsValidationFilter` sends the same `exception` event as before. Notifications use a single active consumer so ticks and endings keep their order; the Redis adapter fans them out to sockets on every core pod.
+**gRPC errors.** game-svc throws Nest `HttpException`s as before. `HttpToGrpcFilter` maps the status to a gRPC code (400 `INVALID_ARGUMENT`, 403 `PERMISSION_DENIED`, 404 `NOT_FOUND`, 409 `ABORTED`, 5xx `INTERNAL`) and puts `{status, response}` in the `x-http-error-bin` trailer. `GameClient` rebuilds the same exception class from it, so `WsValidationFilter` still sends the same `exception` event. Transport failures (`UNAVAILABLE`, `DEADLINE_EXCEEDED`, `CANCELLED`) become `GameServiceUnavailableError` (503). A deadline that already passed when game-svc picks up the call is refused; one that passes mid-command can still commit (the client then sees a timeout for an applied command).
 
-A consumer that throws gets the message back after a backoff (100 ms doubling, max 2 s). `RabbitMQService.subscribe` counts attempts from `x-acquired-count` (RabbitMQ 4) or `x-delivery-count` (3.x) and rejects without requeue on attempt 5, which dead-letters it. The queue's `x-delivery-limit` alone is not enough on RabbitMQ 4: a `nack` with requeue does not count toward it.
+**Proto rules.** `npm run proto` lints and regenerates `src/generated`. Never reuse or renumber a field; add new fields only. `npm run proto:breaking` compares against `dev`. ids are `int64` (decoded as JS numbers by `longs: Number`); clock and config values are `double`. The loader uses `defaults: true`, so `false`/`0`/`''` survive the wire; `optional` marks nullable values (`running`, `PendingReply.game`).
 
-Each service has its own broker user in Kubernetes (`deploy/k8s/rabbitmq/users.yaml`): only core may publish to `game.commands`, only game-svc to `game.lifecycle`, `game.notifications` and the default exchange.
-
-Game end goes through a transactional outbox: the Lua save that marks a game `ended` also `XADD`s the event to `{chess}:outbox`. `OutboxRelay` (consumer group `relay`) publishes with confirms (`messageId` = `matchId`), then `XACK`+`XDEL`s. Unconfirmed entries are reclaimed after 30 s idle. Results are persisted only when both players are authorized.
+**Event stream.** The Lua save that marks a game `ended` also runs `XADD {chess}:events MAXLEN ~ 100000 ACKED * message <IntegrationEvent>` in the same script (a transactional outbox without a relay). `ACKED` (Redis ≥ 8.2) trims only entries every consumer group has acknowledged, so a stopped consumer never loses events; it makes the stream grow instead, which `ChessEventLag` alerts on. `EventStream` reads with `XREADGROUP` (blocking reader connection per subscription), `XACK`s after the handler, and reclaims entries idle ≥ 30 s with `XAUTOCLAIM`. The delivery count from `XPENDING` decides: at 5, the entry goes to `{chess}:events:dead` (with group and error) and is acked. Results are persisted only when both players are authorized.
 
 ## Redis keys (hash tag `{chess}`)
 
@@ -157,8 +185,10 @@ Game end goes through a transactional outbox: the Lua save that marks a game `en
 | `{chess}:lobby`              | zset   | lobby game ids by createdAt                                                               |
 | `{chess}:active`             | set    | active game ids                                                                           |
 | `{chess}:deadlines`          | zset   | active game id -> ms when the side to move runs out of time                               |
-| `{chess}:user-game:<userId>` | string | the user's lobby or active game id                                                        |
-| `{chess}:outbox`             | stream | pending broker messages                                                                   |
+| `{chess}:view:lobby`         | hash   | read model: lobby game id -> LobbyView JSON                                               |
+| `{chess}:view:user:<userId>` | hash   | read model: `gameId`, `status` (`lobby`/`active`), `opponentId`; deleted when the game ends |
+| `{chess}:events`             | stream | integration events (`game.v1.ended`); trimmed only after every group acked                |
+| `{chess}:events:dead`        | stream | events that failed 5 deliveries: `message`, `group`, `id`, `error`                         |
 | `{chess}:clock:leader`       | string | instance id of the clock leader, 3 s lease                                                |
 
 ## Game engine glossary
@@ -174,7 +204,7 @@ Figure ids in `GameProcess.initBoard()`: `pawn1..8`, `R1/R2` rook, `K1/K2` **kni
 
 ## Env
 
-`.env.sample`: `ENV, PORT, JWT_SECRET, JWT_ACCESS_EXPIRES, JWT_REFRESH_EXPIRES, DATABASE_URL, REDIS_URL, RABBITMQ_URL (or RABBITMQ_USER, RABBITMQ_PASSWORD, RABBITMQ_HOST, RABBITMQ_PORT), HEALTH_PORT (game-svc), OTEL_SERVICE_NAME, OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_METRIC_EXPORT_INTERVAL, OTEL_SDK_DISABLED, OTEL_SEMCONV_STABILITY_OPT_IN, STRIPE_KEY, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET, STRIPE_CHECKOUT_SESSION_SUCCESS_URL, STRIPE_CHECKOUT_SESSION_CANCEL_URL, SG_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_SECRET, GOOGLE_REDIRECT_URL`.
+`.env.sample`: `ENV, PORT, JWT_SECRET, JWT_ACCESS_EXPIRES, JWT_REFRESH_EXPIRES, DATABASE_URL, REDIS_URL, GRPC_PORT (game-svc, default 50051), GAME_SVC_GRPC_TARGET (core, default `localhost:50051`; `dns:///game-svc-grpc:50051` in k8s), HEALTH_PORT (game-svc), OTEL_SERVICE_NAME, OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_METRIC_EXPORT_INTERVAL, OTEL_SDK_DISABLED, OTEL_SEMCONV_STABILITY_OPT_IN, STRIPE_KEY, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET, STRIPE_CHECKOUT_SESSION_SUCCESS_URL, STRIPE_CHECKOUT_SESSION_CANCEL_URL, SG_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_SECRET, GOOGLE_REDIRECT_URL`.
 
 ## Known issues (seen while mapping, not fixed)
 

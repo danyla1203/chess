@@ -25,53 +25,29 @@ spec:
             description: 'p99 is {{ $value | humanizeDuration }}. Look for slow traces in Tempo, Redis CAS retries, or game-svc CPU throttling.'
         - alert: ChessCommandTimeouts
           expr: |
-            sum(rate(chess_rpc_client_duration_seconds_count{outcome="timeout"}[5m]))
+            sum(rate(chess_rpc_client_duration_seconds_count{outcome=~"timeout|unavailable"}[5m]))
               / sum(rate(chess_rpc_client_duration_seconds_count[5m])) > 0.01
           for: 5m
           labels:
             severity: critical
           annotations:
             summary: More than 1% of game commands get no reply from game-svc
-            description: '{{ $value | humanizePercentage }} of commands time out. Players see "Internal server error".'
-    - name: chess.messaging
+            description: '{{ $value | humanizePercentage }} of gRPC commands time out or find no game-svc endpoint. Players see "Game service did not answer". Check game-svc pods, the game-svc-grpc headless Service and core logs.'
+    - name: chess.events
       rules:
-        - alert: ChessDeadLetters
-          expr: sum(rabbitmq_queue_messages{queue="chess.dead-letter"}) > 0
+        - alert: ChessDeadEvents
+          expr: max(chess_events_dead) > 0
           for: 5m
           labels:
             severity: warning
           annotations:
-            summary: Messages failed 5 times and were dead-lettered
-            description: '{{ $value }} messages in chess.dead-letter. Inspect them in the RabbitMQ UI; game results there were not saved.'
-        - alert: ChessCommandBacklog
-          expr: sum(rabbitmq_queue_messages_ready{queue="game-svc.commands"}) > 50
-          for: 2m
-          labels:
-            severity: warning
-          annotations:
-            summary: game-svc is not keeping up with commands
-            description: '{{ $value }} commands are waiting. Check game-svc replicas and HPA.'
-        - alert: ChessNotificationsNoConsumer
-          expr: sum(rabbitmq_queue_consumers{queue="ws.notifications"}) == 0
-          for: 2m
-          labels:
-            severity: critical
-          annotations:
-            summary: No core instance consumes ws.notifications
-            description: Clock ticks and time-out endings do not reach players.
-        - alert: ChessOutboxBacklog
-          expr: max(chess_outbox_pending) > 100
+            summary: Events failed 5 deliveries and were dead-lettered
+            description: '{{ $value }} entries in {chess}:events:dead. Inspect with XRANGE {chess}:events:dead - +; game results there were not saved.'
+        - alert: ChessEventLag
+          expr: max by (group) (chess_events_lag) > 100
           for: 5m
           labels:
             severity: critical
           annotations:
-            summary: Finished games are piling up in the Redis outbox
-            description: '{{ $value }} results not yet published. Check RabbitMQ connectivity from game-svc.'
-        - alert: ChessOutboxRelayFailing
-          expr: sum(rate(chess_outbox_relay_failures_total[5m])) > 0
-          for: 5m
-          labels:
-            severity: warning
-          annotations:
-            summary: The outbox relay cannot publish to RabbitMQ
-            description: Results are kept in Redis and retried, but none are being saved.
+            summary: 'Consumer group {{ $labels.group }} is falling behind on {chess}:events'
+            description: '{{ $value }} events not yet read. Finished games are not being saved, and unacknowledged entries are never trimmed, so Redis memory grows. Check core pods and Postgres.'

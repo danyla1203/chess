@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma.service';
-import type { GameEndedEvent } from '../messaging';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
+import type { GameEndedEvent } from '../infrastructure/messaging';
 
 export type SaveResult = 'saved' | 'duplicate';
 

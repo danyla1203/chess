@@ -1,5 +1,5 @@
-import { GameChat } from '../../src/game/entities/game/game.chat';
-import { Client } from '../../src/game/entities';
+import { GameChat } from '../../src/domain/game/entities/game/game.chat';
+import { Client } from '../../src/domain/game/entities';
 import { generateClient } from '../game/generators';
 
 describe('GameChat (unit)', () => {

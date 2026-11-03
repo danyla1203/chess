@@ -15,8 +15,8 @@ import {
   SendVerificationMail,
   GoogleCode,
 } from './dto';
-import { AuthGuard, AuthService } from '.';
-import { LoggerService } from '../tools/logger';
+import { AuthGuard, AuthService } from './';
+import { LoggerService } from '../infrastructure/logger';
 import { EmailLoginDto, NameLoginDto } from './dto/Login';
 
 @Controller('auth')

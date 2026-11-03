@@ -5,7 +5,13 @@ import globals from 'globals';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'eslint.config.mjs'],
+    ignores: [
+      'dist/**',
+      'coverage/**',
+      'node_modules/**',
+      'src/generated/**',
+      'eslint.config.mjs',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -66,7 +72,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/game/**/*.ts', 'src/game-service/**/*.ts'],
+    files: [
+      'src/game/**/*.ts',
+      'src/game-service/**/*.ts',
+      'src/infrastructure/game/**/*.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -87,7 +97,12 @@ export default tseslint.config(
                 '**/prisma.service',
               ],
               message:
-                'game-svc runs without core: reach core through messaging, not imports.',
+                'game-svc runs without core: reach core through gRPC replies, the event stream or socket emits, not imports.',
+            },
+            {
+              regex: 'game-read(?!/views$)',
+              message:
+                'game-svc writes the read models; it may share their types, not read them.',
             },
           ],
         },
@@ -96,28 +111,54 @@ export default tseslint.config(
   },
   {
     files: ['src/**/*.ts'],
-    ignores: ['src/game/**', 'src/game-service/**'],
+    ignores: [
+      'src/game/**',
+      'src/game-service/**',
+      'src/infrastructure/game/**',
+      'src/domain/**',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              group: ['**/game-service', '**/game-service/**'],
-              message: 'core talks to game-svc through GameClient RPC.',
+              group: [
+                '**/game-service',
+                '**/game-service/**',
+                '**/infrastructure/game',
+                '**/infrastructure/game/**',
+              ],
+              message: 'core talks to game-svc through GameClient (gRPC) and GameReadModel.',
             },
             {
               group: [
                 '**/game/*',
+                '!**/generated/**',
                 '!**/game/dto',
-                '!**/game/entities',
-                '!**/game/entities/game',
-                '!**/game/EmitTypes',
                 '!**/game/game.contract',
-                '!**/game/game.notifier',
+                '!**/domain/game/**',
               ],
               message:
                 'core may only use game contracts, DTOs, entities and EmitTypes; game logic runs in game-svc.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/domain/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex:
+                '(^|/)(infrastructure|generated|dto|game-service|game-read|game-history|gateway|auth|user|payments|health)/|\\.\\./game/|^(ioredis|socket\\.io|@prisma/|@opentelemetry/|@grpc/)',
+              message:
+                'domain is the pure game model: no infrastructure, transport or application-layer imports.',
             },
           ],
         },

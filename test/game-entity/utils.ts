@@ -1,4 +1,4 @@
-import { Cell, Figure, Figures } from '../../src/game/entities/game';
+import { Cell, Figure, Figures } from '../../src/domain/game/entities/game';
 
 /**
  *

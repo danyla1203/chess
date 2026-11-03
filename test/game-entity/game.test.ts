@@ -1,14 +1,14 @@
-import { Config, Game } from '../../src/game/entities/game';
+import { Config, Game } from '../../src/domain/game/entities/game';
 import { ConflictException } from '@nestjs/common';
 import {
   generateConfig,
   generateClient,
   startedGame,
 } from '../game/generators';
-import { Client, Player } from '../../src/game/entities';
-import { GameProcess } from '../../src/game/entities/game/process/game.process';
-import { GameChat } from '../../src/game/entities/game/game.chat';
-import { GameEnd } from '../../src/game/EmitTypes';
+import { Client, Player } from '../../src/domain/game/entities';
+import { GameProcess } from '../../src/domain/game/entities/game/process/game.process';
+import { GameChat } from '../../src/domain/game/entities/game/game.chat';
+import { GameEnd } from '../../src/domain/game/EmitTypes';
 
 describe('Game entity (unit)', () => {
   let game: Game;

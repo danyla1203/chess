@@ -86,9 +86,6 @@ grafana:
             path: /var/lib/grafana/dashboards/community
   dashboards:
     community:
-      rabbitmq-overview:
-        gnetId: 10991
-        datasource: Prometheus
       nodejs-runtime:
         gnetId: 11159
         datasource: Prometheus

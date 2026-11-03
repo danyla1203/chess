@@ -16,7 +16,7 @@ import bcrypt from 'bcrypt';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { AuthService } from '../../src/auth/auth.service';
-import { PrismaService } from '../../src/prisma.service';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { AuthModel } from '../../src/auth/auth.model';
 import { Confirmation, User } from '@prisma/client';
 import {
@@ -25,7 +25,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
-import { LoggerModule } from '../../src/tools/logger';
+import { LoggerModule } from '../../src/infrastructure/logger';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { TokenService } from '../../src/auth';
 

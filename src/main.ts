@@ -1,9 +1,9 @@
-import './tools/telemetry/otel';
+import './infrastructure/telemetry/otel';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { LoggerFilter, LoggerService } from './tools/logger';
-import { RedisIoAdapter } from './tools/redis-io.adapter';
+import { LoggerFilter, LoggerService } from './infrastructure/logger';
+import { RedisIoAdapter } from './infrastructure/socket/redis-io.adapter';
 
 async function bootstrap() {
   const allowedOrigin =

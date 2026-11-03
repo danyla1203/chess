@@ -1,22 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import type { Namespace } from 'socket.io';
-import { Game as GameEvent, GameEnd, Lobby, room } from '../game/EmitTypes';
-import { InitedGameData } from '../game/dto';
-import { GameData } from '../game/entities/game';
-import { GameNotifier } from '../game/game.notifier';
+import { Game as GameEvent, userRoom, room } from '../domain/game/EmitTypes';
 
-export const userRoom = (userId: number) => `user:${userId}`;
+export { userRoom };
 
 @Injectable()
-export class SocketNotifier extends GameNotifier {
+export class SocketNotifier {
   private server: Namespace;
 
   public bind(server: Namespace): void {
     this.server = server;
-  }
-
-  public lobbyUpdate(lobby: GameData[]): void {
-    this.server.emit(Lobby.update, lobby);
   }
 
   public toGame(gameId: number, event: string, payload?: unknown): void {
@@ -25,33 +18,6 @@ export class SocketNotifier extends GameNotifier {
     } else {
       this.server.to(room(gameId)).emit(event, payload);
     }
-  }
-
-  public joinGame(userId: number, gameId: number): void {
-    this.server.in(userRoom(userId)).socketsJoin(room(gameId));
-  }
-
-  public gameCreated(userId: number, gameId: number): void {
-    this.server.to(userRoom(userId)).emit(GameEvent.created, { gameId });
-  }
-
-  public gameStart(userIds: number[]): void {
-    this.server.to(userIds.map(userRoom)).emit(GameEvent.start);
-  }
-
-  public initData(userId: number, data: InitedGameData): void {
-    this.server.to(userRoom(userId)).emit(GameEvent.init, data);
-  }
-
-  public gameEnd(
-    userId: number,
-    winner: boolean,
-    game: unknown,
-    reason: GameEnd,
-  ): void {
-    this.server
-      .to(userRoom(userId))
-      .emit(GameEvent.end, { winner, game, reason });
   }
 
   public opponentDisconnected(userId: number): void {

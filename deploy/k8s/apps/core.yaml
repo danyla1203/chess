@@ -86,16 +86,6 @@ spec:
                 secretKeyRef:
                   name: redis-credentials
                   key: uri
-            - name: RABBITMQ_USER
-              valueFrom:
-                secretKeyRef:
-                  name: core-user-credentials
-                  key: username
-            - name: RABBITMQ_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: core-user-credentials
-                  key: password
           startupProbe:
             httpGet:
               path: /health/live

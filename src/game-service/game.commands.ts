@@ -3,20 +3,16 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  OnApplicationBootstrap,
 } from '@nestjs/common';
-import { Queue, RabbitMQService } from '../messaging';
-import { LoggerService } from '../tools/logger';
-import { annotateActiveSpan } from '../tools/telemetry';
+import { annotateActiveSpan } from '../infrastructure/telemetry';
 import { GameService } from '../game/game.service';
-import { GameMetrics } from '../game/game.metrics';
-import { Client } from '../game/entities';
+import { GameMetrics } from '../infrastructure/game/game.metrics';
+import { Client } from '../domain/game/entities';
 import type {
   ClientIdentity,
   GameCommandName,
   GameCommandRequest,
   GameCommandResponse,
-  GameEndResult,
 } from '../game/game.contract';
 
 type Handlers = {
@@ -29,7 +25,7 @@ const toClient = (identity: ClientIdentity): Client =>
   Object.assign(new Client(), identity);
 
 @Injectable()
-export class GameCommandHandler implements OnApplicationBootstrap {
+export class GameCommandHandler {
   private readonly handlers: Handlers = {
     create: async ({ client, config }) => {
       const game = await this.service.createGame(toClient(client), config);
@@ -37,13 +33,7 @@ export class GameCommandHandler implements OnApplicationBootstrap {
     },
     join: async ({ client, gameId }) => {
       const game = await this.service.connectToGame(toClient(client), gameId);
-      return {
-        id: game.id,
-        players: game.players.map((pl) => ({
-          userId: pl.userId,
-          initData: this.service.getInitedGameData(pl.userId, game),
-        })),
-      };
+      return { id: game.id };
     },
     pending: async ({ client }) => {
       const game = await this.service
@@ -58,80 +48,74 @@ export class GameCommandHandler implements OnApplicationBootstrap {
         initData: this.service.getInitedGameData(client.userId, game),
       };
     },
-    opponent: async ({ client }) => {
-      const opponent = await this.service.findCurrentOpponent(toClient(client));
-      return opponent ? { userId: opponent.userId } : null;
-    },
     cancelLobby: async ({ client }) => {
       await this.service.removeInitedGamesBy(toClient(client));
       return null;
     },
-    lobby: () => this.service.getLobby(),
-    leave: async ({ client }) =>
-      this.endResult(await this.service.leaveGame(toClient(client))),
+    leave: async ({ client }) => {
+      await this.service.leaveGame(toClient(client));
+      return null;
+    },
     surrender: async ({ client, gameId }) => {
       await this.requirePlayer(client, gameId);
-      return this.endResult(
-        await this.service.surrender(gameId, toClient(client)),
-      );
+      await this.service.surrender(gameId, toClient(client));
+      return null;
     },
     move: async ({ client, turn }) => {
       await this.requirePlayer(client, turn.gameId);
-      return this.metrics.trackMove(() =>
+      await this.metrics.trackMove(() =>
         this.service.makeTurn(turn.gameId, client.userId, turn),
       );
+      return null;
     },
     chat: async ({ client, gameId, text }) => {
       await this.requirePlayer(client, gameId);
-      return this.service.pushMessage(gameId, text, toClient(client));
+      await this.service.pushMessage(gameId, text, toClient(client));
+      return null;
     },
     proposeDraw: async ({ client, gameId }) => {
       await this.requirePlayer(client, gameId);
-      return this.service.proposeDraw(gameId, toClient(client));
+      await this.service.proposeDraw(gameId, toClient(client));
+      return null;
     },
     acceptDraw: async ({ client, gameId }) => {
       await this.requirePlayer(client, gameId);
-      return this.service.acceptDraw(gameId, toClient(client));
+      await this.service.acceptDraw(gameId, toClient(client));
+      return null;
     },
     rejectDraw: async ({ client, gameId }) => {
       await this.requirePlayer(client, gameId);
-      return this.service.rejectDraw(gameId);
+      await this.service.rejectDraw(gameId);
+      return null;
     },
     addTime: async ({ client, gameId }) => {
       await this.requirePlayer(client, gameId);
-      return this.service.addTimeToAnotherPlayer(gameId, toClient(client));
+      await this.service.addTimeToAnotherPlayer(gameId, toClient(client));
+      return null;
     },
   };
 
   constructor(
-    private readonly rabbit: RabbitMQService,
     private readonly service: GameService,
     private readonly metrics: GameMetrics,
-    private readonly logger: LoggerService,
   ) {}
 
-  onApplicationBootstrap(): void {
-    this.rabbit
-      .serve(Queue.GameCommands, (type, payload) => this.handle(type, payload))
-      .catch((err: Error) =>
-        this.logger.error(
-          `Cannot serve ${Queue.GameCommands}: ${err.message}`,
-          err.stack,
-          GameCommandHandler.name,
-        ),
-      );
-  }
-
-  public handle(type: string, payload: unknown): Promise<unknown> {
-    const handler = this.handlers[type as GameCommandName] as (
-      request: unknown,
-    ) => Promise<unknown>;
+  public handle<K extends GameCommandName>(
+    type: K,
+    payload: GameCommandRequest<K>,
+  ): Promise<GameCommandResponse<K>> {
+    const handler = this.handlers[type] as (
+      request: GameCommandRequest<K>,
+    ) => Promise<GameCommandResponse<K>>;
     if (!handler) {
       throw new BadRequestException(`Unknown command ${type}`);
     }
     const request = payload as { client?: ClientIdentity; gameId?: number };
+    if (!request.client) {
+      throw new BadRequestException('client is required');
+    }
     annotateActiveSpan({
-      'rpc.method': type,
+      'chess.command': type,
       ...(request.client && { 'enduser.id': request.client.userId }),
       ...(request.gameId && { 'chess.game.id': request.gameId }),
     });
@@ -146,17 +130,5 @@ export class GameCommandHandler implements OnApplicationBootstrap {
     if (!game.findPlayer(client.userId)) {
       throw new ForbiddenException('Forbidden resource');
     }
-  }
-
-  private endResult(result: {
-    winner: { userId: number };
-    looser: { userId: number };
-    gameDto: GameEndResult['gameDto'];
-  }): GameEndResult {
-    return {
-      winner: { userId: result.winner.userId },
-      looser: { userId: result.looser.userId },
-      gameDto: result.gameDto,
-    };
   }
 }

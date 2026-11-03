@@ -9,8 +9,8 @@ services:
       OTEL_SERVICE_NAME: chess-core
       OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
       OTEL_SEMCONV_STABILITY_OPT_IN: http
-      RABBITMQ_URL: amqp://chess:chess@rabbitmq:5672
       REDIS_URL: redis://redis:6379
+      GAME_SVC_GRPC_TARGET: game-svc:50051
     volumes:
       - ./src:/usr/src/app/src
       - /usr/src/app/node_modules
@@ -23,8 +23,8 @@ services:
         condition: service_started
       redis:
         condition: service_started
-      rabbitmq:
-        condition: service_healthy
+      game-svc:
+        condition: service_started
       lgtm:
         condition: service_started
 
@@ -38,9 +38,9 @@ services:
     environment:
       OTEL_SERVICE_NAME: chess-game-svc
       OTEL_EXPORTER_OTLP_ENDPOINT: http://lgtm:4318
-      RABBITMQ_URL: amqp://chess:chess@rabbitmq:5672
       REDIS_URL: redis://redis:6379
       HEALTH_PORT: 9300
+      GRPC_PORT: 50051
     volumes:
       - ./src:/usr/src/app/src
       - /usr/src/app/node_modules
@@ -49,8 +49,6 @@ services:
     depends_on:
       redis:
         condition: service_started
-      rabbitmq:
-        condition: service_healthy
       lgtm:
         condition: service_started
 
@@ -79,27 +77,6 @@ services:
     ports:
       - '6380:6379'
 
-  rabbitmq:
-    image: rabbitmq:4.2.9-management
-    container_name: rabbitmq
-    networks:
-      - chesser_net
-    environment:
-      RABBITMQ_DEFAULT_USER: chess
-      RABBITMQ_DEFAULT_PASS: chess
-    volumes:
-      - ./deploy/local/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
-      - rabbitmq_data:/var/lib/rabbitmq
-    ports:
-      - '5672:5672'
-      - '15672:15672'
-      - '15692:15692'
-    healthcheck:
-      test: rabbitmq-diagnostics -q check_port_connectivity
-      interval: 10s
-      timeout: 10s
-      retries: 12
-
   lgtm:
     image: grafana/otel-lgtm:0.36.0
     container_name: lgtm
@@ -115,7 +92,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  rabbitmq_data:
   lgtm_data:
 networks:
   chesser_net:
